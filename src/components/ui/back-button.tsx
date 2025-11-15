@@ -1,0 +1,61 @@
+'use client';
+
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+const sourceToPathMap: { [key: string]: string } = {
+  'admin': '/superadmin/users/admin',
+  'team-leader': '/superadmin/users/team-leader',
+  'staff': '/superadmin/users/staff',
+  'associate': '/superadmin/users/associates',
+  'freelancer': '/superadmin/users/freelancer',
+};
+
+export function BackButton() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const source = searchParams.get('source');
+
+  const handleBack = () => {
+    if (source && sourceToPathMap[source]) {
+      router.push(sourceToPathMap[source]);
+    } else {
+      router.back();
+    }
+  };
+
+  const backPath = source ? sourceToPathMap[source] : null;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {backPath ? (
+            <Link href={backPath}>
+              <Button variant="outline" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+                <span className="sr-only">Back</span>
+              </Button>
+            </Link>
+          ) : (
+            <Button variant="outline" size="icon" onClick={handleBack}>
+              <ArrowLeft className="h-4 w-4" />
+              <span className="sr-only">Back</span>
+            </Button>
+          )}
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Back</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
