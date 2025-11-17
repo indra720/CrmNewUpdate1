@@ -39,7 +39,7 @@ interface ApiResponse {
   daily_productivity_data: DayData[];
 }
 
-export default function EarnCalendarPage() {
+export default function ProductivityPage() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [calendarData, setCalendarData] = useState<DayData[]>([]);
@@ -47,109 +47,105 @@ export default function EarnCalendarPage() {
   const [monthlySalary, setMonthlySalary] = useState(0);
   const [totalSalary, setTotalSalary] = useState(0);
   const [monthsList, setMonthsList] = useState<[number, string][]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Set to false initially
   const [error, setError] = useState("");
   const [staffId, setStaffId] = useState('1'); // Default staff ID
-
-  const [staffList, setStaffList] = useState<any[]>([]);
 
   const { toast } = useToast();
   
   const yearsList = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 5 + i);
 
-  async function fetchStaffList() {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        throw new Error("Authentication token not found.");
-      }
+  // Mock data for UI display
+  const mockCalendarData: DayData[] = Array.from({ length: 30 }, (_, i) => ({
+    day: i + 1,
+    date: `2023-10-${i + 1}`,
+    day_name: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i % 7],
+    leads: Math.floor(Math.random() * 20),
+    salary: Math.floor(Math.random() * 1000),
+  }));
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/superuser/staff-report/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setStaffList(data.staff_list);
-    } catch (err: any) {
-      console.error("Error fetching staff list:", err);
-    }
-  }
+  const mockMonthsList: [number, string][] = [
+    [1, 'January'], [2, 'February'], [3, 'March'], [4, 'April'],
+    [5, 'May'], [6, 'June'], [7, 'July'], [8, 'August'],
+    [9, 'September'], [10, 'October'], [11, 'November'], [12, 'December'],
+  ];
 
   useEffect(() => {
-    fetchStaffList();
-  }, []);
-  
-  async function fetchCalendar() {
+    // Simulate data loading
     setLoading(true);
-    setError("");
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        throw new Error("Authentication token not found.");
-      }
-
-      console.log("=== FETCHING STAFF CALENDAR ===");
-      console.log("Staff ID:", staffId);
-      console.log("Year:", year);
-      console.log("Month:", month);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/staff/${staffId}/calendar/?year=${year}&month=${month}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${token}`,
-          },
-        }
-      );
-
-      console.log("API Response Status:", response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: ApiResponse = await response.json();
-      console.log("API Response Data:", data);
-
-      setCalendarData(data.daily_productivity_data || []);
-      setStaffData(data.staff);
-      setMonthlySalary(parseFloat(data.monthly_salary) || 0);
-      setTotalSalary(data.total_salary || 0);
-      setMonthsList(data.months_list || []);
-
-      toast({
-        title: "Success",
-        description: "Calendar data loaded successfully",
-        className: "bg-green-500 text-white",
-      });
-
-    } catch (err: any) {
-      console.error("=== API ERROR ===");
-      console.error("Error:", err);
-      setError(err.message);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to fetch calendar data",
-        variant: "destructive",
-      });
-    } finally {
+    setTimeout(() => {
+      setCalendarData(mockCalendarData);
+      setMonthsList(mockMonthsList);
+      setStaffData({ name: "Mock Staff", email: "mock@example.com", mobile: "1234567890", salary: "50000" });
+      setMonthlySalary(15000);
+      setTotalSalary(150000);
       setLoading(false);
-    }
-  }
+    }, 1000);
+  }, []);
 
-  useEffect(() => {
-    fetchCalendar();
-  }, [staffId, year, month]);
+  // async function fetchCalendar() {
+  //   setLoading(true);
+  //   setError("");
+  //   try {
+  //     const token = localStorage.getItem("authToken");
+  //     if (!token) {
+  //       throw new Error("Authentication token not found.");
+  //     }
+
+  //     console.log("=== FETCHING STAFF CALENDAR ===");
+  //     console.log("Staff ID:", staffId);
+  //     console.log("Year:", year);
+  //     console.log("Month:", month);
+
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/staff/${staffId}/calendar/?year=${year}&month=${month}`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Token ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     console.log("API Response Status:", response.status);
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+
+  //     const data: ApiResponse = await response.json();
+  //     console.log("API Response Data:", data);
+
+  //     setCalendarData(data.daily_productivity_data || []);
+  //     setStaffData(data.staff);
+  //     setMonthlySalary(parseFloat(data.monthly_salary) || 0);
+  //     setTotalSalary(data.total_salary || 0);
+  //     setMonthsList(data.months_list || []);
+
+  //     toast({
+  //       title: "Success",
+  //       description: "Calendar data loaded successfully",
+  //       className: "bg-green-500 text-white",
+  //     });
+
+  //   } catch (err: any) {
+  //     console.error("=== API ERROR ===");
+  //     console.error("Error:", err);
+  //     setError(err.message);
+  //     toast({
+  //       title: "Error",
+  //       description: err.message || "Failed to fetch calendar data",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   fetchCalendar();
+  // }, [staffId, year, month]);
 
   function handleFilterSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -168,15 +164,15 @@ export default function EarnCalendarPage() {
     const bgColor = getCellBgColor(dayData.leads);
 
     return (
-      <div className={cn("p-3 h-24 md:h-28 flex flex-col justify-between rounded-lg transition-all hover:scale-105", bgColor)}>
-        <div className="font-bold text-lg text-right">{dayData.day}</div>
-        <div className="text-sm">
+      <div className={cn("p-2 h-20 md:h-24 flex flex-col justify-between rounded-lg transition-all hover:scale-105", bgColor)}>
+        <div className="font-semibold text-base text-right">{dayData.day}</div>
+        <div className="text-xs">
           <div className="font-medium">Leads: {dayData.leads}</div>
           <div className="font-medium">Earn: ₹{dayData.salary}</div>
         </div>
         {dayData.leads > 0 && (
           <div className="text-xs opacity-75">
-            {dayData.leads >= 15 ? "🔥 Excellent!" : dayData.leads >= 10 ? "✨ Great!" : dayData.leads >= 5 ? "👍 Good" : "📈 Start"}
+            {dayData.leads >= 15 ? "🔥" : dayData.leads >= 10 ? "✨" : dayData.leads >= 5 ? "👍" : "📈"}
           </div>
         )}
       </div>
@@ -185,62 +181,43 @@ export default function EarnCalendarPage() {
   
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Earn Calendar</h1>
-      
-      {staffData && (
-        <Card>
-          <CardHeader>
-            <div className="text-lg font-semibold">
-              Staff: {staffData.name} ({staffData.email})
-            </div>
-          </CardHeader>
-        </Card>
-      )}
+      <h1 className="text-3xl font-bold tracking-tight">Productivity Calendar</h1>
       
 
 
       <Card>
         <CardHeader>
-          <form onSubmit={handleFilterSubmit} className="flex flex-col sm:flex-row gap-4 items-center">
-            <Select value={String(staffId)} onValueChange={setStaffId}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select Staff" />
-              </SelectTrigger>
-              <SelectContent>
-                {staffList.map((staff) => (
-                  <SelectItem key={staff.id} value={String(staff.id)}>
-                    {staff.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <form onSubmit={handleFilterSubmit} className="flex flex-col gap-4 items-center sm:flex-row">
+            <div className="w-full sm:w-auto"> {/* Month Select */}
+              <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Select Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthsList.map(([monthNum, monthName]) => (
+                    <SelectItem key={monthNum} value={String(monthNum)}>{monthName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             
-            <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select Month" />
-              </SelectTrigger>
-              <SelectContent>
-                {monthsList.map(([monthNum, monthName]) => (
-                  <SelectItem key={monthNum} value={String(monthNum)}>{monthName}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
-              <SelectTrigger className="w-full sm:w-[120px]">
-                <SelectValue placeholder="Select Year" />
-              </SelectTrigger>
-              <SelectContent>
-                 {yearsList.map((y) => (
-                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Filter
-            </Button>
+            <div className="flex gap-4 w-full sm:w-auto"> {/* Year Select and Filter Button */}
+              <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
+                <SelectTrigger className="w-full sm:w-[120px]">
+                  <SelectValue placeholder="Select Year" />
+                </SelectTrigger>
+                <SelectContent>
+                   {yearsList.map((y) => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Filter
+              </Button>
+            </div>
           </form>
         </CardHeader>
         <CardContent>

@@ -65,6 +65,8 @@ import {
   ArrowRight,
   FileUp,
   DollarSign,
+  Minus,
+  Plus,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -150,40 +152,7 @@ const ReviewDetailItem = ({ label, value }: { label: string, value: string | und
     </div>
 );
 
-const UserDetailsDialog = ({ user, open, onOpenChange }: { user: any, open: boolean, onOpenChange: (open: boolean) => void }) => {
-    if (!user) return null;
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md bg-card shadow-2xl rounded-2xl p-0">
-                <DialogHeader className="p-6 pb-4 text-center">
-                    <DialogTitle className="text-xl">Staff Full Details</DialogTitle>
-                </DialogHeader>
-                <div className="p-6 pt-0 grid grid-cols-1 gap-5 max-h-[60vh] overflow-y-auto">
-                    <ReviewDetailItem label="Name" value={user.name} />
-                    <ReviewDetailItem label="Mobile No" value={user.mobile} />
-                    <ReviewDetailItem label="Team Leader" value={user.teamLeader} />
-                    <ReviewDetailItem label="Created Date" value={new Date(user.created_date).toLocaleDateString()} />
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">Active Status</p>
-                      <Switch
-                        id={`active-status-modal-${user.id}`}
-                        checked={user.self_user?.user_active}
-                        disabled
-                      />
-                    </div>
-                </div>
-                <DialogFooter className="p-4 border-t bg-muted/50 rounded-b-2xl flex-row justify-end gap-2">
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline" className="w-full text-foreground hover:bg-primary hover:text-primary-foreground">
-                            Close
-                        </Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
 
 export default function StaffManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -193,15 +162,17 @@ export default function StaffManagementPage() {
   const [formData, setFormData] = useState<any>(initialFormData);
   const [editingUser, setEditingUser] = useState<any>(null);
 
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
   const { toast } = useToast();
   const [admins, setAdmins] = useState<any[]>([]);
   const [teamLeaders, setTeamLeaders] = useState<any[]>([]);
 
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
  
   // staff teamleader card data 
   const [cardData, setcardData] = useState<any>(null);
@@ -261,33 +232,28 @@ export default function StaffManagementPage() {
   };
 
   useEffect(() => {
-    fetchPageData();
-  }, []);
-
-  useEffect(() => {
-    if (isAddFormOpen) {
-      const fetchDropdownData = async () => {
-        try {
-          const [adminsData, teamLeadersData] = await Promise.all([
-            fetchAdminsForSelection(),
-            fetchTeamLeaders(),
-          ]);
-          setAdmins(adminsData);
-          setTeamLeaders(teamLeadersData);
-        } catch (error) {
-          console.error("Failed to fetch dropdown data:", error);
-          setAdmins([]);
-          setTeamLeaders([]);
-          toast({
-            title: "Warning",
-            description: "Could not load admin and team leader data.",
-            variant: "destructive",
-          });
-        }
-      };
-      fetchDropdownData();
-    }
-  }, [isAddFormOpen, toast]);
+    const fetchInitialData = async () => {
+      await fetchPageData();
+      try {
+        const [adminsData, teamLeadersData] = await Promise.all([
+          fetchAdminsForSelection(),
+          fetchTeamLeaders(),
+        ]);
+        setAdmins(adminsData);
+        setTeamLeaders(teamLeadersData);
+      } catch (error) {
+        console.error("Failed to fetch dropdown data:", error);
+        setAdmins([]);
+        setTeamLeaders([]);
+        toast({
+          title: "Warning",
+          description: "Could not load admin and team leader data.",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchInitialData();
+  }, [toast]);
 
 
   const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -372,10 +338,7 @@ export default function StaffManagementPage() {
     }
   };
 
-  const handleOpenDetailsView = (user: any) => {
-    setSelectedUser(user);
-    setIsDetailsOpen(true);
-  }
+
   
   const handleCloseAddForm = () => {
     setIsAddFormOpen(false);
@@ -749,94 +712,171 @@ export default function StaffManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-base md:text-sm">SR. NO</TableHead>
-                  <TableHead className="text-base md:text-sm">Name</TableHead>
-                  <TableHead className="hidden sm:table-cell text-base md:text-sm">Staff ID</TableHead>
-                  <TableHead className="hidden md:table-cell text-base md:text-sm">Mobile No</TableHead>
-                  <TableHead className="hidden lg:table-cell text-base md:text-sm">Email</TableHead>
-                  <TableHead className="text-base md:text-sm">Leads</TableHead>
-                  <TableHead className="text-base md:text-sm">Active/Non-Active</TableHead>
-                  <TableHead className="text-base md:text-sm">Earn</TableHead>
-                  <TableHead className="text-base md:text-sm">Incentives</TableHead>
-                  <TableHead className="text-right text-base md:text-sm">Edit Now</TableHead>
+                  <TableHead>S.N.</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden md:table-cell">Staff ID</TableHead>
+                  <TableHead className="hidden md:table-cell">Mobile No</TableHead>
+                  <TableHead className="hidden lg:table-cell">Email</TableHead>
+                  <TableHead className="hidden lg:table-cell">Leads</TableHead>
+                  <TableHead className="hidden lg:table-cell">Active/Non-Active</TableHead>
+                  <TableHead className="hidden lg:table-cell">Earn</TableHead>
+                  <TableHead className="hidden lg:table-cell">Incentives</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user, index) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="text-base md:text-sm">{index + 1}</TableCell>
-                    <TableCell className="font-medium text-base md:text-sm">{user.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-base md:text-sm">{user.staff_id}</TableCell>
-                    <TableCell className="hidden md:table-cell text-base md:text-sm">{user.mobile}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-base md:text-sm">
-                      {new Date(user.created_date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-base md:text-sm">
+                  <React.Fragment key={user.id}>
+                    <TableRow data-state={expandedRowId === user.id && 'selected'}>
+                      <TableCell>
+                        <div className="lg:hidden">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-green-600"
+                            onClick={() => toggleRow(user.id)}
+                          >
+                            {expandedRowId === user.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <div className="hidden lg:block">{index + 1}.</div>
+                      </TableCell>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{user.staff_id}</TableCell>
+                      <TableCell className="hidden md:table-cell">{user.mobile}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{user.email}</TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Link href={`/superadmin/users/staff/leads`}>
                           <Button variant="link" size="sm" className="p-0 h-auto text-green-600">View</Button>
                         </Link>
-                    </TableCell>
-                    <TableCell className="text-base md:text-sm">
-                      <Switch
-                        checked={user.self_user?.user_active}
-                        onCheckedChange={(checked) =>
-                          handleToggle(user.id, checked)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className="text-base md:text-sm">
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <Switch
+                          checked={user.self_user?.user_active}
+                          onCheckedChange={(checked) => handleToggle(user.id, checked)}
+                        />
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Link href={`/superadmin/users/staff/earn`}>
                           <Button variant="link" size="sm" className="p-0 h-auto text-blue-600">Earn</Button>
                         </Link>
-                    </TableCell>
-                     <TableCell className="text-base md:text-sm">
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Link href={`/superadmin/users/staff/incentives`}>
                           <Button variant="link" size="sm" className="p-0 h-auto text-yellow-600">Incentives</Button>
                         </Link>
-                    </TableCell>
-                    <TableCell className="text-right text-base md:text-sm">
-                       <div className="flex items-center justify-end gap-2">
-                            <div className="hidden sm:flex items-center gap-2">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                             <Button
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() => handleOpenEditForm(user)}
-                                                className="h-8 w-8"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                                <span className="sr-only">Edit</span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Edit</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                          
-
-                        <div className="sm:hidden">
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="hidden lg:flex items-center justify-end gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleOpenEditForm(user)}
+                                  className="h-8 w-8"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Edit</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="hidden md:flex lg:hidden items-center justify-end gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleOpenEditForm(user)}
+                                  className="h-8 w-8"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Edit</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="md:hidden">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                               <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                  <span className="sr-only">More</span>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">More</span>
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                               <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleOpenDetailsView(user)}>
-                                <Eye className="mr-2 h-4 w-4" /> View Details
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                                        <DropdownMenuContent align='end'>
+                                                           <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
+                                                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                                                          </DropdownMenuItem>
+                                                        </DropdownMenuContent>                          </DropdownMenu>
                         </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                      </TableCell>
+                    </TableRow>
+                    {expandedRowId === user.id && (
+                      <TableRow className="lg:hidden">
+                        <TableCell colSpan={10} className="p-0">
+                          <div className="p-4">
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="text-lg font-bold">{user.name}</div>
+                                  <div className="text-sm text-gray-500">{user.self_user?.user_active ? 'Active' : 'Inactive'}</div>
+                                </div>
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Staff ID:</span>
+                                    <span className="text-sm">{user.staff_id || 'N/A'}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Mobile:</span>
+                                    <span className="text-sm">{user.mobile || 'N/A'}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Email:</span>
+                                    <span className="text-sm">{user.email || 'N/A'}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Leads:</span>
+                                    <Link href={`/superadmin/users/staff/leads`}>
+                                      <Button variant="link" size="sm" className="p-0 h-auto text-green-600">View</Button>
+                                    </Link>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Active Status:</span>
+                                    <Switch
+                                      checked={user.self_user?.user_active}
+                                      onCheckedChange={(checked) => handleToggle(user.id, checked)}
+                                    />
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Earn:</span>
+                                    <Link href={`/superadmin/users/staff/earn`}>
+                                      <Button variant="link" size="sm" className="p-0 h-auto text-blue-600">Earn</Button>
+                                    </Link>
+                                  </div>
+                                  <div className="p-3 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Incentives:</span>
+                                    <Link href={`/superadmin/users/staff/incentives`}>
+                                      <Button variant="link" size="sm" className="p-0 h-auto text-yellow-600">Incentives</Button>
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
                 {filteredUsers.length === 0 && (
                   <TableRow>
@@ -989,7 +1029,7 @@ export default function StaffManagementPage() {
 
     {editingUser && (
       <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md max-h-[80vh] overflow-y-auto hide-scrollbar">
           <DialogHeader>
             <DialogTitle>Edit Staff</DialogTitle>
             <DialogDescription>
@@ -1016,8 +1056,11 @@ export default function StaffManagementPage() {
                         <SelectValue placeholder="Select Team Leader" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="teamlead">teamlead</SelectItem>
-                        <SelectItem value="teamlead2">teamlead2</SelectItem>
+                        {teamLeaders.map((leader) => (
+                            <SelectItem key={leader.id} value={String(leader.id)}>
+                                {leader.name || leader.user?.first_name || leader.user?.email || `Team Leader ${leader.id}`}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -1034,13 +1077,7 @@ export default function StaffManagementPage() {
       </Dialog>
     )}
       
-      {selectedUser && (
-        <UserDetailsDialog 
-            user={selectedUser} 
-            open={isDetailsOpen} 
-            onOpenChange={setIsDetailsOpen}
-        />
-      )}
+
     </div>
   );
 };

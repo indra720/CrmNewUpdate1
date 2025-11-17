@@ -50,6 +50,8 @@ import {
   Briefcase,
   User,
   DollarSign,
+  Minus,
+  Plus,
 } from 'lucide-react';
 import { toast, useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -58,7 +60,7 @@ import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DateRange } from 'react-day-picker';
 import { addDays } from 'date-fns';
-import { toggleUserActiveStatus } from "@/lib/api";
+import { toggleUserActiveStatus, fetchTeamLeaders } from "@/lib/api";
 
 
 const kpiData = [
@@ -80,7 +82,7 @@ const initialFormData = {
     teamLeader: "",
 };
 
-const UserDetailsDialog = ({ user, open, onOpenChange }: { user: any, open: boolean, onOpenChange: (open: boolean) => void }) => {
+const UserDetailsDialog = ({ user, open, onOpenChange, getTeamLeaderName }: { user: any, open: boolean, onOpenChange: (open: boolean) => void, getTeamLeaderName: (id: number) => string }) => {
     if (!user) return null;
 
     return (
@@ -92,7 +94,7 @@ const UserDetailsDialog = ({ user, open, onOpenChange }: { user: any, open: bool
                 <div className="p-6 pt-0 grid grid-cols-1 gap-5 max-h-[60vh] overflow-y-auto">
                     <div><p className="text-sm text-muted-foreground">Name</p><p className="font-medium text-foreground">{user.name || 'N/A'}</p></div>
                     <div><p className="text-sm text-muted-foreground">Mobile No</p><p className="font-medium text-foreground">{user.mobile || 'N/A'}</p></div>
-                    <div><p className="text-sm text-muted-foreground">Team Leader</p><p className="font-medium text-foreground">{user.teamLeader || 'N/A'}</p></div>
+                    <div><p className="text-sm text-muted-foreground">Team Leader</p><p className="font-medium text-foreground">{getTeamLeaderName(user.team_leader)}</p></div>
                     <div><p className="text-sm text-muted-foreground">Created Date</p><p className="font-medium text-foreground">{user.created_date ? new Date(user.created_date).toLocaleDateString() : 'N/A'}</p></div>
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">Active Status</p>
@@ -122,9 +124,11 @@ export default function AssociatesPage() {
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [formData, setFormData] = useState<any>(initialFormData);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [teamLeaders, setTeamLeaders] = useState<any[]>([]);
 
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
 
   const [cardData, setcardData] = useState<any>(null);
@@ -137,6 +141,10 @@ export default function AssociatesPage() {
 
   const { toast } = useToast();
 
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("authToken");
@@ -146,29 +154,34 @@ export default function AssociatesPage() {
         return;
       }
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/associates/dashboard/`,
-          {
-            headers: {
-              Authorization: ` Token ${token}`,
-            },
-          }
-        );
+        const [associatesData, teamLeadersData] = await Promise.all([
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/associates/dashboard/`,
+            {
+              headers: {
+                Authorization: ` Token ${token}`,
+              },
+            }
+          ).then(res => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json();
+          }),
+          fetchTeamLeaders()
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
         setcardData({
-            total_visit: data.total_visits_leads,
-            interested: data.total_interested_leads,
-            not_interested: data.total_not_interested_leads,
-            other_location: data.total_other_location_leads,
-            not_picked: data.total_not_picked_leads,
-            total_earning: data.total_earning,
+            total_visit: associatesData.total_visits_leads,
+            interested: associatesData.total_interested_leads,
+            not_interested: associatesData.total_not_interested_leads,
+            other_location: associatesData.total_other_location_leads,
+            not_picked: associatesData.total_not_picked_leads,
+            total_earning: associatesData.total_earning,
         });
-        console.log("Dashboard data.my_staff:", data.my_staff);        console.log("Sample user structure:", data.my_staff?.[0]);
-        const usersWithSelfUser = data.my_staff?.map((user: any) => ({ ...user, self_user: user.self_user || { user_active: user.user_active !== false } })) || []; setUsers(usersWithSelfUser);
+        
+        const usersWithSelfUser = associatesData.my_staff?.map((user: any) => ({ ...user, self_user: user.self_user || { user_active: user.user_active !== false } })) || []; 
+        setUsers(usersWithSelfUser);
+        setTeamLeaders(teamLeadersData);
+
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -177,8 +190,13 @@ export default function AssociatesPage() {
     };
 
     fetchData();
-
   }, []);
+
+  const getTeamLeaderName = (id: number) => {
+    const leader = teamLeaders.find(tl => tl.id === id);
+    return leader ? leader.name : 'N/A';
+  };
+
 
   const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -429,97 +447,174 @@ export default function AssociatesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-base md:text-sm">SR. NO</TableHead>
-                  <TableHead className="text-base md:text-sm">Name</TableHead>
-                  <TableHead className="hidden sm:table-cell text-base md:text-sm">Team Lead</TableHead>
-                  <TableHead className="hidden md:table-cell text-base md:text-sm">Mobile No</TableHead>
-                  <TableHead className="hidden lg:table-cell text-base md:text-sm">Created Date</TableHead>
-                  <TableHead className="text-base md:text-sm">Leads</TableHead>
-                  <TableHead className="text-base md:text-sm">Active/Non-Active</TableHead>
-                  <TableHead className="text-base md:text-sm">Earn</TableHead>
-                  <TableHead className="text-base md:text-sm">Add Sell</TableHead>
-                  <TableHead className="text-right text-base md:text-sm">Actions</TableHead>
+                  <TableHead>S.N.</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden md:table-cell">Team Lead</TableHead>
+                  <TableHead className="hidden md:table-cell">Mobile No</TableHead>
+                  <TableHead className="hidden lg:table-cell">Created Date</TableHead>
+                  <TableHead className="hidden lg:table-cell">Leads</TableHead>
+                  <TableHead className="hidden lg:table-cell">Active/Non-Active</TableHead>
+                  <TableHead className="hidden lg:table-cell">Earn</TableHead>
+                  <TableHead className="hidden lg:table-cell">Add Sell</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user, index) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="text-base md:text-sm">{index + 1}</TableCell>
-                    <TableCell className="font-medium text-base md:text-sm">{user.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-base md:text-sm">{user.teamLeader}</TableCell>
-                    <TableCell className="hidden md:table-cell text-base md:text-sm">{user.mobile}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-base md:text-sm">
-                      {user.created_date ? new Date(user.created_date).toLocaleDateString() : 'N/A'}
-                    </TableCell>
-                    <TableCell className="text-base md:text-sm">
+                  <React.Fragment key={user.id}>
+                    <TableRow data-state={expandedRowId === user.id && 'selected'}>
+                      <TableCell>
+                        <div className="lg:hidden">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-green-600"
+                            onClick={() => toggleRow(user.id)}
+                          >
+                            {expandedRowId === user.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <div className="hidden lg:block">{index + 1}</div>
+                      </TableCell>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{getTeamLeaderName(user.team_leader)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{user.mobile}</TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {user.created_date ? new Date(user.created_date).toLocaleDateString() : 'N/A'}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Link href={`/superadmin/users/associates/view?associate_id=${user.id}`}>
                           <Button variant="link" size="sm" className="p-0 h-auto text-green-600">View</Button>
                         </Link>
-                    </TableCell>
-                    <TableCell className="text-base md:text-sm">
-                      <Switch
-                        checked={user.self_user?.user_active}
-                        onCheckedChange={(checked) =>
-                          handleToggle(user.id, checked)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className="text-base md:text-sm">
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <Switch
+                          checked={user.self_user?.user_active}
+                          onCheckedChange={(checked) => handleToggle(user.id, checked)}
+                        />
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Link href={`/superadmin/users/associates/earn?associate_id=${user.id}`}>
                           <Button variant="link" size="sm" className="p-0 h-auto text-blue-600">Earn</Button>
                         </Link>
-                    </TableCell>
-                     <TableCell className="text-base md:text-sm">
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Link href={`/superadmin/users/associates/add-sell?associate_id=${user.id}`}>
                           <Button variant="link" size="sm" className="p-0 h-auto text-purple-600">Add Sell</Button>
                         </Link>
-                    </TableCell>
-                    <TableCell className="text-right text-base md:text-sm">
-                       <div className="flex items-center justify-end gap-2">
-                            <div className="hidden sm:flex items-center gap-2">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                             <Button
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() => handleOpenEditForm(user)}
-                                                className="h-8 w-8"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                                <span className="sr-only">Edit</span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Edit</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                          
-
-                        <div className="sm:hidden">
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="hidden lg:flex items-center justify-end gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleOpenEditForm(user)}
+                                  className="h-8 w-8"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Edit</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="hidden md:flex lg:hidden items-center justify-end gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleOpenEditForm(user)}
+                                  className="h-8 w-8"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Edit</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="md:hidden">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                               <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                  <span className="sr-only">More</span>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">More</span>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
-                               <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
+                              <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
                                 <Pencil className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => {
-                                setSelectedUser(user);
-                                setIsDetailsOpen(true);
-                              }}>
-                                <Eye className="mr-2 h-4 w-4" /> View Details
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                      </TableCell>
+                    </TableRow>
+                    {expandedRowId === user.id && (
+                      <TableRow className="lg:hidden">
+                        <TableCell colSpan={10} className="p-0">
+                          <div className="p-4">
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="text-lg font-bold">{user.name}</div>
+                                  <div className="text-sm text-gray-500">{user.self_user?.user_active ? 'Active' : 'Inactive'}</div>
+                                </div>
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Team Lead:</span>
+                                    <span className="text-sm">{getTeamLeaderName(user.team_leader)}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Mobile:</span>
+                                    <span className="text-sm">{user.mobile || 'N/A'}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Created Date:</span>
+                                    <span className="text-sm">{user.created_date ? new Date(user.created_date).toLocaleDateString() : 'N/A'}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Leads:</span>
+                                    <Link href={`/superadmin/users/associates/view?associate_id=${user.id}`}>
+                                      <Button variant="link" size="sm" className="p-0 h-auto text-green-600">View</Button>
+                                    </Link>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Active Status:</span>
+                                    <Switch
+                                      checked={user.self_user?.user_active}
+                                      onCheckedChange={(checked) => handleToggle(user.id, checked)}
+                                    />
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Earn:</span>
+                                    <Link href={`/superadmin/users/associates/earn?associate_id=${user.id}`}>
+                                      <Button variant="link" size="sm" className="p-0 h-auto text-blue-600">Earn</Button>
+                                    </Link>
+                                  </div>
+                                  <div className="p-3 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Add Sell:</span>
+                                    <Link href={`/superadmin/users/associates/add-sell?associate_id=${user.id}`}>
+                                      <Button variant="link" size="sm" className="p-0 h-auto text-purple-600">Add Sell</Button>
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
                 {filteredUsers.length === 0 && (
                   <TableRow>
@@ -580,7 +675,7 @@ export default function AssociatesPage() {
 
     {editingUser && (
       <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md max-h-[80vh] overflow-y-auto hide-scrollbar">
           <DialogHeader>
             <DialogTitle>Edit Associate</DialogTitle>
             <DialogDescription>
@@ -607,9 +702,11 @@ export default function AssociatesPage() {
                         <SelectValue placeholder="Select Team Leader" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Pooja Mehta">Pooja Mehta</SelectItem>
-                        <SelectItem value="Anita Das">Anita Das</SelectItem>
-                        <SelectItem value="Rajiv Verma">Rajiv Verma</SelectItem>
+                        {teamLeaders.map((leader) => (
+                            <SelectItem key={leader.id} value={String(leader.id)}>
+                                {leader.name}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -631,6 +728,7 @@ export default function AssociatesPage() {
             user={selectedUser} 
             open={isDetailsOpen} 
             onOpenChange={setIsDetailsOpen}
+            getTeamLeaderName={getTeamLeaderName}
         />
     )}
     </div>

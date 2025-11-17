@@ -153,42 +153,7 @@ const ReviewDetailItem = ({ label, value }: { label: string, value: string | und
     </div>
 );
 
-const UserDetailsDialog = ({ user, open, onOpenChange }: { user: any, open: boolean, onOpenChange: (open: boolean) => void }) => {
-    if (!user) return null;
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[95vw] max-w-lg sm:max-w-2xl bg-background shadow-2xl rounded-xl p-0 border border-border overflow-hidden">
-                <DialogHeader className="p-6 pb-4 text-center bg-muted/20 border-b border-border">
-                    <DialogTitle className="text-2xl font-bold text-foreground">User Details</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">Essential details for <span className="font-semibold">{user.name}</span>.</DialogDescription>
-                </DialogHeader>
-                <div className="p-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                    <ReviewDetailItem label="Name" value={user.name} />
-                    <ReviewDetailItem label="Mobile No" value={user.mobile} />
-                    <ReviewDetailItem label="Email" value={user.email} />
-                    <ReviewDetailItem label="Admin" value={user.admin?.name || 'N/A'} />
-                    <ReviewDetailItem label="Created Date" value={user.user?.created_date ? new Date(user.user.created_date).toLocaleDateString() : 'N/A'} />
-                    <div className="flex justify-between items-center p-3 hover:bg-accent/50 transition-colors duration-200">
-                      <p className="text-sm font-medium text-muted-foreground">Active Status</p>
-                      <Switch
-                        id={`active-status-modal-${user.id}`}
-                        checked={user.user?.user_active}
-                        disabled
-                      />
-                    </div>
-                </div>
-                <DialogFooter className="p-4 border-t border-border bg-muted/20 rounded-b-xl flex-row justify-end gap-2">
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline" className="w-full sm:w-auto text-foreground hover:bg-primary hover:text-primary-foreground">
-                            Close
-                        </Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
 
 export default function TeamLeaderManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -198,8 +163,6 @@ export default function TeamLeaderManagementPage() {
   const [formData, setFormData] = useState<any>(initialFormData);
   const [editingUser, setEditingUser] = useState<any>(null);
 
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
@@ -351,10 +314,7 @@ export default function TeamLeaderManagementPage() {
     }
   }
 
-  const handleOpenDetailsView = (user: any) => {
-    setSelectedUser(user);
-    setIsDetailsOpen(true);
-  }
+
 
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
@@ -672,11 +632,11 @@ export default function TeamLeaderManagementPage() {
                 <TableRow>
                   <TableHead>S.N.</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Admin</TableHead>
+                  <TableHead className="hidden md:table-cell">Admin</TableHead>
                   <TableHead className="hidden md:table-cell">Mobile No</TableHead>
                   <TableHead className="hidden lg:table-cell">Created Date</TableHead>
-                  <TableHead className="hidden sm:table-cell">Leads Report</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Active/Non-Active</TableHead>
+                  <TableHead className="hidden lg:table-cell">Leads Report</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Active/Non-Active</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -686,8 +646,7 @@ export default function TeamLeaderManagementPage() {
                     <TableRow data-state={expandedRowId === user.id && 'selected'}>
                       <TableCell>
                         <>
-                          {/* Mobile: only button */}
-                          <div className="sm:hidden">
+                          <div className="lg:hidden">
                             <Button
                               size="icon"
                               variant="ghost"
@@ -697,19 +656,19 @@ export default function TeamLeaderManagementPage() {
                               {expandedRowId === user.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                             </Button>
                           </div>
-                          {/* sm+: only number */}
-                          <div className="hidden sm:block">
+                          {/* lg+: only number */}
+                          <div className="hidden lg:block">
                             {index + 1}.
                           </div>
                         </>
                       </TableCell>
                       <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{user.admin?.name || 'N/A'}</TableCell>
+                      <TableCell className="hidden md:table-cell">{user.admin?.name || 'N/A'}</TableCell>
                       <TableCell className="hidden md:table-cell">{user.mobile}</TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {user.user?.created_date ? new Date(user.user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">
+                      <TableCell className="hidden lg:table-cell">
                           <select className="form-select form-select-sm w-full bg-background border border-input rounded-md px-2 py-1 text-sm" onChange={(e) => e.target.value && window.location.assign(e.target.value)}>
                               <option value="">Select Type</option>
                               <option value={`/superadmin/reports/interested`}>Intrested</option>
@@ -719,7 +678,7 @@ export default function TeamLeaderManagementPage() {
                               <option value={`/superadmin/reports/visit`}>Visit</option>
                           </select>
                       </TableCell>
-                      <TableCell className="text-center hidden sm:table-cell">
+                      <TableCell className="text-center hidden lg:table-cell">
                         <Switch
                           checked={user.user?.user_active}
                           onCheckedChange={(checked) =>
@@ -728,7 +687,7 @@ export default function TeamLeaderManagementPage() {
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                         <div className="hidden sm:flex items-center justify-end gap-2">
+                         <div className="hidden lg:flex items-center justify-end gap-2">
                           <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -746,25 +705,30 @@ export default function TeamLeaderManagementPage() {
                                   <p>Edit</p>
                                 </TooltipContent>
                               </Tooltip>
-                               <Tooltip>
+                            </TooltipProvider>
+                        </div>
+                        {/* MD screen: Edit button only */}
+                        <div className="hidden md:flex lg:hidden items-center justify-end gap-2">
+                          <TooltipProvider>
+                              <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => handleOpenDetailsView(user)}
-                                    className="h-8 w-8"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                    <span className="sr-only">View Details</span>
-                                  </Button>
-                                </TooltipTrigger>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => handleOpenEditForm(user)}
+                                        className="h-8 w-8"
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                        <span className="sr-only">Edit</span>
+                                    </Button>
+                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>View Details</p>
+                                  <p>Edit</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                         </div>
-                         <div className="sm:hidden">
+                         <div className="md:hidden">
                              <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -782,7 +746,7 @@ export default function TeamLeaderManagementPage() {
                       </TableCell>
                     </TableRow>
                     {expandedRowId === user.id && (
-                      <TableRow className="sm:hidden">
+                      <TableRow className="lg:hidden">
                         <TableCell colSpan={8} className="p-0">
                           <div className="p-4">
                             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -823,7 +787,7 @@ export default function TeamLeaderManagementPage() {
                                       <FileText className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
                                       <span className="text-sm font-medium">Leads Report:</span>
                                     </div>
-                                    <select className="text-sm ml-auto md:ml-0 bg-background border border-input rounded-md px-2 py-1" onChange={(e) => e.target.value && window.location.assign(e.target.value)}>
+                                    <select className="text-sm w-full bg-background border border-input rounded-md px-2 py-1" onChange={(e) => e.target.value && window.location.assign(e.target.value)}>
                                         <option value="">Select Type</option>
                                         <option value={`/superadmin/reports/interested`}>Intrested</option>
                                         <option value={`/superadmin/reports/not-interested`}>Not Interested</option>
@@ -999,7 +963,7 @@ export default function TeamLeaderManagementPage() {
 
     {editingUser && (
       <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="w-[95vw] sm:max-w-lg rounded-xl">
+        <DialogContent className="w-[95vw] sm:max-w-lg max-h-[80vh] overflow-y-auto hide-scrollbar rounded-xl">
           <DialogHeader className="p-6 pb-4 text-center bg-muted/20 border-b border-border">
             <DialogTitle className="text-2xl font-bold text-foreground">Edit Team Leader</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -1032,13 +996,7 @@ export default function TeamLeaderManagementPage() {
       </Dialog>
     )}
       
-      {selectedUser && (
-        <UserDetailsDialog 
-            user={selectedUser} 
-            open={isDetailsOpen} 
-            onOpenChange={setIsDetailsOpen}
-        />
-      )}
+
     </div>
   );
 };

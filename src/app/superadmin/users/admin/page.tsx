@@ -599,7 +599,7 @@ export default function AdminManagementPage() {
     link?: string;
   }) => {
     const cardContent = (
-      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300 h-28 w-28 flex-shrink-0 sm:h-auto sm:w-auto">
+      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300 h-28 py-2 w-50 flex-shrink-0 sm:h-auto sm:w-auto">
         <CardContent className="p-3 flex flex-col  items-center justify-center text-center">
           <motion.div
             initial={{ scale: 0 }}

@@ -47,7 +47,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus ,History as HistoryIcons, HistoryIcon } from 'lucide-react';
+import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus , HistoryIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
@@ -271,32 +271,8 @@ export default function PendingFollowupsPage() {
 
   return (
     <TooltipProvider>
-    <div className="space-y-6 flex flex-col h-full">
-      <div className="flex items-center justify-between">
-        <Link href="/superadmin/users/admin">
-            <Button variant="outline">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-            </Button>
-        </Link>
-      </div>
-
-      <div className="space-y-4">
-        <form className="grid grid-cols-2 md:grid-cols-3 gap-4 items-end">
-          <div className="space-y-2">
-            <Label htmlFor="start_date">Start Date</Label>
-            <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="end_date">End Date</Label>
-            <Input id="end_date" name="end_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} />
-          </div>
-          <Button type="submit" className="self-end">
-            <FileDown className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        </form>
-
+    <div className="space-y-6 flex flex-col h-full pt-6">
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-start gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -308,6 +284,39 @@ export default function PendingFollowupsPage() {
               className="pl-10"
             />
         </div>
+        <form className="hidden lg:flex lg:items-end lg:gap-4">
+          <div className="space-y-2 w-48">
+            <Label htmlFor="start_date">Start Date</Label>
+            <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
+          </div>
+          <div className="space-y-2 w-48">
+            <Label htmlFor="end_date">End Date</Label>
+            <Input id="end_date" name="end_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
+          </div>
+          <Button type="submit" className="h-9 w-24">
+            <FileDown className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+        </form>
+      </div>
+
+      <div className="space-y-4">
+        <form className="lg:hidden grid grid-cols-3 gap-14 md:gap-0 items-end">
+          <div className="space-y-2 w-28 md:w-48">
+            <Label htmlFor="start_date">Start Date</Label>
+            <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
+          </div>
+          <div className="space-y-2 w-28 md:w-48">
+            <Label htmlFor="end_date">End Date</Label>
+            <Input id="end_date" name="end_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
+          </div>
+          <div className="md:w-auto w-12">
+            <Button type="submit" className="h-9 bg-orange-500 hover:bg-orange-600 text-white md:w-auto w-12 px-2 md:px-3">
+              <FileDown className="mr-0 md:mr-2 h-4 w-4" />
+              <span className="hidden md:inline">Export</span>
+            </Button>
+          </div>
+        </form>
       </div>
 
 

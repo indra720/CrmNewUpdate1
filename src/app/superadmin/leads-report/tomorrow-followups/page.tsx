@@ -47,7 +47,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus ,History as HistoryIcons, HistoryIcon } from 'lucide-react';
+import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus , HistoryIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
@@ -302,11 +302,11 @@ export default function TomorrowFollowupsPage() {
 
       <div className="space-y-4">
         <form className="lg:hidden grid grid-cols-3 gap-14 md:gap-0 items-end">
-          <div className="space-y-2 w-28 md:w-40">
+          <div className="space-y-2 w-28 md:w-48">
             <Label htmlFor="start_date">Start Date</Label>
             <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
           </div>
-          <div className="space-y-2 w-28 md:w-40">
+          <div className="space-y-2 w-28 md:w-48">
             <Label htmlFor="end_date">End Date</Label>
             <Input id="end_date" name="end_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
           </div>

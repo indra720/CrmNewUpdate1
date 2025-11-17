@@ -85,9 +85,7 @@ const LeadsPage = () => {
       header: "S.N.",
       cell: ({ row }) => (
         <>
-          <div className="md:hidden">
-            {" "}
-            {/* Mobile: Plus icon */}
+          <div className="md:hidden"> {/* Mobile: Plus icon */}
             <Button
               size="icon"
               variant="ghost"
@@ -101,9 +99,7 @@ const LeadsPage = () => {
               )}
             </Button>
           </div>
-          <div className="hidden md:block">
-            {" "}
-            {/* Desktop: S.N. */}
+          <div className="hidden md:block"> {/* Desktop: S.N. */}
             {row.index + 1}
           </div>
         </>
@@ -389,73 +385,71 @@ useEffect(()=>{
                             ))}
                           </TableRow>
                           {expandedRowId === row.original.id && (
-                            <TableRow className="sm:hidden">
+                            <TableRow className="md:hidden">
                               <TableCell colSpan={table.getAllColumns().length} className="p-0">
                                 <div className="p-4">
-                                  <Card className="border-0 shadow-sm">
-                                    <CardHeader className="p-4 pb-2">
-                                      <div className="flex items-center gap-4">
-                                        <Avatar className="h-12 w-12">
-                                          <AvatarImage src={`https://avatar.vercel.sh/${row.original.name}.png`} alt={row.original.name} />
-                                          <AvatarFallback className="bg-primary text-primary-foreground">{row.original.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1">
-                                          <p className="text-lg font-semibold text-foreground">{row.original.name}</p>
-                                          <p className="text-sm text-muted-foreground capitalize">{row.original.status}</p>
+                                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                    <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                      <div className="text-lg font-bold">{row.original.name}</div>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                        {/* Row 1: Status | Call */}
+                                        <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                          <span className="text-sm font-medium">Status:</span>
+                                          <span className="text-sm capitalize ml-auto">{row.original.status}</span>
+                                        </div>
+                                        <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                          <span className="text-sm font-medium">Call:</span>
+                                          <a href={`tel:${row.original.call}`} className="text-sm font-medium hover:underline">
+                                            {row.original.call}
+                                          </a>
+                                        </div>
+                                        {/* Row 2: WhatsApp | Change Status */}
+                                        <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                          <span className="text-sm font-medium">WhatsApp:</span>
+                                          <a
+                                            href={`https://wa.me/91${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm font-medium hover:underline"
+                                          >
+                                            Message
+                                          </a>
+                                        </div>
+                                        <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                          <span className="text-sm font-medium">Change Status:</span>
+                                          <div className="flex-1 max-w-[60%]">
+                                              <DropdownMenu>
+                                                  <DropdownMenuTrigger asChild>
+                                                      <Button variant="outline" size="sm" className="w-full justify-start h-8">
+                                                      {row.original.status}
+                                                      </Button>
+                                                  </DropdownMenuTrigger>
+                                                  <DropdownMenuContent align="start" className="w-48">
+                                                      {[
+                                                      "New",
+                                                      "Contacted",
+                                                      "Interested",
+                                                      "Not Interested",
+                                                      "Lost",
+                                                      "Visit",
+                                                      ].map((option) => (
+                                                      <DropdownMenuItem
+                                                          key={option}
+                                                          onSelect={() => console.log(`Changed to ${option}`)}
+                                                          className="capitalize"
+                                                      >
+                                                          {option}
+                                                      </DropdownMenuItem>
+                                                      ))}
+                                                  </DropdownMenuContent>
+                                              </DropdownMenu>
+                                          </div>
                                         </div>
                                       </div>
-                                    </CardHeader>
-                                    <CardContent className="p-4 space-y-3">
-                                      <div className="flex items-center gap-3 p-2 rounded-md bg-background">
-                                        <Phone className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                                        <a href={`tel:${row.original.call}`} className="text-sm font-medium hover:underline">
-                                          {row.original.call}
-                                        </a>
-                                      </div>
-                                      <div className="flex items-center gap-3 p-2 rounded-md bg-background">
-                                        <MessageSquare className="h-4 w-4 text-green-500 flex-shrink-0" />
-                                        <a
-                                          href={`https://wa.me/91${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-sm font-medium hover:underline"
-                                        >
-                                          Message on WhatsApp
-                                        </a>
-                                      </div>
-                                      <div className="flex items-center gap-3 p-2 rounded-md bg-background">
-                                        <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                        <div className="flex-1">
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <Button variant="outline" size="sm" className="w-full justify-start h-8">
-                                                {row.original.status}
-                                              </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="start" className="w-48">
-                                              {[
-                                                "New",
-                                                "Contacted",
-                                                "Interested",
-                                                "Not Interested",
-                                                "Lost",
-                                                "Visit",
-                                              ].map((option) => (
-                                                <DropdownMenuItem
-                                                  key={option}
-                                                  onSelect={() => console.log(`Changed to ${option}`)}
-                                                  className="capitalize"
-                                                >
-                                                  {option}
-                                                </DropdownMenuItem>
-                                              ))}
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
-                                        </div>
-                                      </div>
-
-                                    </CardContent>
-                                  </Card>
+                                    </div>
+                                  </div>
                                 </div>
                               </TableCell>
                             </TableRow>

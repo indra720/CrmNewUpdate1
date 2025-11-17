@@ -165,7 +165,7 @@ export const STAFF_SIDENAV_ITEMS = [
     },
     {
         title: 'Productivity',
-        path: '/staff/productivity/staff',
+        path: '/staff/productivity',
         icon: <AreaChart className="h-5 w-5" />,
     },
     {

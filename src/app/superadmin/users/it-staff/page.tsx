@@ -19,10 +19,33 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search } from "lucide-react";
+import {
+  Pencil,
+  Search,
+  Plus,
+  Minus,
+  MoreVertical,
+} from "lucide-react";
 import { AttendanceDialog } from "./attendance-dialog";
 import { toggleUserActiveStatus } from "@/lib/api";
 import { toast, useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 export default function ItStaffPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -32,6 +55,80 @@ export default function ItStaffPage() {
   const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(
     null
   );
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+
+  const { toast } = useToast();
+
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
+
+  const handleOpenEditForm = (user: any) => {
+    setEditingUser(user);
+    setIsEditFormOpen(true);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditingUser({ ...editingUser, [name]: value });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Authentication token not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/it-staff/edit/${editingUser.id}/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+          body: JSON.stringify({
+            name: editingUser.name,
+            mobile: editingUser.mobile,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update IT staff.");
+      }
+
+      const updatedUser = await response.json();
+      setUsers(
+        users.map((u) => (u.id === editingUser.id ? { ...u, ...updatedUser } : u))
+      );
+      toast({
+        title: "Success",
+        description: "IT Staff updated successfully.",
+        className: "bg-green-500 text-white",
+      });
+      setIsEditFormOpen(false);
+      setEditingUser(null);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update IT staff.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchUsers = async () => {
     const token = localStorage.getItem("authToken");
     try {
@@ -132,60 +229,121 @@ export default function ItStaffPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-base md:text-sm">SR. NO</TableHead>
-                  <TableHead className="text-base md:text-sm">Name</TableHead>
-                  <TableHead className="text-base md:text-sm">
-                    Mobile No
-                  </TableHead>
-                  <TableHead className="text-center text-base md:text-sm">
-                    Active / Non-Active
-                  </TableHead>
-                  <TableHead className="text-center text-base md:text-sm">
-                    Attendance
-                  </TableHead>
+                  <TableHead>S.N.</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden md:table-cell">Mobile No</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">Active / Non-Active</TableHead>
+                  <TableHead className="text-center hidden sm:table-cell">Attendance</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.length > 0 ? (
-                  users.map((user, index) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="text-base md:text-sm">
-                        {index + 1}
-                      </TableCell>
-                      <TableCell className="font-medium text-base md:text-sm">
-                        {user.name}
-                      </TableCell>
-                      <TableCell className="text-base md:text-sm">
-                        {user.mobile}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Switch
-                          checked={user.active}
-                          onCheckedChange={() => handleToggle(user.staff_id)}
-                          aria-label={`Toggle status for ${user.name}`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUserId(user.id);
-                            setSelectedUserEmail(user.email); // ✅ YE BHI ADD KARO
-                            setIsAttendanceDialogOpen(true);
-                          }}
-                        >
-                          Attendance
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user, index) => (
+                    <React.Fragment key={user.id}>
+                      <TableRow data-state={expandedRowId === user.id && "selected"}>
+                        <TableCell>
+                          <div className="md:hidden">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-green-600"
+                              onClick={() => toggleRow(user.id)}
+                            >
+                              {expandedRowId === user.id ? <Minus /> : <Plus />}
+                            </Button>
+                          </div>
+                          <div className="hidden md:block">{index + 1}</div>
+                        </TableCell>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell className="hidden md:table-cell">{user.mobile}</TableCell>
+                        <TableCell className="hidden md:table-cell text-center">
+                          <Switch
+                            checked={user.active}
+                            onCheckedChange={(checked) => handleToggle(user.staff_id, checked)}
+                            aria-label={`Toggle status for ${user.name}`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center hidden sm:table-cell">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setSelectedUserEmail(user.email);
+                              setIsAttendanceDialogOpen(true);
+                            }}
+                          >
+                            Attendance
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="hidden md:flex items-center justify-end gap-2">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handleOpenEditForm(user)}
+                                    className="h-8 w-8"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="sr-only">Edit</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Edit</p></TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          <div className="md:hidden">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {expandedRowId === user.id && (
+                        <TableRow className="md:hidden">
+                          <TableCell colSpan={6} className="p-0">
+                            <div className="p-4">
+                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                  <div className="text-lg font-bold">{user.name}</div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Mobile No:</span>
+                                    <span className="text-sm">{user.mobile}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Active Status:</span>
+                                    <Switch
+                                      checked={user.active}
+                                      onCheckedChange={(checked) => handleToggle(user.staff_id, checked)}
+                                      aria-label={`Toggle status for ${user.name}`}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="h-24 text-center text-base md:text-sm"
-                    >
+                    <TableCell colSpan={6} className="h-24 text-center">
                       No records found.
                     </TableCell>
                   </TableRow>
@@ -195,6 +353,51 @@ export default function ItStaffPage() {
           </div>
         </CardContent>
       </Card>
+
+      {editingUser && (
+        <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+          <DialogContent className="w-[95vw] sm:max-w-md max-h-[80vh] overflow-y-auto hide-scrollbar">
+            <DialogHeader>
+              <DialogTitle>Edit IT Staff</DialogTitle>
+              <DialogDescription>
+                Update the details for {editingUser.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  value={editingUser.name}
+                  onChange={handleEditFormChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-mobile">Mobile</Label>
+                <Input
+                  id="edit-mobile"
+                  name="mobile"
+                  value={editingUser.mobile}
+                  onChange={handleEditFormChange}
+                  required
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditFormOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <AttendanceDialog
         userId={selectedUserId}

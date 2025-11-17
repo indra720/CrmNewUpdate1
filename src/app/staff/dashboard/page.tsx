@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Search, Phone, MessageSquare, PlusCircle, User, Flag, Mail, Filter } from "lucide-react";
+import { Search, Phone, MessageSquare, PlusCircle, User, Flag, Mail, Filter, Plus, Minus } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +32,7 @@ interface Project {
 const KpiCard = ({ title, value, icon: Icon, color, link }: { title: string, value: number, icon: React.ElementType, color: string, link?: string }) => {
     const cardContent = (
       <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300">
-        <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2">
+        <CardContent className="p-3 lg:p-2 flex flex-col items-center justify-center text-center gap-1">
             <div className={`text-3xl ${color}`}>
                 <Icon className="h-8 w-8" />
             </div>
@@ -61,6 +61,7 @@ export default function StaffDashboardPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [addLeadModalOpen, setAddLeadModalOpen] = useState(false);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [kpiCounts, setKpiCounts] = useState({
     total_lead: 15,
     total_visits: 2,
@@ -69,6 +70,10 @@ export default function StaffDashboardPage() {
     other_location: 1,
     not_picked: 2,
   });
+
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
   
   const [formData, setFormData] = useState({
     name: "",
@@ -176,7 +181,7 @@ export default function StaffDashboardPage() {
       <Card>
         <CardContent className="p-6">
             <div className="flex flex-wrap gap-4 justify-between items-end">
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 lg:flex-row lg:items-end">
                     <div className="space-y-2">
                         <Label htmlFor="start_date">Start Date</Label>
                         <Input
@@ -184,7 +189,7 @@ export default function StaffDashboardPage() {
                         id="start_date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full sm:w-auto"
+                        className="w-full lg:w-auto"
                         />
                     </div>
                     <div className="space-y-2">
@@ -194,13 +199,13 @@ export default function StaffDashboardPage() {
                         id="end_date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full sm:w-auto"
+                        className="w-full lg:w-auto"
                         />
                     </div>
                 </div>
                 <Button>
-                    <Filter className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Filter</span>
+                    <Filter className="h-4 w-4" />
+                    <span>Filter</span>
                 </Button>
             </div>
         </CardContent>
@@ -226,47 +231,54 @@ export default function StaffDashboardPage() {
                 <Button variant="outline">Auto Assign</Button>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>SN</TableHead>
+                  <TableHead>S.N.</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Call</TableHead>
-                  <TableHead>Whatsapp</TableHead>
-                  <TableHead>Change Status</TableHead>
-                  <TableHead>Project</TableHead>
+                  <TableHead className="hidden md:table-cell">Call</TableHead>
+                  <TableHead className="hidden md:table-cell">Whatsapp</TableHead>
+                  <TableHead className="hidden lg:table-cell">Project</TableHead>
+                  <TableHead className="text-right">Change Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLeads.map((lead, index) => (
-                  <TableRow key={lead.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{lead.name}</TableCell>
-                    <TableCell>
-                      <a href={`tel:+91${lead.call}`} className="text-blue-600">
-                        <Phone />
-                      </a>
-                    </TableCell>
-                    <TableCell>
-                      <a
-                        href={`https://wa.me/+91${lead.call}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-600"
-                      >
-                        <MessageSquare />
-                      </a>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        onClick={() => openEditModal(lead)}
-                      >
-                        {lead.status}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
+                  <React.Fragment key={lead.id}>
+                    <TableRow data-state={expandedRowId === lead.id && 'selected'}>
+                      <TableCell>
+                        <div className="lg:hidden">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-green-600"
+                            onClick={() => toggleRow(lead.id)}
+                          >
+                            {expandedRowId === lead.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <div className="hidden lg:block">
+                          {index + 1}.
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">{lead.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <a href={`tel:+91${lead.call}`} className="text-blue-600">
+                          <Phone />
+                        </a>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <a
+                          href={`https://wa.me/+91${lead.call}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600"
+                        >
+                          <MessageSquare />
+                        </a>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                        <Select>
                         <SelectTrigger>
                             <SelectValue placeholder="Select" />
@@ -277,8 +289,66 @@ export default function StaffDashboardPage() {
                             ))}
                         </SelectContent>
                        </Select>
-                    </TableCell>
-                  </TableRow>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          onClick={() => openEditModal(lead)}
+                        >
+                          {lead.status}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {expandedRowId === lead.id && (
+                      <TableRow className="lg:hidden">
+                        <TableCell colSpan={6} className="p-0">
+                          <div className="p-4">
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                <div className="text-lg font-bold">{lead.name}</div>
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Call:</span>
+                                    <a href={`tel:+91${lead.call}`} className="text-blue-600">
+                                      <Phone />
+                                    </a>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Whatsapp:</span>
+                                    <a
+                                      href={`https://wa.me/+91${lead.call}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-green-600"
+                                    >
+                                      <MessageSquare />
+                                    </a>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Project:</span>
+                                    <div className="w-1/2">
+                                      <Select>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {projects.map((p) => (
+                                                <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>
@@ -339,7 +409,7 @@ export default function StaffDashboardPage() {
       </Dialog>
       
        <Dialog open={addLeadModalOpen} onOpenChange={setAddLeadModalOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="max-w-[95vw] mx-auto sm:max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
            <DialogHeader>
               <DialogTitle className="text-2xl font-bold">Create a New Lead</DialogTitle>
               <DialogDescription>Fill out the form below to add a new lead to the system.</DialogDescription>
@@ -422,7 +492,7 @@ export default function StaffDashboardPage() {
                     className="resize-none"
                   />
                 </div>
-                <DialogFooter className="md:col-span-2">
+                <DialogFooter className="md:col-span-2 gap-2">
                     <Button variant="outline" onClick={() => setAddLeadModalOpen(false)}>Cancel</Button>
                     <Button type="submit">Add Lead</Button>
                 </DialogFooter>

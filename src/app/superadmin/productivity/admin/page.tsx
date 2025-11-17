@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar, Plus, Minus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const ProductivityAdminPage = () => {
   const [startDate, setStartDate] = useState('');
@@ -119,98 +120,93 @@ const ProductivityAdminPage = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto w-full border rounded-lg">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-center">SN</TableHead>
+                  <TableHead>S.N.</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="text-center">
-                    <span className="sm:hidden">Calls</span>
-                    <span className="hidden sm:inline">Total Calls</span>
-                  </TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Interested</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Not Interested</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Other Location</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Lost</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Visit</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Interested %</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Visit %</TableHead>
-                  <TableHead className="text-center sm:hidden">Details</TableHead>
+                  <TableHead className="hidden md:table-cell">Total Calls</TableHead>
+                  <TableHead className="hidden md:table-cell">Interested</TableHead>
+                  <TableHead className="hidden md:table-cell">Visit</TableHead>
+                  <TableHead className="hidden lg:table-cell">Not Interested</TableHead>
+                  <TableHead className="hidden lg:table-cell">Other Location</TableHead>
+                  <TableHead className="hidden lg:table-cell">Lost</TableHead>
+                  <TableHead className="hidden lg:table-cell">Interested %</TableHead>
+                  <TableHead className="text-right">Visit %</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {adminData.map((row, i) => (
                   <React.Fragment key={row.id}>
-                    <TableRow>
-                      <TableCell className="text-center">{i + 1}</TableCell>
-                      <TableCell className="font-medium">{row.name}</TableCell>
-                      <TableCell className="text-center">{row.total_calls}</TableCell>
-                      <TableCell className="text-center text-blue-600 hidden sm:table-cell">{row.interested}</TableCell>
-                      <TableCell className="text-center text-red-500 hidden sm:table-cell">{row.not_interested}</TableCell>
-                      <TableCell className="text-center hidden sm:table-cell">{row.other_location}</TableCell>
-                      <TableCell className="text-center hidden sm:table-cell">{row.lost}</TableCell>
-                      <TableCell className="text-center text-green-600 hidden sm:table-cell">{row.visit}</TableCell>
-                      <TableCell className="text-center font-medium hidden sm:table-cell">{row.interested_percentage}%</TableCell>
-                      <TableCell className="text-center font-medium hidden sm:table-cell">{row.visit_percentage}%</TableCell>
-                      <TableCell className="text-center sm:hidden">
-                        <button
-                          onClick={() => toggleRow(row.id)}
-                          className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          {expandedRowId === row.id ? (
-                            <Minus className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Plus className="h-4 w-4 text-green-500" />
-                          )}
-                        </button>
+                    <TableRow data-state={expandedRowId === row.id && 'selected'}>
+                      <TableCell>
+                        <div className="lg:hidden">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-green-600"
+                            onClick={() => toggleRow(row.id)}
+                          >
+                            {expandedRowId === row.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <div className="hidden lg:block">
+                          {i + 1}.
+                        </div>
                       </TableCell>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{row.total_calls}</TableCell>
+                      <TableCell className="hidden md:table-cell">{row.interested}</TableCell>
+                      <TableCell className="hidden md:table-cell">{row.visit}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.not_interested}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.other_location}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.lost}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.interested_percentage}%</TableCell>
+                      <TableCell className="text-right">{row.visit_percentage}%</TableCell>
                     </TableRow>
                     {expandedRowId === row.id && (
-                      <TableRow className="sm:hidden">
-                        <TableCell colSpan={4} className="p-0">
-                          <div className="p-4 bg-gray-50">
+                      <TableRow className="lg:hidden">
+                        <TableCell colSpan={10} className="p-0">
+                          <div className="p-4">
                             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                              <div className="grid grid-cols-2 divide-x divide-gray-200">
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Total Leads</div>
-                                  <div className="text-lg font-semibold mt-1">{row.total_leads}</div>
-                                </div>
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Interested</div>
-                                  <div className="text-lg font-semibold mt-1">{row.interested}</div>
-                                </div>
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Not Interested</div>
-                                  <div className="text-lg font-semibold mt-1">{row.not_interested}</div>
-                                </div>
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Other Location</div>
-                                  <div className="text-lg font-semibold mt-1">{row.other_location}</div>
-                                </div>
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Not Picked</div>
-                                  <div className="text-lg font-semibold mt-1">{row.not_picked}</div>
-                                </div>
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Lost</div>
-                                  <div className="text-lg font-semibold mt-1">{row.lost}</div>
-                                </div>
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Visit</div>
-                                  <div className="text-lg font-semibold mt-1">{row.visit}</div>
-                                </div>
-                                <div className="p-3 border-b border-gray-200">
-                                  <div className="text-sm text-gray-600">Total Calls</div>
-                                  <div className="text-lg font-semibold mt-1">{row.total_calls}</div>
-                                </div>
-                                <div className="p-3">
-                                  <div className="text-sm text-gray-600">Interested %</div>
-                                  <div className="text-lg font-semibold mt-1">{row.interested_percentage}%</div>
-                                </div>
-                                <div className="p-3">
-                                  <div className="text-sm text-gray-600">Visit %</div>
-                                  <div className="text-lg font-semibold mt-1">{row.visit_percentage}%</div>
+                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                <div className="text-lg font-bold">{row.name}</div>
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Total Calls:</span>
+                                    <span className="text-sm capitalize ml-auto">{row.total_calls}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Interested:</span>
+                                    <span className="text-sm ml-auto">{row.interested}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Not Interested:</span>
+                                    <span className="text-sm ml-auto">{row.not_interested}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Other Location:</span>
+                                    <span className="text-sm ml-auto">{row.other_location}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Lost:</span>
+                                    <span className="text-sm ml-auto">{row.lost}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Visit:</span>
+                                    <span className="text-sm ml-auto">{row.visit}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Interested %:</span>
+                                    <span className="text-sm ml-auto">{row.interested_percentage}%</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Visit %:</span>
+                                    <span className="text-sm ml-auto">{row.visit_percentage}%</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -220,24 +216,29 @@ const ProductivityAdminPage = () => {
                     )}
                   </React.Fragment>
                 ))}
+                {(adminData.length === 0) && (
+                  <TableRow>
+                    <TableCell colSpan={10} className="h-24 text-center">
+                      No matching records found
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
               <TableFooter>
                 <TableRow className="bg-muted/50 font-semibold">
-                  <TableCell>Total</TableCell>
-                  <TableCell className="text-center">{adminData.length}</TableCell>
-                  <TableCell className="text-center">{total.calls}</TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">{total.interested}</TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">{total.not_interested}</TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">{total.other_location}</TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">{total.lost}</TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">{total.visit}</TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">
+                  <TableCell colSpan={2}>Total</TableCell>
+                  <TableCell className="hidden md:table-cell">{total.calls}</TableCell>
+                  <TableCell className="hidden md:table-cell">{total.interested}</TableCell>
+                  <TableCell className="hidden md:table-cell">{total.visit}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{total.not_interested}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{total.other_location}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{total.lost}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     {total.calls > 0 ? Math.round((total.interested / total.calls) * 100) : 0}%
                   </TableCell>
-                  <TableCell className="text-center hidden sm:table-cell">
+                  <TableCell className="text-right">
                     {total.calls > 0 ? Math.round((total.visit / total.calls) * 100) : 0}%
                   </TableCell>
-                  <TableCell className="sm:hidden"></TableCell>
                 </TableRow>
               </TableFooter>
             </Table>

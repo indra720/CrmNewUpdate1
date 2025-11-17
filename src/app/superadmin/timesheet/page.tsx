@@ -126,96 +126,80 @@ const TimeSheetPage = () => {
 
       <Card className="shadow-lg rounded-2xl">
         <CardContent>
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16 text-center">S.N.</TableHead>
+                  <TableHead>S.N.</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Email</TableHead>
-                  <TableHead className="hidden md:table-cell">Activity Type</TableHead>
-                  <TableHead className="hidden sm:table-cell">User Type</TableHead>
-                  <TableHead className="hidden md:table-cell">IP Address</TableHead>
-                  <TableHead className="w-32 text-center">Created Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead className="hidden md:table-cell">User Type</TableHead>
+                  <TableHead className="hidden lg:table-cell">Activity Type</TableHead>
+                  <TableHead className="hidden lg:table-cell">IP Address</TableHead>
+                  <TableHead className="text-right">Created Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLogs.length > 0 ? (
                   filteredLogs.map((log, index) => (
                     <React.Fragment key={log.id}>
-                      <TableRow className="hover:bg-muted/50 transition-colors">
-                        <TableCell className="text-center">
-                          <div className="sm:hidden">
+                      <TableRow data-state={expandedRowId === log.id && 'selected'}>
+                        <TableCell>
+                          <div className="lg:hidden">
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="text-green-600 h-8 w-8"
+                              className="text-green-600"
                               onClick={() => toggleRow(log.id)}
                             >
-                              {expandedRowId === log.id ? (
-                                <Minus className="h-4 w-4" />
-                              ) : (
-                                <Plus className="h-4 w-4" />
-                              )}
+                              {expandedRowId === log.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                             </Button>
                           </div>
-                          <div className="hidden sm:block">
-                            {((currentPage - 1) * itemsPerPage) + index + 1}
+                          <div className="hidden lg:block">
+                            {((currentPage - 1) * itemsPerPage) + index + 1}.
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium max-w-md truncate">
-                          {log.name || 'N/A'}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell max-w-md truncate">
-                          {log.email}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell max-w-md truncate">
-                          {log.activity_type}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell max-w-md truncate">
-                          {log.user_type}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell max-w-md truncate">
-                          {log.ip_address}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {formatDate(log.created_date)}
-                        </TableCell>
+                        <TableCell className="font-medium">{log.name || 'N/A'}</TableCell>
+                        <TableCell className="hidden md:table-cell">{log.email}</TableCell>
+                        <TableCell className="hidden md:table-cell">{log.user_type}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{log.activity_type}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{log.ip_address}</TableCell>
+                        <TableCell className="text-right">{formatDate(log.created_date)}</TableCell>
                       </TableRow>
-
                       {expandedRowId === log.id && (
-                        <TableRow className="sm:hidden">
+                        <TableRow className="lg:hidden">
                           <TableCell colSpan={7} className="p-0">
                             <div className="p-4">
                               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                                 <div className="p-4 flex items-center gap-4 border-b border-gray-200">
-                                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                    <UserIcon className="h-6 w-6 text-gray-500" />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <h3 className="font-bold text-base">{log.name || 'N/A'}</h3>
-                                  </div>
+                                  <div className="text-lg font-bold">{log.name || 'N/A'}</div>
                                 </div>
-                                <div className="p-4 space-y-3">
-                                  <div className="flex items-start gap-3">
-                                    <Mail className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                                    <span className="text-sm text-foreground">{log.email}</span>
-                                  </div>
-                                  <div className="flex items-start gap-3">
-                                    <UserIcon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                                    <span className="text-sm text-foreground">{log.user_type}</span>
-                                  </div>
-                                  <div className="flex items-start gap-3">
-                                    <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                                    <span className="text-sm text-foreground">{log.ip_address}</span>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-sm text-foreground">{formatDate(log.created_date)}</span>
-                                  </div>
-                                  <div className="flex items-start gap-3">
-                                    <UserIcon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                                    <p className="text-sm text-foreground leading-relaxed">{log.description}</p>
+                                <div className="overflow-hidden">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                      <span className="text-sm font-medium">Email:</span>
+                                      <span className="text-sm capitalize ml-auto">{log.email}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                      <span className="text-sm font-medium">User Type:</span>
+                                      <span className="text-sm ml-auto">{log.user_type}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                      <span className="text-sm font-medium">Activity Type:</span>
+                                      <span className="text-sm ml-auto">{log.activity_type}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                      <span className="text-sm font-medium">IP Address:</span>
+                                      <span className="text-sm ml-auto">{log.ip_address}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                      <span className="text-sm font-medium">Created Date:</span>
+                                      <span className="text-sm ml-auto">{formatDate(log.created_date)}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:col-span-2">
+                                      <span className="text-sm font-medium">Description:</span>
+                                      <p className="text-sm text-right ml-4">{log.description}</p>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
