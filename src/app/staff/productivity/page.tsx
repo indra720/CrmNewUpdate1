@@ -153,11 +153,8 @@ export default function ProductivityPage() {
   }
 
   function getCellBgColor(leads?: number) {
-    if (leads === undefined || leads === 0) return "bg-gray-100 border border-gray-200"; // Light gray for 0 leads
-    if (leads >= 15) return "bg-gradient-to-tr from-purple-500 to-blue-500 text-white shadow-lg"; // Dark purple-blue for 15+ leads
-    if (leads >= 10) return "bg-gradient-to-tr from-purple-400 to-blue-400 text-white shadow-md"; // Medium purple-blue for 10+ leads
-    if (leads >= 5) return "bg-gradient-to-tr from-purple-300 to-blue-300 text-gray-800 shadow-sm"; // Light purple-blue for 5+ leads
-    return "bg-gradient-to-tr from-purple-200 to-blue-200 text-gray-700"; // Very light purple-blue for 1-4 leads
+    if (leads === undefined || leads === 0) return "bg-red-500 text-white"; // Red for 0 leads
+    return "bg-green-500 text-white"; // Green for 1+ leads
   }
 
   const DayCell = ({ dayData }: { dayData: DayData }) => {
@@ -243,19 +240,19 @@ export default function ProductivityPage() {
                       <span>0 Leads</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-purple-200 to-blue-200 rounded"></div>
+                      <div className="w-4 h-4 bg-gradient-to-tr from-primary/40 to-secondary/40 rounded"></div>
                       <span>1-4 Leads</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-purple-300 to-blue-300 rounded"></div>
+                      <div className="w-4 h-4 bg-gradient-to-tr from-primary/60 to-secondary/60 rounded"></div>
                       <span>5-9 Leads</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-purple-400 to-blue-400 rounded"></div>
+                      <div className="w-4 h-4 bg-gradient-to-tr from-primary/80 to-secondary/80 rounded"></div>
                       <span>10-14 Leads</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-purple-500 to-blue-500 rounded"></div>
+                      <div className="w-4 h-4 bg-gradient-to-tr from-primary to-secondary rounded"></div>
                       <span>15+ Leads</span>
                     </div>
                   </div>

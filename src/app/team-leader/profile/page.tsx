@@ -29,13 +29,13 @@ export default function ProfilePage() {
         <div className="bg-muted/30 p-8 flex flex-col md:flex-row items-center gap-6">
             <Avatar className="h-24 w-24 border-4 border-background shadow-md">
                 <AvatarImage src={userAvatar?.imageUrl} data-ai-hint={userAvatar?.imageHint} />
-                <AvatarFallback>A</AvatarFallback>
+                <AvatarFallback>T</AvatarFallback>
             </Avatar>
             <div className="text-center md:text-left">
-                <h2 className="text-2xl font-bold">Admin User</h2>
+                <h2 className="text-2xl font-bold">Team Leader User</h2>
                 <p className="text-muted-foreground">{userEmail}</p>
                 <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground justify-center md:justify-start">
-                    <span className="flex items-center gap-1.5"><Briefcase className="h-4 w-4" /> Administrator</span>
+                    <span className="flex items-center gap-1.5"><Briefcase className="h-4 w-4" /> Team Leader</span>
                     <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> San Francisco, CA</span>
                 </div>
             </div>
@@ -49,11 +49,11 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1 border rounded-md p-3">
                     <Label className="text-sm">Full Name</Label>
-                    <p className="font-medium">Admin User</p>
+                    <p className="font-medium">Team Leader User</p>
                 </div>
                  <div className="space-y-1 border rounded-md p-3">
                     <Label className="text-sm">Role</Label>
-                    <p className="font-medium">Administrator</p>
+                    <p className="font-medium">Team Leader</p>
                 </div>
                 <div className="space-y-1 border rounded-md p-3">
                     <Label className="text-sm">Email Address</Label>

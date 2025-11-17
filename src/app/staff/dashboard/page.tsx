@@ -1,17 +1,17 @@
-
 'use client';
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Search, Phone, MessageSquare, PlusCircle, User, Flag, Mail, Filter, Plus, Minus } from "lucide-react";
+import { Search, Phone, MessageSquare, PlusCircle, User, Flag, Mail, Filter, Plus, Minus, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { STAFF_DASHBOARD_KPI_DATA } from "@/lib/constants";
 
 interface Lead {
@@ -29,27 +29,98 @@ interface Project {
   youtube_link: string;
 }
 
+const ExpandedLeadDetails = ({ lead, projects, openEditModal }: { lead: Lead; projects: Project[]; openEditModal: (lead: Lead) => void }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+      <div className="flex items-center gap-4 flex-1">
+        <div className="text-lg font-bold">{lead.name}</div>
+        <div className="text-sm text-gray-500">{lead.status}</div>
+      </div>
+    </div>
+    <div className="overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+        {/* Row 1: Call | WhatsApp */}
+        <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+          <div className="flex items-center">
+            <Phone className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+            <span className="text-sm font-medium">Call:</span>
+          </div>
+          <a href={`tel:+91${lead.call}`} className="text-blue-600 ml-auto md:ml-0">
+            <Phone className="h-4 w-4" />
+          </a>
+        </div>
+        <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+          <div className="flex items-center">
+            <MessageSquare className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+            <span className="text-sm font-medium">WhatsApp:</span>
+          </div>
+          <a
+            href={`https://wa.me/+91${lead.call}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-green-600 ml-auto md:ml-0"
+          >
+            <MessageSquare className="h-4 w-4" />
+          </a>
+        </div>
+        {/* Row 2: Project */}
+        <div className="p-3 border-b md:col-span-2 flex items-center justify-between md:justify-start md:gap-4">
+          <div className="flex items-center">
+            <FileText className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+            <span className="text-sm font-medium">Project:</span>
+          </div>
+          <Select className="ml-auto md:ml-0 w-full md:w-48">
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {/* Row 3: Change Status */}
+        <div className="p-3 border-b md:col-span-2 flex items-center justify-between">
+          <div className="flex items-center">
+            <Flag className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+            <span className="text-sm font-medium">Change Status:</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => openEditModal(lead)}
+            className="ml-auto md:ml-4"
+          >
+            {lead.status}
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const KpiCard = ({ title, value, icon: Icon, color, link }: { title: string, value: number, icon: React.ElementType, color: string, link?: string }) => {
-    const cardContent = (
-      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300">
-        <CardContent className="p-3 lg:p-2 flex flex-col items-center justify-center text-center gap-1">
-            <div className={`text-3xl ${color}`}>
-                <Icon className="h-8 w-8" />
-            </div>
-            <div className="font-semibold text-foreground text-sm">{title}</div>
-            <div className="text-muted-foreground text-lg font-bold">
-                {value}
-            </div>
-        </CardContent>
-      </Card>
-    );
+  const cardContent = (
+    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300">
+      <CardContent className="p-3 lg:p-2 flex flex-col items-center justify-center text-center gap-1">
+        <div className={`text-3xl ${color}`}>
+          <Icon className="h-8 w-8" />
+        </div>
+        <div className="font-semibold text-foreground text-sm">{title}</div>
+        <div className="text-muted-foreground text-lg font-bold">
+          {value}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
-    if (link) {
-      return <Link href={link}>{cardContent}</Link>;
-    }
+  if (link) {
+    return <Link href={link}>{cardContent}</Link>;
+  }
 
-    return cardContent;
-  };
+  return cardContent;
+};
 
 
 export default function StaffDashboardPage() {
@@ -74,7 +145,7 @@ export default function StaffDashboardPage() {
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
-  
+
   const [formData, setFormData] = useState({
     name: "",
     status: "",
@@ -96,26 +167,92 @@ export default function StaffDashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setLeads([
-      { id: 1, name: "Ravi Kumar", call: "9876543210", status: "Leads" },
-      { id: 2, name: "Amit Sharma", call: "9123456789", status: "Interested" },
-    ]);
-    setProjects([
-      { id: 1, name: "Project A", message: "Luxury Flats", youtube_link: "https://youtube.com" },
-      { id: 2, name: "Project B", message: "Premium Villas", youtube_link: "https://youtube.com" },
-    ]);
+    // केवल API से डेटा फ़ेच करें, हार्डकोडेड डेटा सेट न करें।
+    fetchStaffDashboardData();
   }, []);
 
-  const filteredLeads = leads.filter((lead) =>
+  const fetchStaffDashboardData = async () => {
+    const token = localStorage.getItem('authToken');
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/dashboard/`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.results) {
+          const formattedLeads = data.results.map((lead: any) => ({
+            id: lead.id,
+            name: lead.name,
+            call: lead.call,
+            status: lead.status
+          }));
+          setLeads(formattedLeads);
+        }
+
+        if (data.projects) {
+          setProjects(data.projects);
+        }
+        // Update KPI counts from API response
+        if (data.counts) {
+          setKpiCounts({
+            total_lead: data.counts.total_leads,
+            total_visits: data.counts.total_visits_leads,
+            interested: data.counts.total_interested_leads,
+            not_interested: data.counts.total_not_interested_leads,
+            other_location: data.counts.total_other_location_leads,
+            not_picked: data.counts.total_not_picked_leads,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
+  }; const filteredLeads = leads.filter((lead) =>
     lead.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleStatusChange = (id: number, status: string) => {
-    setLeads((prev) =>
-      prev.map((lead) => (lead.id === id ? { ...lead, status } : lead))
-    );
+  const handleStatusChange = async (id: number, status: string, message?: string) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+      return;
+    }
+
+    const data = new FormData();
+    data.append('status', status);
+    if (message) {
+      data.append('message', message);
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/update-lead-status/${id}/`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Token ${token}` },
+        body: data,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update status');
+      }
+
+      // Refetch data to show the update from the server
+      fetchStaffDashboardData();
+      toast({ title: "Status Updated", description: "Lead status has been successfully updated." });
+
+    } catch (error: any) {
+      console.error("Error updating lead status:", error);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
-  
+
   const openEditModal = (lead: Lead) => {
     setSelectedLead(lead);
     setModalOpen(true);
@@ -123,91 +260,129 @@ export default function StaffDashboardPage() {
 
   const handleModalSave = () => {
     if (selectedLead) {
-        handleStatusChange(selectedLead.id, selectedLead.status);
+      handleStatusChange(selectedLead.id, selectedLead.status, selectedLead.message);
     }
     setModalOpen(false);
-    toast({ title: "Status Updated", description: "Lead status has been updated." });
   };
-  
+
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === "mobile" && value.length > 10) return;
     setFormData({ ...formData, [name]: value });
   };
-  
+
   const handleFormSelectChange = (value: string) => {
     setFormData({ ...formData, status: value });
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
-    const newLead = { ...formData, id: Date.now(), call: formData.mobile };
-    setLeads(prev => [...prev, newLead]);
-    toast({
-        title: "Lead Added!",
-        description: `${formData.name} has been successfully added.`,
-        className: 'bg-green-500 text-white'
-    });
-    // Reset form
-    setFormData({
-        name: "",
-        status: "",
-        mobile: "",
-        email: "",
-        description: "",
-    });
-    setAddLeadModalOpen(false);
+    // आपके अनुरोध के अनुसार फॉर्म डेटा को कंसोल में प्रिंट किया जा रहा है
+    console.log("Submitting the following data:", formData);
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+      return;
+    }
+
+    const data = new FormData();
+    data.append('name', formData.name);
+    data.append('mobile', formData.mobile);
+    data.append('status', formData.status || 'Leads');
+    if (formData.email) data.append('email', formData.email);
+    if (formData.description) data.append('message', formData.description);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/add-self-lead/`, {
+        method: "POST",
+        headers: { "Authorization": `Token ${token}` },
+        body: data,
+      });
+
+      if (response.ok) {
+        // UI को ऑप्टिमिस्टिक रूप से अपडेट करने के बजाय, सर्वर से नवीनतम डेटा प्राप्त करें।
+        // यह सुनिश्चित करेगा कि आपके पास सही और सिंक्रनाइज़ किया गया डेटा है।
+        fetchStaffDashboardData();
+        toast({
+          title: "Lead Added!",
+          description: `${formData.name} has been successfully added.`,
+          className: 'bg-green-500 text-white'
+        });
+        setFormData({
+          name: "",
+          status: "",
+          mobile: "",
+          email: "",
+          description: "",
+        });
+        setAddLeadModalOpen(false);
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error Adding Lead",
+          description: errorData.message || "Failed to add lead",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error adding lead:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add lead. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Staff Dashboard</h1>
-      
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {STAFF_DASHBOARD_KPI_DATA.map((card, index) => (
-                <KpiCard 
-                  key={index} 
-                  title={card.title} 
-                  value={kpiCounts[card.valueKey as keyof typeof kpiCounts]}
-                  icon={card.icon} 
-                  color={card.color} 
-                  link={card.link} 
-                />
-            ))}
+        {STAFF_DASHBOARD_KPI_DATA.map((card, index) => (
+          <KpiCard
+            key={index}
+            title={card.title}
+            value={kpiCounts[card.valueKey as keyof typeof kpiCounts]}
+            icon={card.icon}
+            color={card.color}
+            link={card.link}
+          />
+        ))}
       </div>
 
       <Card>
         <CardContent className="p-6">
-            <div className="flex flex-wrap gap-4 justify-between items-end">
-                <div className="flex flex-col sm:flex-row gap-4 lg:flex-row lg:items-end">
-                    <div className="space-y-2">
-                        <Label htmlFor="start_date">Start Date</Label>
-                        <Input
-                        type="date"
-                        id="start_date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full lg:w-auto"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="end_date">End Date</Label>
-                        <Input
-                        type="date"
-                        id="end_date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full lg:w-auto"
-                        />
-                    </div>
-                </div>
-                <Button>
-                    <Filter className="h-4 w-4" />
-                    <span>Filter</span>
-                </Button>
+          <div className="flex flex-wrap gap-4 justify-between items-end">
+            <div className="flex sm:flex-row gap-4 lg:flex-row lg:items-end">
+              <div className="space-y-2">
+                <Label htmlFor="start_date">Start Date</Label>
+                <Input
+                  type="date"
+                  id="start_date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full lg:w-auto"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_date">End Date</Label>
+                <Input
+                  type="date"
+                  id="end_date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full lg:w-auto"
+                />
+              </div>
             </div>
+            <Button>
+              <Filter className="h-4 w-4" />
+              <span>Filter</span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -224,51 +399,54 @@ export default function StaffDashboardPage() {
               />
             </div>
             <div className="flex gap-2">
-                <Button onClick={() => setAddLeadModalOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add New Lead
-                </Button>
-                <Button variant="outline">Auto Assign</Button>
+              <Button onClick={() => setAddLeadModalOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Lead
+              </Button>
+              <Button variant="outline">Auto Assign</Button>
             </div>
           </div>
           <div className="overflow-x-auto rounded-lg border">
-            <Table>
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead>S.N.</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Call</TableHead>
-                  <TableHead className="hidden md:table-cell">Whatsapp</TableHead>
-                  <TableHead className="hidden lg:table-cell">Project</TableHead>
-                  <TableHead className="text-right">Change Status</TableHead>
+                  <TableHead className="w-auto md:w-1/4 lg:w-1/6">S.N.</TableHead>
+                  <TableHead className="w-auto md:w-1/4 lg:w-1/6">Name</TableHead>
+                  <TableHead className="w-auto md:table-cell md:w-1/4 lg:w-1/6">Call</TableHead>
+                  <TableHead className="hidden md:table-cell w-1/4 lg:w-1/6">WhatsApp</TableHead>
+                  <TableHead className="hidden lg:table-cell w-1/6">Project</TableHead>
+                  <TableHead className="hidden lg:table-cell w-1/6 text-right">Change Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLeads.map((lead, index) => (
                   <React.Fragment key={lead.id}>
                     <TableRow data-state={expandedRowId === lead.id && 'selected'}>
-                      <TableCell>
-                        <div className="lg:hidden">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-green-600"
-                            onClick={() => toggleRow(lead.id)}
-                          >
-                            {expandedRowId === lead.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                        <div className="hidden lg:block">
-                          {index + 1}.
-                        </div>
+                      <TableCell className="w-auto md:w-1/4 lg:w-1/6">
+                        <>
+                          <div className="lg:hidden">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-green-600"
+                              onClick={() => toggleRow(lead.id)}
+                            >
+                              {expandedRowId === lead.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                          {/* lg+: only number */}
+                          <div className="hidden lg:block">
+                            {index + 1}.
+                          </div>
+                        </>
                       </TableCell>
-                      <TableCell className="font-medium">{lead.name}</TableCell>
-                      <TableCell className="hidden md:table-cell">
+                      <TableCell className="w-auto md:w-1/4 lg:w-1/6 font-medium">{lead.name}</TableCell>
+                      <TableCell className="w-auto md:table-cell md:w-1/4 lg:w-1/6">
                         <a href={`tel:+91${lead.call}`} className="text-blue-600">
                           <Phone />
                         </a>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">
+                      <TableCell className="hidden md:table-cell w-1/4 lg:w-1/6">
                         <a
                           href={`https://wa.me/+91${lead.call}`}
                           target="_blank"
@@ -278,7 +456,7 @@ export default function StaffDashboardPage() {
                           <MessageSquare />
                         </a>
                       </TableCell>
-                      <TableCell className="hidden lg:table-cell">
+                      <TableCell className="hidden lg:table-cell w-1/6">
                        <Select>
                         <SelectTrigger>
                             <SelectValue placeholder="Select" />
@@ -290,7 +468,7 @@ export default function StaffDashboardPage() {
                         </SelectContent>
                        </Select>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="hidden lg:table-cell w-1/6 text-right">
                         <Button
                           variant="outline"
                           onClick={() => openEditModal(lead)}
@@ -300,56 +478,30 @@ export default function StaffDashboardPage() {
                       </TableCell>
                     </TableRow>
                     {expandedRowId === lead.id && (
-                      <TableRow className="lg:hidden">
-                        <TableCell colSpan={6} className="p-0">
-                          <div className="p-4">
-                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
-                                <div className="text-lg font-bold">{lead.name}</div>
-                              </div>
-                              <div className="overflow-hidden">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Call:</span>
-                                    <a href={`tel:+91${lead.call}`} className="text-blue-600">
-                                      <Phone />
-                                    </a>
-                                  </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Whatsapp:</span>
-                                    <a
-                                      href={`https://wa.me/+91${lead.call}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-green-600"
-                                    >
-                                      <MessageSquare />
-                                    </a>
-                                  </div>
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Project:</span>
-                                    <div className="w-1/2">
-                                      <Select>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {projects.map((p) => (
-                                                <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <>
+                        {/* Mobile Expanded Row */}
+                        <TableRow className="md:hidden">
+                          <TableCell colSpan={3} className="p-0">
+                            <ExpandedLeadDetails lead={lead} projects={projects} openEditModal={openEditModal} />
+                          </TableCell>
+                        </TableRow>
+                        {/* Tablet Expanded Row */}
+                        <TableRow className="hidden md:table-row lg:hidden">
+                          <TableCell colSpan={4} className="p-0">
+                            <ExpandedLeadDetails lead={lead} projects={projects} openEditModal={openEditModal} />
+                          </TableCell>
+                        </TableRow>
+                      </>
                     )}
                   </React.Fragment>
                 ))}
+                {filteredLeads.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No matching records found
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
@@ -365,25 +517,25 @@ export default function StaffDashboardPage() {
             <div className="space-y-4 py-4">
               <div>
                 <Label htmlFor="status">Status</Label>
-                 <Select
+                <Select
                   value={selectedLead.status}
                   onValueChange={(value) =>
                     setSelectedLead({ ...selectedLead, status: value })
                   }
-                 >
-                    <SelectTrigger id="status">
-                        <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Leads">Leads</SelectItem>
-                        <SelectItem value="Interested">Interested</SelectItem>
-                        <SelectItem value="Not Interested">Not Interested</SelectItem>
-                        <SelectItem value="Not Picked">Not Picked</SelectItem>
-                        <SelectItem value="Other Location">Other Location</SelectItem>
-                        <SelectItem value="Lost">Lost</SelectItem>
-                        <SelectItem value="Visit">Visit</SelectItem>
-                    </SelectContent>
-                 </Select>
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Leads">Leads</SelectItem>
+                    <SelectItem value="Interested">Interested</SelectItem>
+                    <SelectItem value="Not Interested">Not Interested</SelectItem>
+                    <SelectItem value="Not Picked">Not Picked</SelectItem>
+                    <SelectItem value="Other Location">Other Location</SelectItem>
+                    <SelectItem value="Lost">Lost</SelectItem>
+                    <SelectItem value="Visit">Visit</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -392,111 +544,112 @@ export default function StaffDashboardPage() {
                   id="message"
                   placeholder="Enter message..."
                   defaultValue={selectedLead.message}
-                   onChange={(e) =>
+                  onChange={(e) =>
                     setSelectedLead({ ...selectedLead, message: e.target.value })
                   }
                 />
               </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-                    <Button onClick={handleModalSave}>
-                    Update
-                    </Button>
-                </DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
+                <Button onClick={handleModalSave}>
+                  Update
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>
       </Dialog>
-      
-       <Dialog open={addLeadModalOpen} onOpenChange={setAddLeadModalOpen}>
+
+      <Dialog open={addLeadModalOpen} onOpenChange={setAddLeadModalOpen}>
         <DialogContent className="max-w-[95vw] mx-auto sm:max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-           <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">Create a New Lead</DialogTitle>
-              <DialogDescription>Fill out the form below to add a new lead to the system.</DialogDescription>
-            </DialogHeader>
-             <form
-                onSubmit={handleFormSubmit}
-                className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-4"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="flex items-center gap-2 text-sm font-medium"><User className="w-4 h-4" /> Name</Label>
-                  <Input
-                    type="text"
-                    id="name"
-                    name="name"
-                    maxLength={30}
-                    required
-                    placeholder="e.g. John Doe"
-                    value={formData.name}
-                    onChange={handleFormChange}
-                    className="h-11"
-                  />
-                </div>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Create a New Lead</DialogTitle>
+            <DialogDescription>Fill out the form below to add a new lead to the system.</DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={handleFormSubmit}
+            className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="name" className="flex items-center gap-2 text-sm font-medium"><User className="w-4 h-4" /> Name</Label>
+              <Input
+                type="text"
+                id="name"
+                name="name"
+                maxLength={30}
+                required
+                placeholder="e.g. John Doe"
+                value={formData.name}
+                onChange={handleFormChange}
+                className="h-11"
                 
-                <div className="space-y-2">
-                    <Label htmlFor="status" className="flex items-center gap-2 text-sm font-medium"><Flag className="w-4 h-4" /> Status</Label>
-                    <Select
-                        value={formData.status}
-                        onValueChange={handleFormSelectChange}
-                        required
-                    >
-                        <SelectTrigger id="status" className="h-11">
-                            <SelectValue placeholder="Select Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                             {statuses.map((status) => (
-                                <SelectItem key={status} value={status}>
-                                {status}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="mobile" className="flex items-center gap-2 text-sm font-medium"><Phone className="w-4 h-4" /> Mobile</Label>
-                  <Input
-                    type="number"
-                    id="mobile"
-                    name="mobile"
-                    placeholder="e.g. 9876543210"
-                    required
-                    value={formData.mobile}
-                    onChange={handleFormChange}
-                    className="h-11"
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="status" className="flex items-center gap-2 text-sm font-medium"><Flag className="w-4 h-4" /> Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={handleFormSelectChange}
+                required
+              >
+                <SelectTrigger id="status" className="h-11">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statuses.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium"><Mail className="w-4 h-4" /> Email</Label>
-                  <Input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="e.g. john.doe@example.com"
-                    value={formData.email}
-                    onChange={handleFormChange}
-                    className="h-11"
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="mobile" className="flex items-center gap-2 text-sm font-medium"><Phone className="w-4 h-4" /> Mobile</Label>
+              <Input
+                type="number"
+                id="mobile"
+                name="mobile"
+                placeholder="e.g. 9876543210"
+                required
+                value={formData.mobile}
+                onChange={handleFormChange}
+                className="h-11"
+              />
+            </div>
 
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="description" className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="w-4 h-4" /> Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    placeholder="Add any relevant notes or details here..."
-                    rows={4}
-                    value={formData.description}
-                    onChange={handleFormChange}
-                    className="resize-none"
-                  />
-                </div>
-                <DialogFooter className="md:col-span-2 gap-2">
-                    <Button variant="outline" onClick={() => setAddLeadModalOpen(false)}>Cancel</Button>
-                    <Button type="submit">Add Lead</Button>
-                </DialogFooter>
-              </form>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium"><Mail className="w-4 h-4" /> Email</Label>
+              <Input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="e.g. john.doe@example.com"
+                value={formData.email}
+                onChange={handleFormChange}
+                className="h-11"
+              />
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="description" className="flex items-center gap-2 text-sm font-medium"><MessageSquare className="w-4 h-4" /> Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="Add any relevant notes or details here..."
+                rows={4}
+                value={formData.description}
+                onChange={handleFormChange}
+                className="resize-none"
+              />
+            </div>
+            <DialogFooter className="md:col-span-2 gap-2">
+              <Button variant="outline" onClick={() => setAddLeadModalOpen(false)}>Cancel</Button>
+              <Button type="submit">Add Lead</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

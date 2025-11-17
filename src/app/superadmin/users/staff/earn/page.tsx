@@ -157,11 +157,8 @@ export default function EarnCalendarPage() {
   }
 
   function getCellBgColor(leads?: number) {
-    if (leads === undefined || leads === 0) return "bg-gray-100 border border-gray-200"; // Light gray for 0 leads
-    if (leads >= 15) return "bg-gradient-to-tr from-purple-500 to-blue-500 text-white shadow-lg"; // Dark purple-blue for 15+ leads
-    if (leads >= 10) return "bg-gradient-to-tr from-purple-400 to-blue-400 text-white shadow-md"; // Medium purple-blue for 10+ leads
-    if (leads >= 5) return "bg-gradient-to-tr from-purple-300 to-blue-300 text-gray-800 shadow-sm"; // Light purple-blue for 5+ leads
-    return "bg-gradient-to-tr from-purple-200 to-blue-200 text-gray-700"; // Very light purple-blue for 1-4 leads
+    if (leads === undefined || leads === 0) return "bg-red-500 text-white"; // Red for 0 leads
+    return "bg-green-500 text-white"; // Green for 1+ leads
   }
 
   const DayCell = ({ dayData }: { dayData: DayData }) => {

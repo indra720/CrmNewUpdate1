@@ -41,11 +41,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import Link from 'next/link';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useSearchParams } from 'next/navigation';
-import { fetchLeadsForSuperuser } from '@/lib/api';
+import { fetchLeadsForStaff } from '@/lib/api';
+import { BackButton } from '@/components/ui/back-button';
 
-export default function TodayFollowupsPage() {
-  const searchParams = useSearchParams();
+export default function StaffTomorrowFollowupsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [leads, setLeads] = useState<any[]>([]);
@@ -69,9 +68,9 @@ export default function TodayFollowupsPage() {
   async function fetchLeads() {
     try {
       setLoading(true);
-      const source = searchParams.get('source');
-      const data = await fetchLeadsForSuperuser('today_followups', source);
+      const data = await fetchLeadsForStaff('tomorrow-followups');
       setLeads(data.results);
+      // You might need to adjust pagination based on the API response
       setTotalPages(Math.ceil(data.count / 10)); // Assuming 10 items per page
     } catch (err: any) {
       setError(err.message || 'Failed to fetch leads.');
@@ -82,7 +81,7 @@ export default function TodayFollowupsPage() {
 
   useEffect(() => {
     fetchLeads();
-  }, [page, search, searchParams]);
+  }, [page, search]);
 
   async function openEditModal(lead: any) {
     setEditingLead(lead);
@@ -96,6 +95,8 @@ export default function TodayFollowupsPage() {
   async function saveChanges() {
     if (!editingLead) return;
 
+    // This is where you would typically make an API call to save the changes.
+    // For now, it just shows a toast notification.
     await new Promise(resolve => setTimeout(resolve, 500));
 
     toast({
@@ -111,16 +112,12 @@ export default function TodayFollowupsPage() {
     <TooltipProvider>
     <div className="space-y-6 flex flex-col h-full">
       <div className="flex items-center justify-between">
-        <Link href="/superadmin/users/admin">
-            <Button variant="outline">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                
-            </Button>
-        </Link>
+        <BackButton />
+        {/* <h1 className="text-xl font-bold">Tomorrow Followups</h1> */}
       </div>
 
       <div className="space-y-4">
-        <form className="grid grid-cols-2 md:grid-cols-3 gap-4 items-end">
+        <form className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="start_date">Start Date</Label>
             <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} />

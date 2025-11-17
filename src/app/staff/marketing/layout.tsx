@@ -17,7 +17,7 @@ function MarketingFlow() {
 
     if (platform) {
         const platformTitle = platform.charAt(0).toUpperCase() + platform.slice(1);
-        openDialog(platformTitle);
+        openDialog(platformTitle, platform);
     }
   }, [pathname, openDialog]);
 

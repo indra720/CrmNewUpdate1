@@ -163,12 +163,12 @@ export default function ItStaffPage() {
     const originalUsers = [...users];
     setUsers(
       users.map((user) =>
-        user.staff_id === id ? { ...user, active: isActive } : user
+        user.id === id ? { ...user, active: isActive } : user
       )
     );
 
     try {
-      await toggleUserActiveStatus(id, "it_staff", isActive);
+      await toggleUserActiveStatus(id, "staff", isActive);
 
       // 3. Success: Show toast (assuming useToast is available)
       toast({
@@ -210,8 +210,8 @@ export default function ItStaffPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>All IT Staff</CardTitle>
-              <CardDescription>Manage IT staff members.</CardDescription>
+              <CardTitle className=" hidden md:flex">All IT Staff</CardTitle>
+              <CardDescription className="hidden md:flex">Manage IT staff members.</CardDescription>
             </div>
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -234,7 +234,7 @@ export default function ItStaffPage() {
                   <TableHead className="hidden md:table-cell">Mobile No</TableHead>
                   <TableHead className="hidden md:table-cell text-center">Active / Non-Active</TableHead>
                   <TableHead className="text-center hidden sm:table-cell">Attendance</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">Edit</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -260,7 +260,7 @@ export default function ItStaffPage() {
                         <TableCell className="hidden md:table-cell text-center">
                           <Switch
                             checked={user.active}
-                            onCheckedChange={(checked) => handleToggle(user.staff_id, checked)}
+                            onCheckedChange={(checked) => handleToggle(user.id, checked)}
                             aria-label={`Toggle status for ${user.name}`}
                           />
                         </TableCell>
@@ -278,38 +278,22 @@ export default function ItStaffPage() {
                           </Button>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="hidden md:flex items-center justify-end gap-2">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => handleOpenEditForm(user)}
-                                    className="h-8 w-8"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                    <span className="sr-only">Edit</span>
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Edit</p></TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                          <div className="md:hidden">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleOpenEditForm(user)}
+                                  className="h-8 w-8"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
                                 </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
-                                  <Pencil className="mr-2 h-4 w-4" /> Edit
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Edit</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                       </TableRow>
                       {expandedRowId === user.id && (
@@ -320,18 +304,32 @@ export default function ItStaffPage() {
                                 <div className="p-4 flex items-center gap-4 border-b border-gray-200">
                                   <div className="text-lg font-bold">{user.name}</div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                <div className="grid grid-cols-1 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-gray-200 flex items-center justify-between">
                                     <span className="text-sm font-medium">Mobile No:</span>
                                     <span className="text-sm">{user.mobile}</span>
                                   </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                  <div className="p-3 border-b border-gray-200 flex items-center justify-between">
                                     <span className="text-sm font-medium">Active Status:</span>
                                     <Switch
                                       checked={user.active}
-                                      onCheckedChange={(checked) => handleToggle(user.staff_id, checked)}
+                                      onCheckedChange={(checked) => handleToggle(user.id, checked)}
                                       aria-label={`Toggle status for ${user.name}`}
                                     />
+                                  </div>
+                                  <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Attendance:</span>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedUserId(user.id);
+                                        setSelectedUserEmail(user.email);
+                                        setIsAttendanceDialogOpen(true);
+                                      }}
+                                    >
+                                      View
+                                    </Button>
                                   </div>
                                 </div>
                               </div>
@@ -374,7 +372,7 @@ export default function ItStaffPage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 ">
                 <Label htmlFor="edit-mobile">Mobile</Label>
                 <Input
                   id="edit-mobile"
@@ -384,7 +382,7 @@ export default function ItStaffPage() {
                   required
                 />
               </div>
-              <DialogFooter>
+              <DialogFooter className="gap-2">
                 <Button
                   type="button"
                   variant="outline"

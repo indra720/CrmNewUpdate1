@@ -165,6 +165,7 @@ const LoginPage = () => {
   });
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
 
@@ -213,6 +214,7 @@ const LoginPage = () => {
   useEffect(() => {
     const storedRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
     if (storedRole) {
+        setIsAuthenticated(true);
         handleRedirect(storedRole);
     }
   }, []);
@@ -316,6 +318,7 @@ const LoginPage = () => {
           }
           localStorage.setItem('userRole', userRole);
           localStorage.setItem('userEmail', data.data.email); // Store user's email
+          setIsAuthenticated(true);
           handleRedirect(userRole);
         }
         toast({
@@ -437,7 +440,8 @@ const LoginPage = () => {
 
   return (
     <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
-      {isLoading && <LoadingOverlay />}
+      {(isLoading || isAuthenticated) && <LoadingOverlay />}
+      {!isAuthenticated && (
       <section className="min-h-screen w-full flex items-center justify-center bg-card p-4">
         <Card className="w-full max-w-5xl mx-auto rounded-3xl shadow-2xl overflow-hidden bg-background backdrop-blur-sm border-white/20">
           <div className="grid grid-cols-1 md:grid-cols-2">
@@ -598,7 +602,7 @@ const LoginPage = () => {
           </div>
         </Card>
       </section>
-
+      )}
       <DialogContent className="sm:max-w-4xl max-h-[95vh] p-0 bg-card rounded-2xl shadow-2xl flex flex-col">
         <DialogHeader className="p-6 md:p-8 pb-0 flex-shrink-0">
           <DialogTitle className="text-2xl md:text-3xl font-bold text-foreground">

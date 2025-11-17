@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -77,11 +76,6 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold">Your Profile</h1>
-        <p className="text-muted-foreground">Manage your personal and account details.</p>
-      </div>
-
       <Card className="shadow-lg rounded-2xl overflow-hidden">
         <div className="bg-muted/30 p-8 flex flex-col md:flex-row items-center gap-6">
             <Avatar className="h-24 w-24 border-4 border-background shadow-md">

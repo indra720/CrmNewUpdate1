@@ -20,6 +20,7 @@ export async function toggleUserActiveStatus(
   console.log("=== TOGGLE API CALL ===");
   console.log("Request Data:", requestData);
   console.log("API URL:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/toggle-active/`);
+  console.log("Request Body:", JSON.stringify(requestData));
 
   try {
     const response = await fetch(
@@ -464,59 +465,386 @@ export async function fetchLeadHistory(leadId: string): Promise<LeadHistoryEntry
 
 
 
+
+
+
+
 // users ke pages ke card ke liye api 
+
+
+
 export async function fetchLeadsForSuperuser(tag: string, source: string | null): Promise<any> {
+
+
+
   const token = localStorage.getItem("authToken");
 
+
+
+
+
+
+
   if (!token) {
+
+
+
     throw new Error("Authentication token not found.");
+
+
+
   }
+
+
+
+
+
+
 
   let endpoint = '';
+
+
+
   switch (source) {
+
+
+
     case 'admin':
+
+
+
       endpoint = `/accounts/api/admin-leads/${tag}/`;
+
+
+
       break;
+
+
+
     case 'team-leader':
+
+
+
       endpoint = `/accounts/api/superuser/team-leader-leads/${tag}/`;
+
+
+
       break;
+
+
+
     case 'staff':
+
+
+
       endpoint = `/accounts/superuser/staff-leads/${tag}/`;
+
+
+
       break;
+
+
+
     case 'associate':
+
+
+
       endpoint = `/accounts/api/superuser/freelancer-leads/${tag}/`;
+
+
+
       break;
+
+
+
     default:
+
+
+
       // Fallback or error
+
+
+
       throw new Error(`Invalid source for fetching leads: ${source}`);
+
+
+
   }
+
+
+
+
+
+
 
   try {
+
+
+
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`;
+
+
+
     console.log(`Fetching URL for source ${source}:`, url);
+
+
+
     const response = await fetch(
+
+
+
       url,
+
+
+
       {
+
+
+
         method: "GET",
+
+
+
         headers: {
+
+
+
           "Content-Type": "application/json",
+
+
+
           Authorization: `Token ${token}`,
+
+
+
         },
+
+
+
       }
+
+
+
     );
+
+
+
+
+
+
 
     if (!response.ok) {
+
+
+
       const errorData = await response.json();
+
+
+
       throw new Error(
+
+
+
         errorData.message || `HTTP error! status: ${response.status}`
+
+
+
       );
+
+
+
     }
 
+
+
+
+
+
+
     return await response.json();
+
+
+
   } catch (error: any) {
+
+
+
     console.error(`Failed to fetch leads for tag ${tag} and source ${source}:`, error);
+
+
+
     throw new Error(
+
+
+
       `Failed to fetch leads: ${error.message || "Unknown error"}`
+
+
+
     );
+
+
+
   }
+
+
+
 }
+
+
+
+
+
+
+
+export async function fetchLeadsForStaff(tag: string): Promise<any> {
+
+
+
+  const token = localStorage.getItem("authToken");
+
+
+
+
+
+
+
+  if (!token) {
+
+
+
+    throw new Error("Authentication token not found.");
+
+
+
+  }
+
+
+
+
+
+
+
+  const endpoint = `/accounts/staff/leads/${tag}/`;
+
+
+
+
+
+
+
+  try {
+
+
+
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`;
+
+
+
+    console.log(`Fetching URL for staff leads:`, url);
+
+
+
+    const response = await fetch(
+
+
+
+      url,
+
+
+
+      {
+
+
+
+        method: "GET",
+
+
+
+        headers: {
+
+
+
+          "Content-Type": "application/json",
+
+
+
+          Authorization: `Token ${token}`,
+
+
+
+        },
+
+
+
+      }
+
+
+
+    );
+
+
+
+
+
+
+
+    if (!response.ok) {
+
+
+
+      const errorData = await response.json();
+
+
+
+      throw new Error(
+
+
+
+        errorData.message || `HTTP error! status: ${response.status}`
+
+
+
+      );
+
+
+
+    }
+
+
+
+
+
+
+
+    return await response.json();
+
+
+
+  } catch (error: any) {
+
+
+
+    console.error(`Failed to fetch leads for tag ${tag} for staff:`, error);
+
+
+
+    throw new Error(
+
+
+
+      `Failed to fetch leads: ${error.message || "Unknown error"}`
+
+
+
+    );
+
+
+
+  }
+
+
+
+}
+
+

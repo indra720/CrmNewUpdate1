@@ -117,7 +117,7 @@ export default function PendingFollowupsPage() {
         <Link href="/superadmin/users/admin">
             <Button variant="outline">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                
             </Button>
         </Link>
       </div>
@@ -136,9 +136,7 @@ export default function PendingFollowupsPage() {
             <FileDown className="mr-2 h-4 w-4" />
             Export
           </Button>
-        </form>
-
-        <div className="relative w-full">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
@@ -147,6 +145,9 @@ export default function PendingFollowupsPage() {
               className="pl-10 w-full"
             />
         </div>
+        </form>
+
+        
       </div>
 
 

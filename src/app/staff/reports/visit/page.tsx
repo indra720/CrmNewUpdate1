@@ -15,15 +15,17 @@ import {
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Phone, MessageSquare, ArrowUpDown, Search, Plus, Minus, Tag, Loader2 } from 'lucide-react';
+import { Phone, MessageSquare, ArrowUpDown, Search, Plus, Minus, Tag, Calendar, Loader2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { fetchAdminLeadsByTag } from '@/lib/api';
+import { cn } from '@/lib/utils'
+import { fetchLeadsForStaff } from '@/lib/api';
+import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
 
-function UploadLeadsPage() {
+function StaffVisitLeadsPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -35,9 +37,8 @@ function UploadLeadsPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const data = await fetchAdminLeadsByTag('total_leads');
-        const combinedLeads = [...data.staff_leads, ...data.team_leads];
-        setLeads(combinedLeads);
+        const data = await fetchLeadsForStaff('visit');
+        setLeads(data.results);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -131,6 +132,14 @@ function UploadLeadsPage() {
           className: 'hidden sm:table-cell',
         },
       },
+      {
+        accessorKey: 'dateTime',
+        header: 'Time and Date',
+        cell: ({ row }) => <div className="capitalize">{row.getValue('dateTime')}</div>,
+        meta: {
+          className: 'hidden sm:table-cell',
+        },
+      },
     ],
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -146,7 +155,10 @@ function UploadLeadsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">View Uploaded Leads</h1>
+      <div className="flex items-center gap-4">
+        <BackButton />
+        {/* <h1 className="text-2xl font-bold">Total Visits</h1> */}
+      </div>
       
       <div className="grid gap-4">
         <Card className="overflow-hidden">
@@ -166,7 +178,7 @@ function UploadLeadsPage() {
               </div>
             </div>
 
-            <div className="w-full rounded-md border">
+            <div className="w-full rounded-md border overflow-x-hidden md:overflow-x-auto">
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
@@ -212,7 +224,7 @@ function UploadLeadsPage() {
                         {expandedRowId === row.original.id && (
                           <TableRow className="sm:hidden">
                             <TableCell colSpan={table.getAllColumns().length} className="p-0">
-                              <div className="p-4 bg-gray-50">
+                              <div className="p-4">
                                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                                   <div className="p-4 flex items-center gap-4 border-b border-gray-200">
                                     <Avatar>
@@ -243,6 +255,10 @@ function UploadLeadsPage() {
                                     <div className="flex items-center">
                                       <Tag className="h-4 w-4 mr-3 text-gray-500" />
                                       <span className="text-sm">Status: {row.original.status}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <Calendar className="h-4 w-4 mr-3 text-gray-500" />
+                                      <span className="text-sm">{row.original.dateTime}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -298,4 +314,4 @@ function UploadLeadsPage() {
   );
 }
 
-export default UploadLeadsPage;
+export default StaffVisitLeadsPage;
