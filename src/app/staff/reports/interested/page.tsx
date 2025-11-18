@@ -135,7 +135,7 @@ function StaffInterestedLeadsPage() {
       {
         accessorKey: 'dateTime',
         header: 'Time and Date',
-        cell: ({ row }) => <div className="capitalize">{row.getValue('dateTime')}</div>,
+        cell: ({ row }) => <div className="capitalize">{row.getValue('created_date')}</div>,
         meta: {
           className: 'hidden sm:table-cell',
         },

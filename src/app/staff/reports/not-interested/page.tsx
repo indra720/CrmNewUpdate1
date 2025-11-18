@@ -35,10 +35,29 @@ function StaffNotInterestedLeadsPage() {
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setError('Authentication token not found.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        setLoading(true);
-        const data = await fetchLeadsForStaff('not-interested');
-        setLeads(data.results);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/not-interested-leads/`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch leads.');
+        }
+        
+        const data = await response.json();
+        setLeads(data.results || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -133,9 +152,23 @@ function StaffNotInterestedLeadsPage() {
         },
       },
       {
-        accessorKey: 'dateTime',
+        accessorKey: 'created_date',
         header: 'Time and Date',
-        cell: ({ row }) => <div className="capitalize">{row.getValue('dateTime')}</div>,
+        cell: ({ row }) => {
+          const date = new Date(row.getValue('created_date'));
+          const dateString = date.toLocaleDateString('en-GB').replace(/\//g, '-');
+          const timeString = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true, 
+          });
+          return (
+            <div className="flex flex-col">
+              <span>{dateString}</span>
+              <span className="text-muted-foreground text-xs">{timeString}</span>
+            </div>
+          );
+        },
         meta: {
           className: 'hidden sm:table-cell',
         },

@@ -160,7 +160,7 @@ export default function StaffDashboardPage() {
 
   const statuses = [
     "Leads",
-    "Interested",
+    "interested",
     "Not Interested",
     "Other Location",
     "Not Picked",
@@ -237,8 +237,8 @@ export default function StaffDashboardPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/update-lead-status/${id}/`, {
-        method: 'PATCH',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/update-lead/${id}/`, {
+        method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
         body: data,
       });
@@ -258,6 +258,16 @@ export default function StaffDashboardPage() {
     }
   };
 
+  const handleModalSave=()=>{
+    if(selectedLead){
+      handleStatusChange(selectedLead.id,selectedLead.status,selectedLead.message);
+    }
+    setModalOpen(false);
+  }
+
+
+
+  // Handle project change
   const handleProjectChange = async (leadId: number, projectId: number) => {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -297,12 +307,7 @@ export default function StaffDashboardPage() {
     setModalOpen(true);
   };
 
-  const handleModalSave = () => {
-    if (selectedLead) {
-      handleStatusChange(selectedLead.id, selectedLead.status, selectedLead.message);
-    }
-    setModalOpen(false);
-  };
+
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -572,7 +577,7 @@ export default function StaffDashboardPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Leads">Leads</SelectItem>
-                    <SelectItem value="Interested">Interested</SelectItem>
+                    <SelectItem value="interested">Interested</SelectItem>
                     <SelectItem value="Not Interested">Not Interested</SelectItem>
                     <SelectItem value="Not Picked">Not Picked</SelectItem>
                     <SelectItem value="Other Location">Other Location</SelectItem>
@@ -642,7 +647,7 @@ export default function StaffDashboardPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {statuses.map((status) => (
-                    <SelectItem key={status} value={status}>
+                    <SelectItem key={status} value={status === 'interested' ? 'interested' : status}>
                       {status}
                     </SelectItem>
                   ))}

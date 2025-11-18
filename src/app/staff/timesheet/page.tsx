@@ -39,7 +39,7 @@ const TimeSheetPage = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/activitylogs/?page=${page}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/activity-logs/?page=${page}`, {
         headers: {
           'Authorization': ` Token ${token}`,
           'Content-Type': 'application/json',

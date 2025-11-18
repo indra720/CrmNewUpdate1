@@ -83,69 +83,69 @@ export default function ProductivityPage() {
     }, 1000);
   }, []);
 
-  // async function fetchCalendar() {
-  //   setLoading(true);
-  //   setError("");
-  //   try {
-  //     const token = localStorage.getItem("authToken");
-  //     if (!token) {
-  //       throw new Error("Authentication token not found.");
-  //     }
+  async function fetchCalendar() {
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("Authentication token not found.");
+      }
 
-  //     console.log("=== FETCHING STAFF CALENDAR ===");
-  //     console.log("Staff ID:", staffId);
-  //     console.log("Year:", year);
-  //     console.log("Month:", month);
+      console.log("=== FETCHING STAFF CALENDAR ===");
+      console.log("Staff ID:", staffId);
+      console.log("Year:", year);
+      console.log("Month:", month);
 
-  //     const response = await fetch(
-  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/staff/${staffId}/calendar/?year=${year}&month=${month}`,
-  //       {
-  //         method: "GET",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Token ${token}`,
-  //         },
-  //       }
-  //     );
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/productivity-calendar/${staffId}/?year=${year}&month=${month}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
 
-  //     console.log("API Response Status:", response.status);
+      console.log("API Response Status:", response.status);
 
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-  //     const data: ApiResponse = await response.json();
-  //     console.log("API Response Data:", data);
+      const data: ApiResponse = await response.json();
+      console.log("API Response Data:", data);
 
-  //     setCalendarData(data.daily_productivity_data || []);
-  //     setStaffData(data.staff);
-  //     setMonthlySalary(parseFloat(data.monthly_salary) || 0);
-  //     setTotalSalary(data.total_salary || 0);
-  //     setMonthsList(data.months_list || []);
+      setCalendarData(data.daily_productivity_data || []);
+      setStaffData(data.staff);
+      setMonthlySalary(parseFloat(data.monthly_salary) || 0);
+      setTotalSalary(data.total_salary || 0);
+      setMonthsList(data.months_list || []);
 
-  //     toast({
-  //       title: "Success",
-  //       description: "Calendar data loaded successfully",
-  //       className: "bg-green-500 text-white",
-  //     });
+      toast({
+        title: "Success",
+        description: "Calendar data loaded successfully",
+        className: "bg-green-500 text-white",
+      });
 
-  //   } catch (err: any) {
-  //     console.error("=== API ERROR ===");
-  //     console.error("Error:", err);
-  //     setError(err.message);
-  //     toast({
-  //       title: "Error",
-  //       description: err.message || "Failed to fetch calendar data",
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
+    } catch (err: any) {
+      console.error("=== API ERROR ===");
+      console.error("Error:", err);
+      setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to fetch calendar data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  // useEffect(() => {
-  //   fetchCalendar();
-  // }, [staffId, year, month]);
+  useEffect(() => {
+    fetchCalendar();
+  }, [staffId, year, month]);
 
   function handleFilterSubmit(e: React.FormEvent) {
     e.preventDefault();

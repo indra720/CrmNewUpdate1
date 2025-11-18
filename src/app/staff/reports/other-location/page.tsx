@@ -20,7 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils'
-import { fetchLeadsForStaff } from '@/lib/api';
+
 import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
@@ -35,10 +35,29 @@ function StaffOtherLocationLeadsPage() {
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setError('Authentication token not found.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        setLoading(true);
-        const data = await fetchLeadsForStaff('other-location');
-        setLeads(data.results);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/other-location-leads/`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch leads.');
+        }
+
+        const data = await response.json();
+        setLeads(data.results || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -104,7 +123,7 @@ function StaffOtherLocationLeadsPage() {
         accessorKey: 'whatsapp',
         header: 'Whatsapp',
         cell: ({ row }) => (
-          <a 
+          <a
             href={`https://wa.me/${row.getValue('call')}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -133,9 +152,23 @@ function StaffOtherLocationLeadsPage() {
         },
       },
       {
-        accessorKey: 'dateTime',
+        accessorKey: 'created_date',
         header: 'Time and Date',
-        cell: ({ row }) => <div className="capitalize">{row.getValue('dateTime')}</div>,
+        cell: ({ row }) => {
+          const date = new Date(row.getValue('created_date'));
+          const dateString = date.toLocaleDateString('en-GB').replace(/\//g, '-');
+          const timeString = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          });
+          return (
+            <div className="flex flex-col">
+              <span>{dateString}</span>
+              <span className="text-muted-foreground text-xs">{timeString}</span>
+            </div>
+          );
+        },
         meta: {
           className: 'hidden sm:table-cell',
         },
@@ -159,11 +192,11 @@ function StaffOtherLocationLeadsPage() {
         <BackButton />
         {/* <h1 className="text-2xl font-bold">Other Location</h1> */}
       </div>
-      
+
       <div className="grid gap-4">
         <Card className="overflow-hidden">
           <CardContent className="p-2 md:p-6 md:pt-0">
-            
+
             <div className="flex items-center justify-between mb-4 px-2 pt-4 md:px-0">
               <div className="relative w-full max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -189,9 +222,9 @@ function StaffOtherLocationLeadsPage() {
                             {header.isPlaceholder
                               ? null
                               : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
                           </TableHead>
                         );
                       })}
@@ -243,10 +276,10 @@ function StaffOtherLocationLeadsPage() {
                                     </div>
                                     <div className="flex items-center">
                                       <MessageSquare className="h-4 w-4 mr-3 text-gray-500" />
-                                      <a 
-                                        href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`} 
-                                        target="_blank" 
-                                        rel="noreferrer" 
+                                      <a
+                                        href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
+                                        target="_blank"
+                                        rel="noreferrer"
                                         className="text-sm"
                                       >
                                         Whatsapp

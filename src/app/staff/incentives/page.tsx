@@ -133,7 +133,7 @@ export default function StaffIncentivesPage() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/report/incentive-slab/${staffId}/?year=${year}&month=${month}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/incentives/?year=${year}&month=${month}`,
         {
           method: "GET",
           headers: {
@@ -224,7 +224,7 @@ export default function StaffIncentivesPage() {
         <CardContent>
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div>
+            {/* <div>
               <Label className="text-sm font-medium">Staff</Label>
               <Select value={staffId} onValueChange={setStaffId} disabled={staffList.length === 0}>
                 <SelectTrigger>
@@ -236,7 +236,7 @@ export default function StaffIncentivesPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div>
               <Label className="text-sm font-medium">Month</Label>
