@@ -20,7 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils'
-import { fetchLeadsForStaff } from '@/lib/api';
+import { fetchStaffLeadsReport } from '@/lib/api';
 import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
@@ -37,7 +37,7 @@ function StaffInterestedLeadsPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const data = await fetchLeadsForStaff('interested');
+        const data = await fetchStaffLeadsReport('interested');
         setLeads(data.results);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');

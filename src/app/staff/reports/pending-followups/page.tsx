@@ -41,7 +41,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import Link from 'next/link';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { fetchLeadsForStaff } from '@/lib/api';
+import { fetchStaffLeadsReport, updateLeadStatusAndFollowUp } from '@/lib/api';
 import { BackButton } from '@/components/ui/back-button';
 
 export default function StaffPendingFollowupsPage() {
@@ -68,7 +68,7 @@ export default function StaffPendingFollowupsPage() {
   async function fetchLeads() {
     try {
       setLoading(true);
-      const data = await fetchLeadsForStaff('pending-followups');
+      const data = await fetchStaffLeadsReport('pending_follow');
       setLeads(data.results);
       // You might need to adjust pagination based on the API response
       setTotalPages(Math.ceil(data.count / 10)); // Assuming 10 items per page
@@ -95,17 +95,30 @@ export default function StaffPendingFollowupsPage() {
   async function saveChanges() {
     if (!editingLead) return;
 
-    // This is where you would typically make an API call to save the changes.
-    // For now, it just shows a toast notification.
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      await updateLeadStatusAndFollowUp(
+        editingLead.id,
+        statusValue,
+        messageValue,
+        followDate,
+        followTime
+      );
 
-    toast({
-        title: "Status Updated",
-        description: `Follow-up for ${editingLead.name} has been updated.`,
-        className: 'bg-green-500 text-white'
-    });
-    setShowModal(false);
-    fetchLeads(); // Refresh leads
+      toast({
+          title: "Status Updated",
+          description: `Follow-up for ${editingLead.name} has been updated.`,
+          className: 'bg-green-500 text-white'
+      });
+      setShowModal(false);
+      fetchLeads(); // Refresh leads
+    } catch (error: any) {
+      console.error("Error saving changes:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update lead status.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (

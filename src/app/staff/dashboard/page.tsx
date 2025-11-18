@@ -19,17 +19,16 @@ interface Lead {
   name: string;
   call: string;
   status: string;
+  project: number | null;
   message?: string;
 }
 
 interface Project {
   id: number;
   name: string;
-  message: string;
-  youtube_link: string;
 }
 
-const ExpandedLeadDetails = ({ lead, projects, openEditModal }: { lead: Lead; projects: Project[]; openEditModal: (lead: Lead) => void }) => (
+const ExpandedLeadDetails = ({ lead, projects, openEditModal, handleProjectChange }: { lead: Lead; projects: Project[]; openEditModal: (lead: Lead) => void; handleProjectChange: (leadId: number, projectId: number) => void; }) => (
   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
     <div className="p-4 flex items-center gap-4 border-b border-gray-200">
       <div className="flex items-center gap-4 flex-1">
@@ -69,13 +68,18 @@ const ExpandedLeadDetails = ({ lead, projects, openEditModal }: { lead: Lead; pr
             <FileText className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
             <span className="text-sm font-medium">Project:</span>
           </div>
-          <Select className="ml-auto md:ml-0 w-full md:w-48">
-            <SelectTrigger>
-              <SelectValue placeholder="Select" />
+          <Select
+            value={lead.project?.toString() ?? ""}
+            onValueChange={(newProjectId) => handleProjectChange(lead.id, parseInt(newProjectId))}
+          >
+            <SelectTrigger className="ml-auto md:ml-0 w-full md:w-48">
+              <SelectValue placeholder="Select Project">
+                {projects.find(p => p.id === lead.project)?.name}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {projects.map((p) => (
-                <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -191,7 +195,8 @@ export default function StaffDashboardPage() {
             id: lead.id,
             name: lead.name,
             call: lead.call,
-            status: lead.status
+            status: lead.status,
+            project: lead.project, // Assuming the API returns the project ID for each lead
           }));
           setLeads(formattedLeads);
         }
@@ -249,6 +254,40 @@ export default function StaffDashboardPage() {
 
     } catch (error: any) {
       console.error("Error updating lead status:", error);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleProjectChange = async (leadId: number, projectId: number) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/update-lead-project/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lead_id: leadId,
+          project_id: projectId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update project');
+      }
+
+      fetchStaffDashboardData();
+      toast({ title: "Project Updated", description: "Lead project has been successfully updated." });
+
+    } catch (error: any) {
+      console.error("Error updating lead project:", error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
@@ -457,13 +496,18 @@ export default function StaffDashboardPage() {
                         </a>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell w-1/6">
-                       <Select>
+                       <Select
+                         value={lead.project?.toString() ?? ""}
+                         onValueChange={(newProjectId) => handleProjectChange(lead.id, parseInt(newProjectId))}
+                       >
                         <SelectTrigger>
-                            <SelectValue placeholder="Select" />
+                            <SelectValue placeholder="Select Project">
+                              {projects.find(p => p.id === lead.project)?.name}
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             {projects.map((p) => (
-                                <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                                <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                             ))}
                         </SelectContent>
                        </Select>
@@ -482,13 +526,13 @@ export default function StaffDashboardPage() {
                         {/* Mobile Expanded Row */}
                         <TableRow className="md:hidden">
                           <TableCell colSpan={3} className="p-0">
-                            <ExpandedLeadDetails lead={lead} projects={projects} openEditModal={openEditModal} />
+                            <ExpandedLeadDetails lead={lead} projects={projects} openEditModal={openEditModal} handleProjectChange={handleProjectChange} />
                           </TableCell>
                         </TableRow>
                         {/* Tablet Expanded Row */}
                         <TableRow className="hidden md:table-row lg:hidden">
                           <TableCell colSpan={4} className="p-0">
-                            <ExpandedLeadDetails lead={lead} projects={projects} openEditModal={openEditModal} />
+                            <ExpandedLeadDetails lead={lead} projects={projects} openEditModal={openEditModal} handleProjectChange={handleProjectChange} />
                           </TableCell>
                         </TableRow>
                       </>

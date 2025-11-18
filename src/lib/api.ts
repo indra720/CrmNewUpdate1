@@ -96,6 +96,53 @@ export async function fetchAdminLeadsByTag(tag: string): Promise<{ staff_leads: 
   }
 }
 
+export async function updateLeadStatusAndFollowUp(
+  leadId: number,
+  status: string,
+  message: string,
+  followUpDate: string,
+  followUpTime: string
+): Promise<any> {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/update-lead-status/${leadId}/`,
+      {
+        method: "PATCH", // Assuming PATCH for partial update
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify({
+          status: status,
+          message: message,
+          follow_up_date: followUpDate,
+          follow_up_time: followUpTime,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error(`Failed to update lead ${leadId} status and follow-up:`, error);
+    throw new Error(
+      `Failed to update lead status and follow-up: ${error.message || "Unknown error"}`
+    );
+  }
+}
+
 //  Funciton to fethch all admins cards 
 export async function fetchAdmins(): Promise<any[]> {
   const token = localStorage.getItem("authToken");
@@ -845,6 +892,43 @@ export async function fetchLeadsForStaff(tag: string): Promise<any> {
 
 
 
+}
+
+export async function fetchStaffLeadsReport(tag: string): Promise<any> {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/interested-leads/${tag}/`;
+    console.log(`Fetching staff leads report for tag ${tag}:`, url);
+    const response = await fetch(
+      url,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error(`Failed to fetch staff leads report for tag ${tag}:`, error);
+    throw new Error(
+      `Failed to fetch staff leads report: ${error.message || "Unknown error"}`
+    );
+  }
 }
 
 
