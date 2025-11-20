@@ -161,6 +161,11 @@ export default function TeamLeaderDashboardPage() {
   const [activeTab, setActiveTab] = useState("personal");
   const { toast } = useToast();
   const [users, setUsers] = useState(staffData);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
 
   const filteredStaff = users.filter(staff =>
     staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -242,7 +247,7 @@ export default function TeamLeaderDashboardPage() {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold tracking-tight">Staff Users</h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {kpiData.map(item => (
           <KpiCard key={item.title} {...item} />
         ))}
@@ -303,60 +308,109 @@ export default function TeamLeaderDashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>SR. NO</TableHead>
+                  <TableHead>
+                    <div className="lg:hidden"></div>
+                    <div className="hidden lg:block">SR. NO</div>
+                  </TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email id</TableHead>
-                  <TableHead>Mobile No</TableHead>
-                  <TableHead>Created Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Leads</TableHead>
-                  <TableHead>Incentives</TableHead>
-                  <TableHead>Earn</TableHead>
-                  <TableHead>Add Sell</TableHead>
-                  <TableHead>Edit Now</TableHead>
+                  <TableHead className="hidden md:table-cell">Email id</TableHead>
+                  <TableHead className="hidden md:table-cell">Mobile No</TableHead>
+                  <TableHead className="hidden lg:table-cell">Created Date</TableHead>
+                  <TableHead className="hidden lg:table-cell">Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Duration</TableHead>
+                  <TableHead className="hidden lg:table-cell">Leads</TableHead>
+                  <TableHead className="hidden lg:table-cell">Incentives</TableHead>
+                  <TableHead className="hidden lg:table-cell">Earn</TableHead>
+                  <TableHead className="hidden lg:table-cell">Add Sell</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStaff.map((staff, index) => (
-                  <TableRow key={staff.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{staff.name}</TableCell>
-                    <TableCell>{staff.email}</TableCell>
-                    <TableCell>{staff.mobile}</TableCell>
-                    <TableCell>{staff.createdDate}</TableCell>
-                    <TableCell>{staff.status}</TableCell>
-                    <TableCell>{staff.duration}</TableCell>
-                    <TableCell>
-                      <Link href="/team-leader/leads/staff">
-                        <Button variant="link" className="text-green-600 p-0 h-auto">
-                           <span className="sm:hidden"><Eye className="h-4 w-4" /></span>
-                           <span className="hidden sm:inline">View</span>
-                        </Button>
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                       <Link href="/team-leader/incentives">
-                            <Button variant="link" className="p-0 h-auto">Incentives</Button>
-                       </Link>
-                    </TableCell>
-                    <TableCell>
-                       <Link href="/team-leader/earn">
-                            <Button variant="link" className="text-green-600 p-0 h-auto">Earn</Button>
-                       </Link>
-                    </TableCell>
-                    <TableCell>
-                       <Link href="/team-leader/add-sell">
-                            <Button variant="link" className="text-purple-600 p-0 h-auto">Add Sell</Button>
-                       </Link>
-                    </TableCell>
-                    <TableCell>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEditForm(staff)}>
-                           <Pencil className="h-4 w-4" />
-                           <span className="sr-only">Edit</span>
-                        </Button>
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment key={staff.id}>
+                    <TableRow data-state={expandedRowId === staff.id && 'selected'}>
+                      <TableCell>
+                        <div className="lg:hidden">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-green-600"
+                            onClick={() => toggleRow(staff.id)}
+                          >
+                            {expandedRowId === staff.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <div className="hidden lg:block">{index + 1}.</div>
+                      </TableCell>
+                      <TableCell className="font-medium">{staff.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{staff.email}</TableCell>
+                      <TableCell className="hidden md:table-cell">{staff.mobile}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{staff.createdDate}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{staff.status}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{staff.duration}</TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <Link href="/team-leader/leads/staff">
+                          <Button variant="link" className="text-green-600 p-0 h-auto">
+                             <span className="sm:hidden"><Eye className="h-4 w-4" /></span>
+                             <span className="hidden sm:inline">View</span>
+                          </Button>
+                        </Link>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                         <Link href="/team-leader/incentives">
+                              <Button variant="link" className="p-0 h-auto">Incentives</Button>
+                         </Link>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                         <Link href="/team-leader/earn">
+                              <Button variant="link" className="text-green-600 p-0 h-auto">Earn</Button>
+                         </Link>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                         <Link href="/team-leader/add-sell">
+                              <Button variant="link" className="text-purple-600 p-0 h-auto">Add Sell</Button>
+                         </Link>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="hidden lg:flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleOpenEditForm(staff)}
+                            className="h-8 w-8"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        </div>
+                        <div className="hidden md:flex lg:hidden items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleOpenEditForm(staff)}
+                            className="h-8 w-8"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        </div>
+                        <div className="md:hidden">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">More</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuItem onClick={() => handleOpenEditForm(staff)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                 ))}
                  {filteredStaff.length === 0 && (
                   <TableRow>
