@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { STAFF_DASHBOARD_KPI_DATA } from "@/lib/constants";
+import { TEAM_LEADER_DASHBOARD_KPI_DATA } from "@/lib/constants";
 
 interface Lead {
   id: number;
@@ -31,7 +31,7 @@ interface Project {
 
 const KpiCard = ({ title, value, icon: Icon, color, link }: { title: string, value: number, icon: React.ElementType, color: string, link?: string }) => {
     const cardContent = (
-      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300">
+      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300 h-full">
         <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2">
             <div className={`text-3xl ${color}`}>
                 <Icon className="h-8 w-8" />
@@ -52,7 +52,7 @@ const KpiCard = ({ title, value, icon: Icon, color, link }: { title: string, val
   };
 
 
-export default function StaffDashboardPage() {
+export default function TeamLeaderDashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState("");
@@ -62,9 +62,6 @@ export default function StaffDashboardPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [addLeadModalOpen, setAddLeadModalOpen] = useState(false);
   const [kpiCounts, setKpiCounts] = useState({
-    pending_followups: 10,
-    tomorrow_followups: 10,
-    today_followups: 10,
     upload_leads: 10,
     remaining_leads: 2,
     total_lead: 15,
@@ -166,7 +163,7 @@ export default function StaffDashboardPage() {
       <h1 className="text-2xl font-bold tracking-tight">Staff Dashboard</h1>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {STAFF_DASHBOARD_KPI_DATA.map((card, index) => (
+            {TEAM_LEADER_DASHBOARD_KPI_DATA.map((card, index) => (
                 <KpiCard 
                   key={index} 
                   title={card.title} 

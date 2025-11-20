@@ -272,3 +272,12 @@ export const STAFF_DASHBOARD_KPI_DATA = [
     { title: "Other Location", valueKey: "other_location", icon: MapPin, color: "text-orange-500", link: "/staff/reports/other-location" },
     { title: "Not Picked", valueKey: "not_picked", icon: Phone, color: "text-slate-500", link: "/staff/reports/not-picked" },
 ];
+
+export const TEAM_LEADER_DASHBOARD_KPI_DATA = [
+    { title: "Total Lead", valueKey: "total_lead", icon: Users, color: "text-rose-500", link: "/team-leader/reports/total-leads" },
+    { title: "Total Visits", valueKey: "total_visits", icon: Eye, color: "text-green-500", link: "/team-leader/reports/visit" },
+    { title: "Interested", valueKey: "interested", icon: Check, color: "text-teal-500", link: "/team-leader/reports/interested" },
+    { title: "Not Interested", valueKey: "not_interested", icon: XCircle, color: "text-red-500", link: "/team-leader/reports/not-interested" },
+    { title: "Other Location", valueKey: "other_location", icon: MapPin, color: "text-orange-500", link: "/team-leader/reports/other-location" },
+    { title: "Not Picked", valueKey: "not_picked", icon: Phone, color: "text-slate-500", link: "/team-leader/reports/not-picked" },
+];
