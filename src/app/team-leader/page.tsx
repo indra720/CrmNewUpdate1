@@ -52,21 +52,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const kpiData = [
-    { title: 'Total Staff', value: 1, icon: Users, color: 'text-blue-500', link: '/team-leader/productivity/staff' },
-    { title: 'Login Staff', value: 0, icon: LogIn, color: 'text-green-500' },
-    { title: 'Log-out', value: 1, icon: LogOut, color: 'text-red-500' },
-    { title: 'Associate staff', value: 1, icon: UserCheck, color: 'text-purple-500' },
-    { title: 'Total Upload Lead', value: 0, icon: FileUp, color: 'text-sky-500', link: '/team-leader/upload-leads' },
     { title: 'Total Lead', value: 0, icon: Users, color: 'text-rose-500', link: '/team-leader/reports/total-leads' },
     { title: 'Total Visits', value: 0, icon: Eye, color: 'text-green-500', link: '/team-leader/reports/visit' },
     { title: 'Interested', value: 0, icon: CheckCircle, color: 'text-teal-500', link: '/team-leader/reports/interested' },
     { title: 'Not Interested', value: 0, icon: XCircle, color: 'text-red-500', link: '/team-leader/reports/not-interested' },
     { title: 'Other Location', value: 0, icon: MapPin, color: 'text-orange-500', link: '/team-leader/reports/other-location' },
     { title: 'Not Picked', value: 0, icon: PhoneOff, color: 'text-slate-500', link: '/team-leader/reports/not-picked' },
-    { title: 'Lost Leads', value: 0, icon: Percent, color: 'text-gray-500', link: '/team-leader/reports/total-leads' },
-    { title: "Pending FollowUps", value: 10, icon: Clock, color: "text-yellow-500", link: "/team-leader/reports/pending-followups" },
-    { title: "Tomorrow FollowUps", value: 10, icon: Clock, color: "text-blue-500", link: "/team-leader/reports/tomorrow-followups" },
-    { title: "Today FollowUps", value: 10, icon: Clock, color: "text-purple-500", link: "/team-leader/reports/today-followups" },
 ];
 
 const staffData = [
@@ -107,7 +98,7 @@ const initialFormData = {
 
 const KpiCard = ({ title, value, icon: Icon, color, link }: { title: string, value: number, icon: React.ElementType, color: string, link?: string }) => {
     const cardContent = (
-      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300 bg-card">
+      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300 h-full bg-card">
         <CardContent className="p-3 flex flex-col items-center justify-center text-center gap-1">
             <div className={cn("text-primary", color)}>
                 <Icon className="h-8 w-8" />
