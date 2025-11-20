@@ -52,6 +52,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const kpiData = [
+    { title: 'Total Staff', value: 1, icon: Users, color: 'text-blue-500', link: '/team-leader/productivity/staff' },
+    { title: 'Login Staff', value: 0, icon: LogIn, color: 'text-green-500' },
+    { title: 'Log-out', value: 1, icon: LogOut, color: 'text-red-500' },
+    { title: 'Associate staff', value: 1, icon: UserCheck, color: 'text-purple-500' },
+    { title: 'Total Upload Lead', value: 0, icon: FileUp, color: 'text-sky-500', link: '/team-leader/upload-leads' },
+    { title: 'Lost Leads', value: 0, icon: Percent, color: 'text-gray-500', link: '/team-leader/reports/total-leads' },
     { title: 'Total Lead', value: 0, icon: Users, color: 'text-rose-500', link: '/team-leader/reports/total-leads' },
     { title: 'Total Visits', value: 0, icon: Eye, color: 'text-green-500', link: '/team-leader/reports/visit' },
     { title: 'Interested', value: 0, icon: CheckCircle, color: 'text-teal-500', link: '/team-leader/reports/interested' },
