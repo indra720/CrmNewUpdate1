@@ -227,7 +227,7 @@ export const TEAM_LEADER_SIDENAV_ITEMS = [
     },
     {
         title: 'Leads',
-        path: '/team-leader/reports/total-leads',
+        path: '/team-leader/leads',
         icon: <FolderKanban className="h-5 w-5" />,
     },
     {

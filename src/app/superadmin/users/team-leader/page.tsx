@@ -214,9 +214,6 @@ export default function TeamLeaderManagementPage() {
 
       const data = await response.json();
       setUsers(data.results || []);
-      
-      const uniqueAdmins = Array.from(new Map(data.results.map((item: any) => [item.admin.id, item.admin])).values());
-      setAdmins(uniqueAdmins || []);
 
     } catch (err: any) {
       setError(err.message);
@@ -230,7 +227,37 @@ export default function TeamLeaderManagementPage() {
   useEffect(() => {
     fetchDashboardData();
     fetchPageData();
+    fetchAdmins(); // Call the new function to fetch admins
   }, []);
+
+  const fetchAdmins = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Authentication token not found.");
+      return;
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/dashboard/super-admin/`, {
+          headers: { Authorization: ` Token ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      // Assuming the admin list is under 'users' key in the super-admin dashboard response
+      const fetchedAdmins = data.users.map((admin: any) => ({ id: admin.id, name: admin.name }));
+      setAdmins(fetchedAdmins);
+    } catch (err: any) {
+      console.error("Failed to fetch admins:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load admin list for the dropdown.",
+        variant: "destructive",
+      });
+    }
+  };
 
 
   const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -332,12 +359,8 @@ export default function TeamLeaderManagementPage() {
 
     const data = new FormData();
     
-    // Create a copy to avoid mutating state directly, and rename admin to admin_id
+    // Create a copy to avoid mutating state directly
     const submissionData = { ...formData };
-    if (submissionData.admin) {
-        submissionData.admin_id = submissionData.admin;
-        delete submissionData.admin;
-    }
 
     Object.keys(submissionData).forEach(key => {
         if (submissionData[key] !== null && submissionData[key] !== undefined) {
@@ -853,10 +876,9 @@ export default function TeamLeaderManagementPage() {
             <form onSubmit={handleAddSubmit} className="flex-1 flex flex-col min-h-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
                   <div className="px-6 flex-shrink-0">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="personal">Personal Details</TabsTrigger>
                         <TabsTrigger value="account">Account Details</TabsTrigger>
-                        <TabsTrigger value="role">Role</TabsTrigger>
                     </TabsList>
                   </div>
                  <div className="p-6 overflow-y-auto flex-1 relative hide-scrollbar">
@@ -872,7 +894,7 @@ export default function TeamLeaderManagementPage() {
                         {activeTab === 'personal' && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                               <InputField id="admin" label="Admin" name="admin" value={formData.admin} onChange={(e) => handleAddFormSelectChange("admin", e.target.value)} required>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" defaultValue={formData.admin}>
+                                <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" defaultValue={formData.admin} required>
                                     <SelectTrigger className="pl-10 pr-4 h-11">
                                     <SelectValue placeholder="Select Admin" />
                                     </SelectTrigger>
@@ -886,14 +908,14 @@ export default function TeamLeaderManagementPage() {
                               <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleAddFormChange} required />
                               <InputField id="email" label="E-Mail Address" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleAddFormChange} required />
                               <InputField id="password" label="Password" name="password" type="password" placeholder="••••••••" icon={Lock} value={formData.password} onChange={handleAddFormChange} required />
-                              <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} />
-                              <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} />
-                              <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} />
-                              <InputField id="marksheets" label="MarkSheets" name="marksheets" type="file" icon={FileText} onChange={handleAddFormChange} value={''} />
-                              <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleAddFormChange} />
-                              <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleAddFormChange} />
-                              <InputField id="state" label="State" name="state" value={formData.state} onChange={handleAddFormChange}>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("state", value)} name="state" defaultValue={formData.state}>
+                              <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} required />
+                              <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} required />
+                              <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} required />
+                              <InputField id="marksheets" label="MarkSheets" name="marksheets" type="file" icon={FileText} onChange={handleAddFormChange} value={''} required />
+                              <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleAddFormChange} required />
+                              <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleAddFormChange} required />
+                              <InputField id="state" label="State" name="state" value={formData.state} onChange={handleAddFormChange} required>
+                                <Select onValueChange={(value) => handleAddFormSelectChange("state", value)} name="state" defaultValue={formData.state} required>
                                     <SelectTrigger className="pl-10 pr-4 h-11">
                                     <SelectValue placeholder="Select State" />
                                     </SelectTrigger>
@@ -905,27 +927,23 @@ export default function TeamLeaderManagementPage() {
                                 </Select>
                               </InputField>
                               <InputField id="mobile" label="Mobile" name="mobile" type="tel" placeholder="9876543210" icon={Phone} value={formData.mobile} onChange={handleAddFormChange} required />
-                              <InputField id="salary" label="Salary" name="salary" placeholder="e.g. 50000" icon={Wallet} value={formData.salary} onChange={handleAddFormChange} />
+                              <InputField id="salary" label="Salary" name="salary" placeholder="e.g. 50000" icon={Wallet} value={formData.salary} onChange={handleAddFormChange} required />
                           </div>
                         )}
                         {activeTab === 'account' && (
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                              <InputField id="account_number" label="Account Number" name="account_number" placeholder="Your account number" icon={Wallet} value={formData.account_number} onChange={handleAddFormChange} />
+                              <InputField id="account_number" label="Account Number" name="account_number" placeholder="Your account number" icon={Wallet} value={formData.account_number} onChange={handleAddFormChange} required />
                               <InputField id="upi_id" label="Add UPI" name="upi_id" placeholder="yourname@upi" icon={Briefcase} value={formData.upi_id} onChange={handleAddFormChange} />
-                              <InputField id="bank_name" label="Bank Name" name="bank_name" placeholder="e.g. State Bank of India" icon={Landmark} value={formData.bank_name} onChange={handleAddFormChange} />
-                              <InputField id="ifsc_code" label="IFSC Code" name="ifsc_code" placeholder="SBIN0001234" icon={Hash} value={formData.ifsc_code} onChange={handleAddFormChange} />
-                              <InputField id="pincode" label="Pincode" name="pincode" placeholder="e.g. 110001" icon={MapPin} value={formData.pincode} onChange={handleAddFormChange} />
+                              <InputField id="bank_name" label="Bank Name" name="bank_name" placeholder="e.g. State Bank of India" icon={Landmark} value={formData.bank_name} onChange={handleAddFormChange} required />
+                              <InputField id="ifsc_code" label="IFSC Code" name="ifsc_code" placeholder="SBIN0001234" icon={Hash} value={formData.ifsc_code} onChange={handleAddFormChange} required />
+                              <InputField id="pincode" label="Pincode" name="pincode" placeholder="e.g. 110001" icon={MapPin} value={formData.pincode} onChange={handleAddFormChange} required />
                               <div className="md:col-span-2">
-                                <InputField id="address" label="Address" name="address" value={formData.address} onChange={handleAddFormChange}>
+                                <InputField id="address" label="Address" name="address" value={formData.address} onChange={handleAddFormChange} required>
                                    <Textarea className="pl-10 pr-4 min-h-[80px]" placeholder="Enter full address" />
                                 </InputField>
                               </div>
-                           </div>
-                        )}
-                        {activeTab === 'role' && (
-                           <div className="grid grid-cols-1 gap-y-5">
                               <InputField id="manager_type" label="Manager Type" name="manager_type" value={formData.manager_type} onChange={(e) => handleAddFormSelectChange("manager_type", e.target.value)} required>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("manager_type", value)} name="manager_type" defaultValue={formData.manager_type}>
+                                <Select onValueChange={(value) => handleAddFormSelectChange("manager_type", value)} name="manager_type" defaultValue={formData.manager_type} required>
                                     <SelectTrigger className="pl-10 pr-4 h-11">
                                     <SelectValue placeholder="Select Manager Type" />
                                     </SelectTrigger>
@@ -946,15 +964,15 @@ export default function TeamLeaderManagementPage() {
                   {activeTab === 'personal' ? (
                       <Button type="button" variant="outline" onClick={handleCloseAddForm}>Cancel</Button>
                     ) : (
-                      <Button type="button" variant="outline" onClick={(e) => { e.preventDefault(); activeTab === 'account' ? setActiveTab('personal') : setActiveTab('account'); }}>
+                      <Button type="button" variant="outline" onClick={(e) => { e.preventDefault(); setActiveTab('personal'); }}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Previous
                       </Button>
                     )}
-                    {activeTab === 'role' ? (
+                    {activeTab === 'account' ? (
                       <Button type="submit">Save Team Leader</Button>
                     ) : (
-                      <Button type="button" onClick={(e) => { e.preventDefault(); activeTab === 'personal' ? setActiveTab('account') : setActiveTab('role'); }}>
+                      <Button type="button" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>
                         Next
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -1004,3 +1022,26 @@ export default function TeamLeaderManagementPage() {
     </div>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

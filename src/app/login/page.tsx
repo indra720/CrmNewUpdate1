@@ -318,6 +318,7 @@ const LoginPage = () => {
           }
           localStorage.setItem('userRole', userRole);
           localStorage.setItem('userEmail', data.data.email); // Store user's email
+          localStorage.setItem('userId', data.data.id); // Store user's ID
           setIsAuthenticated(true);
           handleRedirect(userRole);
         }

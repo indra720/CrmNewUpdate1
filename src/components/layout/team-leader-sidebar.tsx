@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, ChevronDown, PanelLeft, PanelRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { LogOut, ChevronDown, PanelLeft, PanelRight } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -167,14 +167,14 @@ export function TeamLeaderSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, 
   const SidebarHeader = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsCollapsed: (collapsed: boolean) => void }) => (
     <div className={cn("flex items-center h-20 border-b border-sidebar-border", isCollapsed ? "justify-center" : "px-4 justify-between")}>
       <div className="flex items-center">
-        <Avatar className="h-10 w-10 bg-primary text-primary-foreground">
-          <AvatarFallback>TL</AvatarFallback>
+        <Avatar className="h-10 w-10 ">
+          <AvatarFallback className='bg-orange-500 text-primary-foreground'>TL</AvatarFallback>
         </Avatar>
-        {!isCollapsed && <h1 className="ml-3 text-2xl font-bold text-white">Team Leader</h1>}
+        {!isCollapsed && <h1 className="ml-3 text-md font-bold text-white">Team Leader</h1>}
       </div>
       {!isCollapsed && (
         <Button onClick={() => setIsCollapsed(true)} variant="ghost" className="hidden lg:flex justify-center h-8 w-8 p-0 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground">
-          <ChevronsLeft size={20} />
+          <PanelLeft size={20} />
           <span className="sr-only">Collapse Sidebar</span>
         </Button>
       )}
@@ -196,7 +196,7 @@ export function TeamLeaderSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, 
       <div className={cn("p-4 border-t border-sidebar-border", isCollapsed ? "flex flex-col items-center" : "")}>
           {isCollapsed && (
              <Button onClick={() => setIsCollapsed(false)} variant="ghost" className="hidden lg:flex justify-center w-full mb-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground">
-              <ChevronsRight size={20} />
+              <PanelRight size={20} />
               <span className="sr-only">Expand Sidebar</span>
             </Button>
           )}

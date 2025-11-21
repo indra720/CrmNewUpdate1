@@ -168,7 +168,7 @@ export function StaffSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, setIs
     <div className={cn("flex items-center h-20 border-b border-sidebar-border", isCollapsed ? "justify-center" : "px-4 justify-between")}>
       <div className="flex items-center">
         <Avatar className="h-10 w-10 bg-primary text-primary-foreground">
-          <AvatarFallback>S</AvatarFallback>
+          <AvatarFallback className='bg-orange-500'>S</AvatarFallback>
         </Avatar>
         {!isCollapsed && <h1 className="ml-3 text-2xl font-bold text-white">Staff</h1>}
       </div>

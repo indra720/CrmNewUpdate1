@@ -29,16 +29,25 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogDescription,
+  } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Phone, MessageSquare, Plus, Minus, Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Search, Phone, MessageSquare, Plus, Minus, Loader2, PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import Link from 'next/link'; // Import Link for navigation
+import Link from 'next/link';
 
 interface Lead {
   id: number;
@@ -47,6 +56,14 @@ interface Lead {
   whatsapp: boolean;
   status: string;
 }
+
+const initialNewLeadData = {
+    name: "",
+    status: "",
+    mobile: "",
+    email: "",
+    description: "",
+};
 
 const ExpandedLeadDetails = ({ lead }: { lead: Lead }) => (
     <div className="p-4">
@@ -73,7 +90,6 @@ const ExpandedLeadDetails = ({ lead }: { lead: Lead }) => (
                             </a>
                         </Button>
                     </div>
-                    {/* You can add more lead specific details here if available in the Lead interface */}
                 </div>
             </div>
         </div>
@@ -81,13 +97,16 @@ const ExpandedLeadDetails = ({ lead }: { lead: Lead }) => (
 );
 
 
-export default function StaffLeadsPage() {
+export default function LeadsPage() {
     const router = useRouter();
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const { toast } = useToast();
     const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+    const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
+    const [newLeadData, setNewLeadData] = useState(initialNewLeadData);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleRow = (rowId: number) => {
         setExpandedRowId(expandedRowId === rowId ? null : rowId);
@@ -136,19 +155,79 @@ export default function StaffLeadsPage() {
     const handleTypeNavChange = (value: string) => {
         if (!value) return;
         router.push(value);
-    }
+    };
     
-  const getStatusBadgeVariant = (status: string) => {
-    const lowerCaseStatus = status.toLowerCase();
-    if (lowerCaseStatus.includes('interested')) return 'default';
-    if (lowerCaseStatus.includes('not interested')) return 'destructive';
-    if (lowerCaseStatus.includes('visit')) return 'secondary';
-    return 'outline';
-  };
+    const getStatusBadgeVariant = (status: string) => {
+        const lowerCaseStatus = status.toLowerCase();
+        if (lowerCaseStatus.includes('interested')) return 'default';
+        if (lowerCaseStatus.includes('not interested')) return 'destructive';
+        if (lowerCaseStatus.includes('visit')) return 'secondary';
+        return 'outline';
+    };
+
+    const handleAddLeadChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setNewLeadData({ ...newLeadData, [name]: value });
+    };
+
+    const handleAddLeadSelectChange = (name: string, value: string) => {
+        setNewLeadData({ ...newLeadData, [name]: value });
+    };
+
+    const handleAddLeadSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newLeadData.name) {
+            toast({
+                title: "Name is required",
+                description: "Please enter a name for the lead.",
+                variant: "destructive",
+            });
+            return;
+        }
+        setIsSubmitting(true);
+        
+        try {
+            const token = localStorage.getItem("authToken");
+            if (!token) {
+                throw new Error("Authentication token not found.");
+            }
+
+            const response = await fetch('http://127.0.0.1:8000/accounts/api/leads/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`,
+                },
+                body: JSON.stringify(newLeadData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to add lead.');
+            }
+            
+            toast({
+                title: "Lead Added!",
+                description: `${newLeadData.name} has been added successfully.`,
+                className: 'bg-green-500 text-white'
+            });
+            setIsAddLeadOpen(false);
+            setNewLeadData(initialNewLeadData);
+            fetchLeads(); // Refresh leads list
+        } catch (err: any) {
+            toast({
+                title: "Error",
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Staff Leads</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
 
        <Card className="shadow-lg rounded-2xl">
         <CardContent className="p-6">
@@ -192,12 +271,18 @@ export default function StaffLeadsPage() {
       <Card className="shadow-lg rounded-2xl">
          <CardHeader>
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="relative w-full sm:max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                    placeholder="Search leads..."
-                    className="pl-10"
-                    />
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:max-w-xs">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                        placeholder="Search leads..."
+                        className="pl-10"
+                        />
+                    </div>
+                    <Button onClick={() => setIsAddLeadOpen(true)} className="sm:w-auto p-2 sm:px-4 sm:py-2">
+                        <PlusCircle className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Add New Lead</span>
+                    </Button>
                 </div>
                  <div className="w-full sm:w-auto">
                      <Select onValueChange={handleTypeNavChange}>
@@ -220,12 +305,12 @@ export default function StaffLeadsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px] p-1 md:w-auto md:hidden">S.N.</TableHead> {/* Only show SN on large screens, or + icon on mobile */}
-                  <TableHead className="w-[50px] p-1 hidden md:table-cell">S.N.</TableHead> {/* S.N. for MD and above */}
+                  <TableHead className="w-[50px] p-1 md:w-auto md:hidden">S.N.</TableHead>
+                  <TableHead className="w-[50px] p-1 hidden md:table-cell">S.N.</TableHead>
                   <TableHead className="p-1">Name</TableHead>
                   <TableHead className="p-1">Status</TableHead>
-                  <TableHead className="text-center p-1 md:table-cell hidden">Call</TableHead>
-                  <TableHead className="text-center p-1 md:table-cell hidden">Whatsapp</TableHead>
+                  <TableHead className="text-center p-1 hidden md:table-cell">Call</TableHead>
+                  <TableHead className="text-center p-1 hidden md:table-cell">Whatsapp</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -253,7 +338,6 @@ export default function StaffLeadsPage() {
                     leads.map((lead, index) => (
                     <React.Fragment key={lead.id}>
                         <TableRow data-state={expandedRowId === lead.id ? "selected" : undefined}>
-                            {/* Mobile only S.N. with plus icon */}
                             <TableCell className="p-1 md:hidden">
                                 <Button
                                     size="icon"
@@ -268,7 +352,6 @@ export default function StaffLeadsPage() {
                                     )}
                                 </Button>
                             </TableCell>
-                            {/* S.N. for MD and above */}
                             <TableCell className="p-1 hidden md:table-cell">{index + 1}</TableCell>
 
                             <TableCell className="font-medium p-1">{lead.name}</TableCell>
@@ -304,16 +387,67 @@ export default function StaffLeadsPage() {
         </CardContent>
       </Card>
       
+      <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
+        <DialogContent className="sm:max-w-sm w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto hide-scrollbar">
+            <DialogHeader>
+                <DialogTitle>Add New Lead</DialogTitle>
+                <DialogDescription>
+                    Fill in the details below to create a new lead.
+                </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddLeadSubmit} className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" name="name" value={newLeadData.name} onChange={handleAddLeadChange} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select name="status" onValueChange={(value) => handleAddLeadSelectChange("status", value)} required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Interested">Interested</SelectItem>
+                            <SelectItem value="Not Interested">Not Interested</SelectItem>
+                            <SelectItem value="Visit">Visit</SelectItem>
+                            <SelectItem value="Lost">Lost</SelectItem>
+                            <SelectItem value="Other Location">Other Location</SelectItem>
+                            <SelectItem value="Not Picked">Not Picked</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="mobile">Mobile</Label>
+                    <Input id="mobile" name="mobile" type="tel" value={newLeadData.mobile} onChange={handleAddLeadChange} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" name="email" type="email" value={newLeadData.email} onChange={handleAddLeadChange} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea id="description" name="description" value={newLeadData.description} onChange={handleAddLeadChange} />
+                </div>
+                <DialogFooter>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Submit
+                    </Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+      </Dialog>
+
       <Pagination>
         <PaginationContent>
             <PaginationItem>
-            <PaginationPrevious href="#" />
+                <PaginationPrevious href="#" />
             </PaginationItem>
             <PaginationItem>
-            <PaginationLink href="#" isActive>1</PaginationLink>
+                <PaginationLink href="#" isActive>1</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-            <PaginationNext href="#" />
+                <PaginationNext href="#" />
             </PaginationItem>
         </PaginationContent>
         </Pagination>

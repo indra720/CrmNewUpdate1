@@ -47,55 +47,26 @@ export default function ProductivityPage() {
   const [monthlySalary, setMonthlySalary] = useState(0);
   const [totalSalary, setTotalSalary] = useState(0);
   const [monthsList, setMonthsList] = useState<[number, string][]>([]);
-  const [loading, setLoading] = useState(false); // Set to false initially
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [staffId, setStaffId] = useState('1'); // Default staff ID
 
   const { toast } = useToast();
   
   const yearsList = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 5 + i);
-
-  // Mock data for UI display
-  const mockCalendarData: DayData[] = Array.from({ length: 30 }, (_, i) => ({
-    day: i + 1,
-    date: `2023-10-${i + 1}`,
-    day_name: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i % 7],
-    leads: Math.floor(Math.random() * 20),
-    salary: Math.floor(Math.random() * 1000),
-  }));
-
-  const mockMonthsList: [number, string][] = [
-    [1, 'January'], [2, 'February'], [3, 'March'], [4, 'April'],
-    [5, 'May'], [6, 'June'], [7, 'July'], [8, 'August'],
-    [9, 'September'], [10, 'October'], [11, 'November'], [12, 'December'],
-  ];
-
-  useEffect(() => {
-    // Simulate data loading
-    setLoading(true);
-    setTimeout(() => {
-      setCalendarData(mockCalendarData);
-      setMonthsList(mockMonthsList);
-      setStaffData({ name: "Mock Staff", email: "mock@example.com", mobile: "1234567890", salary: "50000" });
-      setMonthlySalary(15000);
-      setTotalSalary(150000);
-      setLoading(false);
-    }, 1000);
-  }, []);
 
   async function fetchCalendar() {
     setLoading(true);
     setError("");
     try {
       const token = localStorage.getItem("authToken");
-      if (!token) {
-        throw new Error("Authentication token not found.");
-      }
+      const staffId = localStorage.getItem("userId");
 
-      console.log("=== FETCHING STAFF CALENDAR ===");
-      console.log("Staff ID:", staffId);
-      console.log("Year:", year);
-      console.log("Month:", month);
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in again.");
+      }
+      if (!staffId) {
+        throw new Error("User ID not found. Please log in again.");
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/productivity-calendar/${staffId}/?year=${year}&month=${month}`,
@@ -108,14 +79,11 @@ export default function ProductivityPage() {
         }
       );
 
-      console.log("API Response Status:", response.status);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: ApiResponse = await response.json();
-      console.log("API Response Data:", data);
 
       setCalendarData(data.daily_productivity_data || []);
       setStaffData(data.staff);
@@ -123,15 +91,7 @@ export default function ProductivityPage() {
       setTotalSalary(data.total_salary || 0);
       setMonthsList(data.months_list || []);
 
-      toast({
-        title: "Success",
-        description: "Calendar data loaded successfully",
-        className: "bg-green-500 text-white",
-      });
-
     } catch (err: any) {
-      console.error("=== API ERROR ===");
-      console.error("Error:", err);
       setError(err.message);
       toast({
         title: "Error",
@@ -145,7 +105,7 @@ export default function ProductivityPage() {
 
   useEffect(() => {
     fetchCalendar();
-  }, [staffId, year, month]);
+  }, [year, month]);
 
   function handleFilterSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -180,25 +140,29 @@ export default function ProductivityPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Productivity Calendar</h1>
       
-
-
       <Card>
         <CardHeader>
           <form onSubmit={handleFilterSubmit} className="flex flex-col gap-4 items-center sm:flex-row">
-            <div className="w-full sm:w-auto"> {/* Month Select */}
+            <div className="w-full sm:w-auto">
               <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Select Month" />
                 </SelectTrigger>
                 <SelectContent>
-                  {monthsList.map(([monthNum, monthName]) => (
-                    <SelectItem key={monthNum} value={String(monthNum)}>{monthName}</SelectItem>
-                  ))}
+                  {monthsList.length > 0 ? (
+                    monthsList.map(([monthNum, monthName]) => (
+                      <SelectItem key={monthNum} value={String(monthNum)}>{monthName}</SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value={String(new Date().getMonth() + 1)} disabled>
+                      {new Date().toLocaleString('default', { month: 'long' })}
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="flex gap-4 w-full sm:w-auto"> {/* Year Select and Filter Button */}
+            <div className="flex gap-4 w-full sm:w-auto">
               <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
                 <SelectTrigger className="w-full sm:w-[120px]">
                   <SelectValue placeholder="Select Year" />
@@ -225,39 +189,13 @@ export default function ProductivityPage() {
             ) : error ? (
                 <div className="text-center text-red-500 py-10">
                   <p>{error}</p>
+
                   <Button onClick={fetchCalendar} className="mt-4">
                     Try Again
                   </Button>
                 </div>
             ) : (
              <>
-                {/* Color Legend */}
-                <div className="mb-6 p-4 bg-muted/30 rounded-lg">
-                  <h3 className="text-sm font-semibold mb-3">Performance Legend:</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gray-100 border border-gray-200 rounded"></div>
-                      <span>0 Leads</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-primary/40 to-secondary/40 rounded"></div>
-                      <span>1-4 Leads</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-primary/60 to-secondary/60 rounded"></div>
-                      <span>5-9 Leads</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-primary/80 to-secondary/80 rounded"></div>
-                      <span>10-14 Leads</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-gradient-to-tr from-primary to-secondary rounded"></div>
-                      <span>15+ Leads</span>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="hidden md:grid grid-cols-7 gap-2 mb-4">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                         <div key={day} className="text-center font-semibold text-muted-foreground pb-2">{day}</div>

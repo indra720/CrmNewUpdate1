@@ -160,7 +160,7 @@ export default function StaffDashboardPage() {
 
   const statuses = [
     "Leads",
-    "interested",
+    "Intrested",
     "Not Interested",
     "Other Location",
     "Not Picked",
@@ -171,15 +171,28 @@ export default function StaffDashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // केवल API से डेटा फ़ेच करें, हार्डकोडेड डेटा सेट न करें।
     fetchStaffDashboardData();
   }, []);
 
-  const fetchStaffDashboardData = async () => {
+  const fetchStaffDashboardData = async (startDate?: string, endDate?: string) => {
     const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+      return;
+    }
+
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/dashboard/`;
+
+    if (startDate && endDate) {
+      const params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate,
+      });
+      url += `?${params.toString()}`;
+    }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/dashboard/`, {
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           "Authorization": `Token ${token}`,
@@ -196,7 +209,7 @@ export default function StaffDashboardPage() {
             name: lead.name,
             call: lead.call,
             status: lead.status,
-            project: lead.project, // Assuming the API returns the project ID for each lead
+            project: lead.project,
           }));
           setLeads(formattedLeads);
         }
@@ -204,7 +217,7 @@ export default function StaffDashboardPage() {
         if (data.projects) {
           setProjects(data.projects);
         }
-        // Update KPI counts from API response
+        
         if (data.counts) {
           setKpiCounts({
             total_lead: data.counts.total_leads,
@@ -215,11 +228,34 @@ export default function StaffDashboardPage() {
             not_picked: data.counts.total_not_picked_leads,
           });
         }
+        
+        if (startDate && endDate) {
+          setSearch(""); // Clear search field on successful filter
+        }
+      } else {
+        toast({ title: "Error", description: "Failed to fetch dashboard data.", variant: "destructive" });
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      toast({ title: "Error", description: "An error occurred while fetching data.", variant: "destructive" });
     }
-  }; const filteredLeads = leads.filter((lead) =>
+  };
+
+  const handleFilterClick = () => {
+    if (!startDate || !endDate) {
+      toast({
+        title: "Missing Dates",
+        description: "Please select both a start and end date to filter.",
+        variant: "destructive",
+      });
+      return;
+    }
+    fetchStaffDashboardData(startDate, endDate);
+    setStartDate(""); // Clear start date
+    setEndDate("");   // Clear end date
+  };
+
+  const filteredLeads = leads.filter((lead) =>
     lead.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -379,12 +415,51 @@ export default function StaffDashboardPage() {
     }
   };
 
+  const handleAutoAssign = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/auto-assign-leads/`, {
+        method: "POST",
+        headers: { "Authorization": `Token ${token}` },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Leads Assigned!",
+          description: data.message || "New leads have been assigned to you.",
+          className: 'bg-green-500 text-white'
+        });
+        fetchStaffDashboardData(); // Refresh the dashboard
+      } else {
+        toast({
+          title: "Assignment Failed",
+          description: data.error || "Could not assign leads.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error auto-assigning leads:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred during auto-assignment.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Staff Dashboard</h1>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl: gap-4">
         {STAFF_DASHBOARD_KPI_DATA.map((card, index) => (
           <KpiCard
             key={index}
@@ -422,7 +497,7 @@ export default function StaffDashboardPage() {
                 />
               </div>
             </div>
-            <Button>
+            <Button onClick={handleFilterClick}>
               <Filter className="h-4 w-4" />
               <span>Filter</span>
             </Button>
@@ -447,7 +522,9 @@ export default function StaffDashboardPage() {
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Lead
               </Button>
-              <Button variant="outline">Auto Assign</Button>
+              {kpiCounts.total_lead === 0 && (
+                <Button variant="outline" onClick={handleAutoAssign}>Auto Assign</Button>
+              )}
             </div>
           </div>
           <div className="overflow-x-auto rounded-lg border">
@@ -547,7 +624,13 @@ export default function StaffDashboardPage() {
                 {filteredLeads.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                      No matching records found
+                      {kpiCounts.total_lead === 0 ? (
+                        <span>
+                          No leads assigned. Click the <strong>Auto Assign</strong> button to get new leads.
+                        </span>
+                      ) : (
+                        "No matching records found"
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
@@ -577,7 +660,7 @@ export default function StaffDashboardPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Leads">Leads</SelectItem>
-                    <SelectItem value="interested">Interested</SelectItem>
+                    <SelectItem value="Intrested">Interested</SelectItem>
                     <SelectItem value="Not Interested">Not Interested</SelectItem>
                     <SelectItem value="Not Picked">Not Picked</SelectItem>
                     <SelectItem value="Other Location">Other Location</SelectItem>
@@ -704,3 +787,65 @@ export default function StaffDashboardPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+// class AutoAssignLeadsAPIView(APIView):
+//     permission_classes = [permissions.IsAuthenticated]
+
+//     def post(self, request):
+//         user_email = request.user.email
+//         request_user = Staff.objects.filter(email=user_email).last()
+
+//         if not request_user:
+//             return Response({"error": "Staff user not found"}, status=status.HTTP_404_NOT_FOUND)
+
+//         team_leader = request_user.team_leader
+
+//         # Count leads already assigned
+//         current_total_assign_leads = LeadUser.objects.filter(
+//             assigned_to=request_user, 
+//             status='Leads'
+//         ).count()
+
+//         if current_total_assign_leads != 0:
+//             return Response({"error": "You already have leads."}, status=status.HTTP_400_BAD_REQUEST)
+
+//         # Leads available for assignment
+//         team_leader_total_leads = Team_LeadData.objects.filter(
+//             assigned_to=None,
+//             status='Leads'
+//         )
+
+//         leads_count = 0
+
+//         for lead in team_leader_total_leads:
+//             if leads_count >= 100:
+//                 break
+
+//             # Skip duplicates
+//             if LeadUser.objects.filter(call=lead.call).exists():
+//                 continue
+
+//             LeadUser.objects.create(
+//                 name=lead.name,
+//                 email=lead.email,
+//                 call=lead.call,
+//                 send=False,
+//                 status=lead.status,
+//                 assigned_to=request_user,
+//                 team_leader=team_leader,
+//                 user=lead.user,
+//             )
+
+//             lead.delete()
+//             leads_count += 1
+
+//         return Response(
+//             {"message": "Auto leads assigned successfully.", "assigned_leads": leads_count},
+//             status=status.HTTP_200_OK
+//         )

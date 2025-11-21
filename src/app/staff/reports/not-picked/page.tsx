@@ -291,7 +291,7 @@ function StaffNotPickedLeadsPage() {
                                     </div>
                                     <div className="flex items-center">
                                       <Calendar className="h-4 w-4 mr-3 text-gray-500" />
-                                      <span className="text-sm">{row.original.dateTime}</span>
+                                      <span className="text-sm">{new Date(row.original.created_date).toLocaleDateString('en-GB').replace(/\//g, '-')} time {new Date(row.original.created_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
                                     </div>
                                   </div>
                                 </div>

@@ -29,11 +29,11 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -84,72 +84,72 @@ import { fetchSuperuserStaffLeadsByTag, toggleUserActiveStatus, fetchTeamLeaders
 
 
 const kpiData = [
-    { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/superadmin/reports/total-leads?source=staff" },
-    { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/superadmin/reports/visit?source=staff" },
-    { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/superadmin/reports/interested?source=staff" },
-    { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/superadmin/reports/not-interested?source=staff" },
-    { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/superadmin/reports/other-location?source=staff" },
-    { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/superadmin/reports/not-picked?source=staff" },
-    { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500", link: "/superadmin/reports/total-earning?source=staff" },
+  { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/superadmin/reports/total-leads?source=staff" },
+  { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/superadmin/reports/visit?source=staff" },
+  { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/superadmin/reports/interested?source=staff" },
+  { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/superadmin/reports/not-interested?source=staff" },
+  { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/superadmin/reports/other-location?source=staff" },
+  { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/superadmin/reports/not-picked?source=staff" },
+  { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500", link: "/superadmin/reports/total-earning?source=staff" },
 ];
 
 const initialFormData = {
-    id: null,
-    name: "",
-    email: "",
-    password: "",
-    mobile: "",
-    dob: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    degree: "",
-    pancard: "",
-    aadharCard: "",
-    bank_name: "",
-    account_number: "",
-    ifsc_code: "",
-    upi_id: "",
-    salary: "",
-    referralCode: "",
-    teamLeader: "",
-    admin: "",
+  id: null,
+  name: "",
+  email: "",
+  password: "",
+  mobile: "",
+  dob: "",
+  address: "",
+  city: "",
+  state: "",
+  pincode: "",
+  degree: "",
+  pancard: "",
+  aadharCard: "",
+  bank_name: "",
+  account_number: "",
+  ifsc_code: "",
+  upi_id: "",
+  salary: "",
+  referralCode: "",
+  teamLeader: "",
+  admin: "",
 };
 
 const InputField = ({ id, label, name, type = 'text', placeholder, icon: Icon, value, onChange, required, children, disabled }: {
-    id: string;
-    label: string;
-    name: string;
-    type?: string;
-    placeholder?: string;
-    icon?: React.ElementType;
-    value: string | number;
-    onChange: (e: any) => void;
-    required?: boolean;
-    children?: React.ReactElement;
-    disabled?: boolean;
+  id: string;
+  label: string;
+  name: string;
+  type?: string;
+  placeholder?: string;
+  icon?: React.ElementType;
+  value: string | number;
+  onChange: (e: any) => void;
+  required?: boolean;
+  children?: React.ReactElement;
+  disabled?: boolean;
 }) => {
-    const inputElement = children ? 
-        React.cloneElement(children, { id, name, value, onChange, required, placeholder, disabled }) :
-        <Input type={type} id={id} name={name} value={value as string} onChange={onChange} required={required} placeholder={placeholder} className="pl-10 pr-4 h-11" disabled={disabled} />;
+  const inputElement = children ?
+    React.cloneElement(children, { id, name, value, onChange, required, placeholder, disabled }) :
+    <Input type={type} id={id} name={name} value={value as string} onChange={onChange} required={required} placeholder={placeholder} className="pl-10 pr-4 h-11" disabled={disabled} />;
 
-    return (
-        <div className="relative flex flex-col space-y-2">
-            <Label htmlFor={id} className="text-sm font-medium text-muted-foreground">{label}</Label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />}
-                {inputElement}
-            </div>
-        </div>
-    );
+  return (
+    <div className="relative flex flex-col space-y-2">
+      <Label htmlFor={id} className="text-sm font-medium text-muted-foreground">{label}</Label>
+      <div className="relative">
+        {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />}
+        {inputElement}
+      </div>
+    </div>
+  );
 };
 
 const ReviewDetailItem = ({ label, value }: { label: string, value: string | undefined | null }) => (
-    <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="font-medium text-foreground">{value || 'N/A'}</p>
-    </div>
+  <div>
+    <p className="text-sm text-muted-foreground">{label}</p>
+    <p className="font-medium text-foreground">{value || 'N/A'}</p>
+  </div>
 );
 
 
@@ -173,7 +173,7 @@ export default function StaffManagementPage() {
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
- 
+
   // staff teamleader card data 
   const [cardData, setcardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -205,10 +205,10 @@ export default function StaffManagementPage() {
 
       const data = await response.json();
       console.log("Staff Report API Response:", data);
-      
+
       // Set card data from lead_counts
       setcardData(data.lead_counts);
-      
+
       // Set users from staff_list with proper structure
       const staffUsers = data.staff_list.map((staff: any) => ({
         id: staff.id,
@@ -220,7 +220,7 @@ export default function StaffManagementPage() {
         created_date: new Date().toISOString(),
         self_user: { user_active: true },
       }));
-      
+
       setUsers(staffUsers);
     } catch (err: any) {
       setError(err.message);
@@ -259,17 +259,17 @@ export default function StaffManagementPage() {
   const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     if (type === 'file') {
-        const target = e.target as HTMLInputElement;
-        setFormData({ ...formData, [name]: target.files ? target.files[0] : null });
+      const target = e.target as HTMLInputElement;
+      setFormData({ ...formData, [name]: target.files ? target.files[0] : null });
     } else {
-        setFormData({ ...formData, [name]: value });
+      setFormData({ ...formData, [name]: value });
     }
   };
-  
+
   const handleAddFormSelectChange = (name: string, value: string) => {
     setFormData({ ...formData, [name]: value });
   };
-  
+
   const handleOpenAddForm = () => {
     setFormData(initialFormData);
     setActiveTab("personal");
@@ -326,7 +326,7 @@ export default function StaffManagementPage() {
         teamLeader: staffData.team_leader || '',
         admin: staffData.admin || '',
       });
-      
+
       setIsEditFormOpen(true);
     } catch (error: any) {
       console.error("Error fetching staff data:", error);
@@ -339,12 +339,12 @@ export default function StaffManagementPage() {
   };
 
 
-  
+
   const handleCloseAddForm = () => {
     setIsAddFormOpen(false);
     setFormData(initialFormData);
   }
-  
+
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -379,7 +379,7 @@ export default function StaffManagementPage() {
     data.append('password', formData.password);
     data.append('team_leader', formData.teamLeader);
     data.append('admin', formData.admin);
-    
+
     // Optional fields
     if (formData.name) data.append('name', formData.name);
     if (formData.mobile) data.append('mobile', formData.mobile);
@@ -404,7 +404,7 @@ export default function StaffManagementPage() {
 
     try {
       console.log("Making API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/add/`);
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/add/`, {
         method: "POST",
         headers: {
@@ -419,27 +419,27 @@ export default function StaffManagementPage() {
       if (!response.ok) {
         const errorData = await response.json();
         console.log("API Error Data:", errorData);
-        
+
         let errorMessage = "Failed to add staff.";
-        
+
         if (errorData) {
           const errors = [];
           if (errorData.team_leader) errors.push(`Team Leader: ${errorData.team_leader.join(', ')}`);
           if (errorData.email) errors.push(`Email: ${errorData.email.join(', ')}`);
           if (errorData.password) errors.push(`Password: ${errorData.password.join(', ')}`);
           if (errorData.admin) errors.push(`Admin: ${errorData.admin.join(', ')}`);
-          
+
           if (errors.length > 0) {
             errorMessage = errors.join('\n');
           }
         }
-        
+
         throw new Error(errorMessage);
       }
 
       const newUser = await response.json();
       console.log("API Success Response:", newUser);
-      
+
       setUsers([...users, newUser]);
       toast({
         title: "Staff Added!",
@@ -452,7 +452,7 @@ export default function StaffManagementPage() {
       console.error("=== API ERROR ===");
       console.error("Error:", error);
       console.error("Error Message:", error.message);
-      
+
       toast({
         title: "Error",
         description: error.message || "Failed to add staff.",
@@ -468,8 +468,8 @@ export default function StaffManagementPage() {
     const { name, value } = e.target;
     setEditingUser({ ...editingUser, [name]: value });
   };
-  
-    const handleEditSelectChange = (name: string, value: string) => {
+
+  const handleEditSelectChange = (name: string, value: string) => {
     setEditingUser({ ...editingUser, [name]: value });
   };
 
@@ -491,7 +491,7 @@ export default function StaffManagementPage() {
     }
 
     const data = new FormData();
-    
+
     // Add all fields to FormData
     if (editingUser.name) data.append('name', editingUser.name);
     if (editingUser.email) data.append('email', editingUser.email);
@@ -519,7 +519,7 @@ export default function StaffManagementPage() {
 
     try {
       console.log("Making PATCH API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${editingUser.id}/`);
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${editingUser.id}/`, {
         method: "PATCH",
         headers: {
@@ -534,7 +534,7 @@ export default function StaffManagementPage() {
       if (!response.ok) {
         const errorData = await response.json();
         console.log("Edit API Error Data:", errorData);
-        
+
         let errorMessage = "Failed to update staff.";
         if (errorData) {
           const errors: string[] = [];
@@ -555,13 +555,13 @@ export default function StaffManagementPage() {
 
       // Update users list
       setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...updatedUser } : u));
-      
+
       toast({
         title: "Staff Updated!",
         description: `${editingUser.name} has been updated successfully.`,
         className: 'bg-green-500 text-white'
       });
-      
+
       setIsEditFormOpen(false);
       setEditingUser(null);
       fetchPageData(); // Refresh the data
@@ -569,7 +569,7 @@ export default function StaffManagementPage() {
       console.error("=== EDIT API ERROR ===");
       console.error("Error:", error);
       console.error("Error Message:", error.message);
-      
+
       toast({
         title: "Error",
         description: error.message || "Failed to update staff.",
@@ -602,9 +602,8 @@ export default function StaffManagementPage() {
       // 3. Success: Show toast
       toast({
         title: "Status Updated",
-        description: `User status changed to ${
-          isActive ? "Active" : "Inactive"
-        }.`,
+        description: `User status changed to ${isActive ? "Active" : "Inactive"
+          }.`,
         className: "bg-blue-500 text-white",
         duration: 3000,
       });
@@ -617,9 +616,8 @@ export default function StaffManagementPage() {
       console.error("Failed to update user status:", error);
       toast({
         title: "Error",
-        description: `Failed to update user status: ${
-          error.message || "Unknown error"
-        }`,
+        description: `Failed to update user status: ${error.message || "Unknown error"
+          }`,
         variant: "destructive",
       });
     }
@@ -635,7 +633,7 @@ export default function StaffManagementPage() {
 
   const KpiCard = ({ title, value, icon, color, link }: { title: string, value: string | number, icon: React.ElementType, color: string, link?: string }) => {
     const cardContent = (
-       <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300">
+      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300">
         <CardContent className="p-3 flex flex-col items-center justify-center text-center">
           <div className={`text-3xl ${color} mb-1`}>
             {React.createElement(icon, { className: "h-6 w-6" })}
@@ -652,8 +650,8 @@ export default function StaffManagementPage() {
 
     return cardContent;
   };
-  
-    const tabAnimation = {
+
+  const tabAnimation = {
     initial: { x: '100%', opacity: 0 },
     animate: { x: 0, opacity: 1 },
     exit: { x: '-100%', opacity: 0 },
@@ -661,8 +659,8 @@ export default function StaffManagementPage() {
 
   return (
     <div className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">Staff Users</h1>
-        {!loading && cardData ? (
+      <h1 className="text-2xl font-bold tracking-tight">Staff Users</h1>
+      {!loading && cardData ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {kpiData.map((card, index) => (
             <KpiCard
@@ -683,23 +681,23 @@ export default function StaffManagementPage() {
 
       <Card className="shadow-lg rounded-2xl">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <CardTitle>Staff List</CardTitle>
-                <CardDescription className="hidden sm:block">View and manage staff users.</CardDescription>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div>
+            <CardTitle>Staff List</CardTitle>
+            <CardDescription className="hidden sm:block">View and manage staff users.</CardDescription>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative">
-                <Input
+              <Input
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="flex-1 sm:flex-initial sm:max-w-xs pl-10"
-                />
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <Button size="icon" className="sm:hidden" onClick={handleOpenAddForm}>
               <PlusCircle className="h-4 w-4" />
-               <span className="sr-only">Add Staff</span>
+              <span className="sr-only">Add Staff</span>
             </Button>
             <Button className="hidden sm:flex" onClick={handleOpenAddForm}>
               <PlusCircle className="h-4 w-4 mr-2" />
@@ -811,11 +809,11 @@ export default function StaffManagementPage() {
                                 <span className="sr-only">More</span>
                               </Button>
                             </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align='end'>
-                                                           <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
-                                                            <Pencil className="mr-2 h-4 w-4" /> Edit
-                                                          </DropdownMenuItem>
-                                                        </DropdownMenuContent>                          </DropdownMenu>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -891,192 +889,192 @@ export default function StaffManagementPage() {
         </CardContent>
       </Card>
 
-    <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
+      <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
         <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
-            <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
-                <DialogTitle className="text-xl font-bold">Add New Staff</DialogTitle>
-                <DialogDescription>
-                    Fill in the details below.
-                </DialogDescription>
-            </DialogHeader>
-            <form className="flex-1 flex flex-col min-h-0">
-                <div className="px-6 pt-4 flex gap-4">
-                    <div className="w-full">
-                        <Label className="text-sm font-medium text-muted-foreground">Admin *</Label>
-                        <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" required>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select Admin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {admins.map((admin) => (
-                                    <SelectItem key={admin.id} value={String(admin.id)}>
-                                        {admin.name || admin.user?.first_name || admin.user?.email || `Admin ${admin.id}`}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="w-full">
-                        <Label className="text-sm font-medium text-muted-foreground">Team Leader *</Label>
-                        <Select onValueChange={(value) => handleAddFormSelectChange("teamLeader", value)} name="teamLeader" required>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select Team-Leader" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {teamLeaders.map((leader) => (
-                                    <SelectItem key={leader.id} value={String(leader.id)}>
-                                        {leader.name || leader.user?.first_name || leader.user?.email || `Team Leader ${leader.id}`}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-                  <div className="px-6 pt-4 flex-shrink-0">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="personal">Personal Details</TabsTrigger>
-                        <TabsTrigger value="account">Account Details</TabsTrigger>
-                    </TabsList>
-                  </div>
-                 <div className="p-6 overflow-y-auto flex-1 relative hide-scrollbar">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={activeTab}
-                        initial={tabAnimation.initial}
-                        animate={tabAnimation.animate}
-                        exit={tabAnimation.exit}
-                        transition={{ duration: 0.3 }}
-                        className="w-full"
-                      >
-                        {activeTab === 'personal' && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                              <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleAddFormChange} />
-                              <InputField id="email" label="E-Mail Address *" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleAddFormChange} required />
-                              <InputField id="password" label="Password *" name="password" type="password" placeholder="••••••••" icon={Lock} value={formData.password} onChange={handleAddFormChange} required />
-                              <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} />
-                              <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} />
-                              <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} />
-                              <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleAddFormChange} />
-                              <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleAddFormChange} />
-                              <InputField id="state" label="State" name="state" value={formData.state} onChange={handleAddFormChange}>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("state", value)} name="state" defaultValue={formData.state}>
-                                    <SelectTrigger className="pl-10 pr-4 h-11">
-                                    <SelectValue placeholder="Select State" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                    <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                                    <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                                    <SelectItem value="Gujarat">Gujarat</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                              </InputField>
-                              <InputField id="mobile" label="Mobile" name="mobile" type="tel" placeholder="9876543210" icon={Phone} value={formData.mobile} onChange={handleAddFormChange} />
-                              <InputField id="salary" label="Salary" name="salary" placeholder="e.g. 50000" icon={Wallet} value={formData.salary} onChange={handleAddFormChange} />
-                          </div>
-                        )}
-                        {activeTab === 'account' && (
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                              <InputField id="account_number" label="Account Number" name="account_number" placeholder="Your account number" icon={Wallet} value={formData.account_number} onChange={handleAddFormChange} />
-                              <InputField id="upi_id" label="Add UPI" name="upi_id" placeholder="yourname@upi" icon={Briefcase} value={formData.upi_id} onChange={handleAddFormChange} />
-                              <InputField id="bank_name" label="Bank Name" name="bank_name" placeholder="e.g. State Bank of India" icon={Landmark} value={formData.bank_name} onChange={handleAddFormChange} />
-                              <InputField id="ifsc_code" label="IFSC Code" name="ifsc_code" placeholder="SBIN0001234" icon={Hash} value={formData.ifsc_code} onChange={handleAddFormChange} />
-                              <InputField id="pincode" label="Pincode" name="pincode" placeholder="e.g. 110001" icon={MapPin} value={formData.pincode} onChange={handleAddFormChange} />
-                              <div className="md:col-span-2">
-                                <InputField id="address" label="Address" name="address" value={formData.address} onChange={handleAddFormChange}>
-                                   <Textarea className="pl-10 pr-4 min-h-[80px]" placeholder="Enter full address" />
-                                </InputField>
-                              </div>
-                           </div>
-                        )}
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                <DialogFooter className="p-6 pt-4 border-t bg-muted/50 flex justify-between w-full flex-shrink-0">
-                  {activeTab === 'personal' ? (
-                      <div></div>
-                    ) : (
-                      <Button type="button" variant="outline" onClick={() => setActiveTab('personal')}>
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Previous
-                      </Button>
-                    )}
-                    {activeTab === 'personal' ? (
-                      <Button type="button" onClick={() => setActiveTab('account')}>
-                        Next
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    ) : (
-                      <Button type="button" onClick={handleAddSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Submitting...
-                          </>
-                        ) : (
-                          "Save Staff"
-                        )}
-                      </Button>
-                    )}
-                </DialogFooter>
-              </Tabs>
-            </form>
-        </DialogContent>
-    </Dialog>
-
-    {editingUser && (
-      <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="w-[95vw] sm:max-w-md max-h-[80vh] overflow-y-auto hide-scrollbar">
-          <DialogHeader>
-            <DialogTitle>Edit Staff</DialogTitle>
+          <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
+            <DialogTitle className="text-xl font-bold">Add New Staff</DialogTitle>
             <DialogDescription>
-              Update the details for {editingUser.name}.
+              Fill in the details below.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input id="edit-name" name="name" value={editingUser.name} onChange={handleEditFormChange} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input id="edit-email" name="email" type="email" value={editingUser.email} onChange={handleEditFormChange} required />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="edit-mobile">Mobile</Label>
-              <Input id="edit-mobile" name="mobile" value={editingUser.mobile} onChange={handleEditFormChange} required />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="edit-teamLeader">Team Leader</Label>
-                <Select onValueChange={(value) => handleEditSelectChange("teamLeader", value)} name="teamLeader" defaultValue={editingUser.teamLeader}>
-                    <SelectTrigger id="edit-teamLeader">
-                        <SelectValue placeholder="Select Team Leader" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {teamLeaders.map((leader) => (
-                            <SelectItem key={leader.id} value={String(leader.id)}>
-                                {leader.name || leader.user?.first_name || leader.user?.email || `Team Leader ${leader.id}`}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
+          <form className="flex-1 flex flex-col min-h-0">
+            <div className="px-6 pt-4 flex gap-4">
+              <div className="w-full">
+                <Label className="text-sm font-medium text-muted-foreground">Admin *</Label>
+                <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" required>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Admin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {admins.map((admin) => (
+                      <SelectItem key={admin.id} value={String(admin.id)}>
+                        {admin.name || admin.user?.first_name || admin.user?.email || `Admin ${admin.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
+              </div>
+              <div className="w-full">
+                <Label className="text-sm font-medium text-muted-foreground">Team Leader *</Label>
+                <Select onValueChange={(value) => handleAddFormSelectChange("teamLeader", value)} name="teamLeader" required>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Team-Leader" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamLeaders.map((leader) => (
+                      <SelectItem key={leader.id} value={String(leader.id)}>
+                        {leader.name || leader.user?.first_name || leader.user?.email || `Team Leader ${leader.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-password">New Password (optional)</Label>
-              <Input id="edit-password" name="password" type="password" placeholder="Leave blank to keep current password" onChange={handleEditFormChange} />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditFormOpen(false)}>Cancel</Button>
-              <Button type="submit">Save Changes</Button>
-            </DialogFooter>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+              <div className="px-6 pt-4 flex-shrink-0">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="personal">Personal Details</TabsTrigger>
+                  <TabsTrigger value="account">Account Details</TabsTrigger>
+                </TabsList>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 relative hide-scrollbar">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={tabAnimation.initial}
+                    animate={tabAnimation.animate}
+                    exit={tabAnimation.exit}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
+                  >
+                    {activeTab === 'personal' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                        <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleAddFormChange} />
+                        <InputField id="email" label="E-Mail Address *" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleAddFormChange} required />
+                        <InputField id="password" label="Password *" name="password" type="password" placeholder="••••••••" icon={Lock} value={formData.password} onChange={handleAddFormChange} required />
+                        <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} />
+                        <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} />
+                        <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} />
+                        <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleAddFormChange} />
+                        <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleAddFormChange} />
+                        <InputField id="state" label="State" name="state" value={formData.state} onChange={handleAddFormChange}>
+                          <Select onValueChange={(value) => handleAddFormSelectChange("state", value)} name="state" defaultValue={formData.state}>
+                            <SelectTrigger className="pl-10 pr-4 h-11">
+                              <SelectValue placeholder="Select State" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                              <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                              <SelectItem value="Gujarat">Gujarat</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </InputField>
+                        <InputField id="mobile" label="Mobile" name="mobile" type="tel" placeholder="9876543210" icon={Phone} value={formData.mobile} onChange={handleAddFormChange} />
+                        <InputField id="salary" label="Salary" name="salary" placeholder="e.g. 50000" icon={Wallet} value={formData.salary} onChange={handleAddFormChange} />
+                      </div>
+                    )}
+                    {activeTab === 'account' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                        <InputField id="account_number" label="Account Number" name="account_number" placeholder="Your account number" icon={Wallet} value={formData.account_number} onChange={handleAddFormChange} />
+                        <InputField id="upi_id" label="Add UPI" name="upi_id" placeholder="yourname@upi" icon={Briefcase} value={formData.upi_id} onChange={handleAddFormChange} />
+                        <InputField id="bank_name" label="Bank Name" name="bank_name" placeholder="e.g. State Bank of India" icon={Landmark} value={formData.bank_name} onChange={handleAddFormChange} />
+                        <InputField id="ifsc_code" label="IFSC Code" name="ifsc_code" placeholder="SBIN0001234" icon={Hash} value={formData.ifsc_code} onChange={handleAddFormChange} />
+                        <InputField id="pincode" label="Pincode" name="pincode" placeholder="e.g. 110001" icon={MapPin} value={formData.pincode} onChange={handleAddFormChange} />
+                        <div className="md:col-span-2">
+                          <InputField id="address" label="Address" name="address" value={formData.address} onChange={handleAddFormChange}>
+                            <Textarea className="pl-10 pr-4 min-h-[80px]" placeholder="Enter full address" />
+                          </InputField>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <DialogFooter className="p-6 pt-4 border-t bg-muted/50 flex justify-between w-full flex-shrink-0">
+                {activeTab === 'personal' ? (
+                  <div></div>
+                ) : (
+                  <Button type="button" variant="outline" onClick={() => setActiveTab('personal')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Previous
+                  </Button>
+                )}
+                {activeTab === 'personal' ? (
+                  <Button type="button" onClick={() => setActiveTab('account')}>
+                    Next
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button type="button" onClick={handleAddSubmit} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Submitting...
+                      </>
+                    ) : (
+                      "Save Staff"
+                    )}
+                  </Button>
+                )}
+              </DialogFooter>
+            </Tabs>
           </form>
         </DialogContent>
       </Dialog>
-    )}
-      
+
+      {editingUser && (
+        <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+          <DialogContent className="w-[95vw] sm:max-w-md max-h-[80vh] overflow-y-auto hide-scrollbar">
+            <DialogHeader>
+              <DialogTitle>Edit Staff</DialogTitle>
+              <DialogDescription>
+                Update the details for {editingUser.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input id="edit-name" name="name" value={editingUser.name} onChange={handleEditFormChange} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input id="edit-email" name="email" type="email" value={editingUser.email} onChange={handleEditFormChange} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-mobile">Mobile</Label>
+                <Input id="edit-mobile" name="mobile" value={editingUser.mobile} onChange={handleEditFormChange} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-teamLeader">Team Leader</Label>
+                <Select onValueChange={(value) => handleEditSelectChange("teamLeader", value)} name="teamLeader" defaultValue={editingUser.teamLeader}>
+                  <SelectTrigger id="edit-teamLeader">
+                    <SelectValue placeholder="Select Team Leader" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamLeaders.map((leader) => (
+                      <SelectItem key={leader.id} value={String(leader.id)}>
+                        {leader.name || leader.user?.first_name || leader.user?.email || `Team Leader ${leader.id}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">New Password (optional)</Label>
+                <Input id="edit-password" name="password" type="password" placeholder="Leave blank to keep current password" onChange={handleEditFormChange} />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditFormOpen(false)}>Cancel</Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
 
     </div>
   );
