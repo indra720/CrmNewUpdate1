@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -32,159 +32,75 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Phone, MessageSquare, Plus, Minus, Loader2 } from 'lucide-react';
+import { Search, Phone, MessageSquare, Calendar, FileDown, Plus, Minus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import Link from 'next/link'; // Import Link for navigation
 
-interface Lead {
-  id: number;
-  name: string;
-  phone: string;
-  whatsapp: boolean;
-  status: string;
-}
 
-const ExpandedLeadDetails = ({ lead }: { lead: Lead }) => (
-    <div className="p-4">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="p-4 flex items-center gap-4 border-b border-gray-200">
-                <div className="flex items-center gap-4">
-                    <div className="text-lg font-bold">{lead.name}</div>
-                    <div className="text-sm text-gray-500">{lead.status}</div>
-                </div>
-            </div>
-            <div className="overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
-                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
-                        <span className="text-sm font-medium">Phone:</span>
-                        <Button variant="link" size="sm" className="p-0 h-auto text-blue-600" asChild disabled={!lead.phone}>
-                            <a href={`tel:${lead.phone}`}>{lead.phone || 'N/A'}</a>
-                        </Button>
-                    </div>
-                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
-                        <span className="text-sm font-medium">Whatsapp:</span>
-                        <Button variant="link" size="sm" className="p-0 h-auto text-green-600" asChild disabled={!lead.phone}>
-                            <a href={`https://wa.me/91${lead.phone}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
-                                Chat
-                            </a>
-                        </Button>
-                    </div>
-                    {/* You can add more lead specific details here if available in the Lead interface */}
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
+const mockLeads = [
+    { id: 1, name: 'Mahesh Sharma', staff: 'chanchal-staff', status: 'Leads', call: '9876543210', updated_date: 'Nov. 19, 2025, 9:12 a.m.'},
+    { id: 2, name: 'Qutubuddin', staff: 'chanchal-staff', status: 'Leads', call: '9876543211', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
+    { id: 3, name: 'Ashok Agarwal', staff: 'chanchal-staff', status: 'Leads', call: '9876543212', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
+    { id: 4, name: 'Giriraj Maheshwari', staff: 'chanchal-staff', status: 'Leads', call: '9876543213', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
+    { id: 5, name: 'Laxmi Narayan', staff: 'chanchal-staff', status: 'Leads', call: '9876543214', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
+    { id: 6, name: 'Mahesh Agarwal', staff: 'chanchal-staff', status: 'Leads', call: '9876543215', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
+];
 
 export default function StaffLeadsPage() {
     const router = useRouter();
-    const [leads, setLeads] = useState<Lead[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const { toast } = useToast();
     const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
     const toggleRow = (rowId: number) => {
         setExpandedRowId(expandedRowId === rowId ? null : rowId);
     };
 
-    const fetchLeads = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const token = localStorage.getItem("authToken");
-            if (!token) {
-                throw new Error("Authentication token not found.");
-            }
-
-            const response = await fetch('http://127.0.0.1:8000/accounts/api/leads/', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Token ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch leads');
-            }
-
-            const data = await response.json();
-            setLeads(data.staff_name || []);
-
-        } catch (err: any) {
-            setError(err.message);
-            toast({
-                title: "Error",
-                description: err.message || "Failed to fetch leads.",
-                variant: "destructive",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchLeads();
-    }, []);
-
     const handleTypeNavChange = (value: string) => {
         if (!value) return;
         router.push(value);
     }
-    
-  const getStatusBadgeVariant = (status: string) => {
-    const lowerCaseStatus = status.toLowerCase();
-    if (lowerCaseStatus.includes('interested')) return 'default';
-    if (lowerCaseStatus.includes('not interested')) return 'destructive';
-    if (lowerCaseStatus.includes('visit')) return 'secondary';
-    return 'outline';
-  };
-
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Staff Leads</h1>
 
-       <Card className="shadow-lg rounded-2xl">
+       <Card className="shadow-lg  rounded-2xl">
         <CardContent className="p-6">
-             <div className="flex items-center gap-4">
-                <p className="text-sm font-medium">Filter</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="Assigned" /></SelectTrigger>
+             <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                <div className="space-y-2">
+                    <Label htmlFor="start_date">Start Date</Label>
+                    <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="start_date" name="start_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="end_date">End Date</Label>
+                    <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="end_date" name="end_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
+                    </div>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="status" className="sr-only">Status</Label>
+                    <Select name="status">
+                        <SelectTrigger id="status">
+                            <SelectValue placeholder="Open this select menu" />
+                        </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="user1">User 1</SelectItem>
-                            <SelectItem value="user2">User 2</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="Interested" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="yes">Yes</SelectItem>
-                            <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select>
-                        <SelectTrigger><SelectValue placeholder="IT-Team" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="team-a">Team A</SelectItem>
-                            <SelectItem value="team-b">Team B</SelectItem>
-                        </SelectContent>
-                    </Select>
-                     <Select>
-                        <SelectTrigger><SelectValue placeholder="Lost" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="yes">Yes</SelectItem>
-                            <SelectItem value="no">No</SelectItem>
+                            <SelectItem value="Leads">Leads</SelectItem>
+                            <SelectItem value="Intrested">Intrested</SelectItem>
+                            <SelectItem value="Not Interested">Not Interested</SelectItem>
+                            <SelectItem value="Other Location">Other Location</SelectItem>
+                            <SelectItem value="Not Picked">Not Picked</SelectItem>
+                            <SelectItem value="Lost">Lost</SelectItem>
+                            <SelectItem value="Visit">Visit</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
-            </div>
+                <Button type="submit" className="w-full md:w-auto self-end">
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Export
+                </Button>
+            </form>
         </CardContent>
       </Card>
 
@@ -215,89 +131,120 @@ export default function StaffLeadsPage() {
                 </div>
             </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+        <CardContent className="p-3">
+          <div className="overflow-x-auto border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px] p-1 md:w-auto md:hidden">S.N.</TableHead> {/* Only show SN on large screens, or + icon on mobile */}
-                  <TableHead className="w-[50px] p-1 hidden md:table-cell">S.N.</TableHead> {/* S.N. for MD and above */}
-                  <TableHead className="p-1">Name</TableHead>
-                  <TableHead className="p-1">Status</TableHead>
-                  <TableHead className="text-center p-1 md:table-cell hidden">Call</TableHead>
-                  <TableHead className="text-center p-1 md:table-cell hidden">Whatsapp</TableHead>
+                  <TableHead className="w-12">S.N.</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden md:table-cell">Staff</TableHead>
+                  <TableHead className="hidden md:table-cell">Status</TableHead>
+                  <TableHead className="text-center">Call</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Whatsapp</TableHead>
+                  <TableHead className="hidden lg:table-cell">Date & Time</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
-                    Array(5).fill(0).map((_, index) => (
-                        <TableRow key={index}>
-                            <TableCell colSpan={5}>
-                                <Skeleton className="h-8 w-full" />
-                            </TableCell>
-                        </TableRow>
-                    ))
-                ) : error ? (
-                    <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center text-red-500">
-                           {error}
-                        </TableCell>
+                {mockLeads.map((lead, index) => (
+                  <React.Fragment key={lead.id}>
+                    <TableRow
+                      data-state={
+                        expandedRowId === lead.id ? "selected" : undefined
+                      }
+                    >
+                      <TableCell className="w-12">
+                        <div className="hidden lg:flex justify-center">
+                          <span>{index + 1}.</span>
+                        </div>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => toggleRow(lead.id)}
+                          className="lg:hidden"
+                        >
+                          {expandedRowId === lead.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="font-medium">{lead.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{lead.staff}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                         <Button variant="ghost" size="icon" asChild>
+                           <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
+                         </Button>
+                      </TableCell>
+                      <TableCell className="text-center hidden lg:table-cell">
+                          <Button variant="ghost" size="icon" asChild>
+                              <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
+                                  <MessageSquare className="h-5 w-5 text-green-500" />
+                              </a>
+                          </Button>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">{lead.updated_date}</TableCell>
                     </TableRow>
-                ) : leads.length === 0 ? (
-                    <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
-                            No leads found.
+                    {expandedRowId === lead.id && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="p-0">
+                          <div className="p-4">
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="text-lg font-bold">{lead.name}</div>
+                                  <div className="text-sm text-gray-500">
+                                    <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Staff:</span>
+                                    <span className="text-sm">{lead.staff || 'N/A'}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Status:</span>
+                                    <span className="text-sm">
+                                      <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status || 'N/A'}</Badge>
+                                    </span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Call:</span>
+                                    <span className="text-sm">
+                                      <Button variant="ghost" size="icon" asChild>
+                                        <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
+                                      </Button>
+                                    </span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Whatsapp:</span>
+                                    <span className="text-sm">
+                                      <Button variant="ghost" size="icon" asChild>
+                                          <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
+                                              <MessageSquare className="h-5 w-5 text-green-500" />
+                                          </a>
+                                      </Button>
+                                    </span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Updated Date:</span>
+                                    <span className="text-sm">{lead.updated_date || 'N/A'}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">S.N.:</span>
+                                    <span className="text-sm">{index + 1}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </TableCell>
-                    </TableRow>
-                ) : (
-                    leads.map((lead, index) => (
-                    <React.Fragment key={lead.id}>
-                        <TableRow data-state={expandedRowId === lead.id ? "selected" : undefined}>
-                            {/* Mobile only S.N. with plus icon */}
-                            <TableCell className="p-1 md:hidden">
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => toggleRow(lead.id)}
-                                    className="text-green-500"
-                                >
-                                    {expandedRowId === lead.id ? (
-                                    <Minus className="h-4 w-4" />
-                                    ) : (
-                                    <Plus className="h-4 w-4" />
-                                    )}
-                                </Button>
-                            </TableCell>
-                            {/* S.N. for MD and above */}
-                            <TableCell className="p-1 hidden md:table-cell">{index + 1}</TableCell>
-
-                            <TableCell className="font-medium p-1">{lead.name}</TableCell>
-                            <TableCell className="p-1">
-                                <Badge variant={getStatusBadgeVariant(lead.status)}>{lead.status}</Badge>
-                            </TableCell>
-                            <TableCell className="text-center p-1 hidden md:table-cell">
-                                <Button variant="ghost" size="icon" asChild disabled={!lead.phone}>
-                                    <a href={`tel:${lead.phone}`}><Phone className="h-4 w-4 text-blue-500" /></a>
-                                </Button>
-                            </TableCell>
-                            <TableCell className="text-center p-1 hidden md:table-cell">
-                                <Button variant="ghost" size="icon" asChild disabled={!lead.phone}>
-                                    <a href={`https://wa.me/91${lead.phone}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
-                                        <MessageSquare className="h-5 w-5 text-green-500" />
-                                    </a>
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                        {expandedRowId === lead.id && (
-                            <TableRow className="md:hidden">
-                                <TableCell colSpan={4} className="p-0">
-                                    <ExpandedLeadDetails lead={lead} />
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </React.Fragment>
-                    ))
-                )}
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -320,3 +267,58 @@ export default function StaffLeadsPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+// class TeamLeaderStaffLeadsListAPIView(APIView):
+//     """
+//     API endpoint for 'teamleader_perticular_leads'.
+//     GET: Fetches list of leads for a specific staff, filtered by status (tag).
+//     ONLY TEAM LEADER can access this.
+//     """
+//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
+//     pagination_class = StandardResultsSetPagination
+
+//     def get(self, request, staff_id, tag, format=None):
+//         # 1. Verify Team Leader & Staff Relationship
+//         try:
+//             tl_instance = Team_Leader.objects.get(user=request.user)
+//             staff = Staff.objects.get(id=staff_id)
+//             if staff.team_leader != tl_instance:
+//                  return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+//         except (Team_Leader.DoesNotExist, Staff.DoesNotExist):
+//             return Response({"error": "Invalid Team Leader or Staff."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 2. Filter Leads based on Tag
+//         base_qs = LeadUser.objects.filter(assigned_to=staff)
+        
+//         if tag == "Intrested":
+//             leads = base_qs.filter(status='Intrested')
+//         elif tag == "Not Interested":
+//             leads = base_qs.filter(status='Not Interested')
+//         elif tag == "Other Location":
+//             leads = base_qs.filter(status='Other Location')
+//         elif tag == "Lost":
+//             leads = base_qs.filter(status='Lost')
+//         elif tag == "Visit":
+//             leads = base_qs.filter(status='Visit')
+//         else:
+//             leads = base_qs # All leads if tag doesn't match
+
+//         leads = leads.order_by('-updated_date')
+
+//         # 3. Paginate & Serialize
+//         paginator = self.pagination_class()
+//         page = paginator.paginate_queryset(leads, request, view=self)
+//         if page is not None:
+//             serializer = ApiLeadUserSerializer(page, many=True)
+//             return paginator.get_paginated_response(serializer.data)
+
+//         serializer = ApiLeadUserSerializer(leads, many=True)
+//         return Response(serializer.data)

@@ -169,7 +169,11 @@ export default function StaffIncentivesPage() {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) throw new Error("Authentication token not found.");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff-dashboard/`, {
+      
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+      const url = new URL('/accounts/api/team-leader/staff-dashboard/', baseUrl);
+
+      const res = await fetch(url.toString(), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -178,13 +182,17 @@ export default function StaffIncentivesPage() {
       });
       if (!res.ok) throw new Error(`Staff list HTTP error: ${res.status}`);
       const json = await res.json();
+      console.log("fetchStaffList response:", json); // Added log
       const list: StaffListItem[] = json.staff_list || [];
       setStaffList(list);
       if (list.length > 0 && !staffId) {
         setStaffId(String(list[0].id));
+        console.log("Setting initial staffId:", list[0].id); // Added log
+      } else if (list.length === 0) {
+        console.log("fetchStaffList returned an empty list."); // Added log
       }
     } catch (err: any) {
-      console.error("fetchStaffList error:", err);
+      console.error("fetchStaffList error:", err); // Added log
       toast({
         title: "Error",
         description: err.message || "Failed to fetch staff list",
@@ -201,15 +209,21 @@ export default function StaffIncentivesPage() {
     setLoading(true);
     setError('');
     setNotFound(false);
+    console.log("Fetching incentive data for staffId:", staffId, "year:", year, "month:", month); // Added log
 
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
+        console.error("Authentication token not found."); // Added log
         throw new Error("Authentication token not found.");
       }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff-incentive/${staffId}/?year=${year}&month=${month}`,
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+      const url = new URL(`/accounts/api/team-leader/staff-incentive/${staffId}/`, baseUrl);
+      url.searchParams.append('year', String(year));
+      url.searchParams.append('month', String(month));
+
+      const response = await fetch(url.toString(),
         {
           method: "GET",
           headers: {
@@ -219,6 +233,8 @@ export default function StaffIncentivesPage() {
         }
       );
 
+      console.log("Incentive API response status:", response.status); // Added log
+
       if (response.status === 404) {
         setNotFound(true);
         setSellProperties([]);
@@ -227,14 +243,18 @@ export default function StaffIncentivesPage() {
         setIncentiveAmount(0);
         setCurrentSlab(null);
         setMonthsList([]);
+        console.log("No incentive data found (404)."); // Added log
         return;
       }
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text(); // Get raw error text
+        console.error(`HTTP error! status: ${response.status}, details: ${errorText}`); // Added log
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
       }
 
       const data: ApiResponse = await response.json();
+      console.log("Incentive API data:", data); // Added log
 
       setSellProperties(data.sell_property || []);
       setSlabs(data.slab || []);
@@ -556,3 +576,80 @@ export default function StaffIncentivesPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+// class TeamLeaderStaffIncentiveAPIView(APIView):
+//     """
+//     API endpoint for 'incentive_slap_staff' (Team Leader Dashboard).
+//     GET: Allows Team Leader to view incentives of a specific staff member.
+//     ONLY TEAM LEADER (is_team_leader=True) can access this.
+//     """
+    
+//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
+
+//     def get(self, request, staff_id, format=None):
+//         # 1. Get Team Leader Profile
+//         try:
+//             tl_instance = Team_Leader.objects.get(user=request.user)
+//         except Team_Leader.DoesNotExist:
+//             return Response({"error": "Team Leader profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 2. Get Staff and Check Permission
+//         try:
+//             staff = Staff.objects.get(id=staff_id)
+//             # Check: Kya ye staff is Team Leader ke under hai?
+//             if staff.team_leader != tl_instance:
+//                 return Response({"error": "You do not have permission to view this staff's incentives."}, status=status.HTTP_403_FORBIDDEN)
+//         except Staff.DoesNotExist:
+//             return Response({"error": "Staff not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 3. Get Filters (Month/Year)
+//         months_list = [(i, calendar.month_name[i]) for i in range(1, 13)]
+//         year = int(request.query_params.get('year', datetime.now().year))
+//         month = int(request.query_params.get('month', datetime.now().month))
+
+//         # 4. Get User Type (Freelancer or Not)
+//         user_type = staff.user.is_freelancer
+
+//         # 5. Get Slab Data & Adjust Amount logic
+//         slab_qs = Slab.objects.all()
+//         slab_data = SlabSerializer(slab_qs, many=True).data
+        
+//         # Logic: Agar user Staff hai (Freelancer nahi), to Amount me se 100 minus karo
+//         # (Bilkul waisa jaise humne Staff API me kiya tha)
+//         if not user_type:
+//             for slab_item in slab_data:
+//                 try:
+//                     original_amount = int(slab_item.get('amount', 0))
+//                     slab_item['amount'] = str(original_amount - 100) 
+//                 except (ValueError, TypeError):
+//                     pass
+
+//         # 6. Get Sell Data (Earning History)
+//         sell_property_qs = Sell_plot.objects.filter(
+//             staff=staff, 
+//             updated_date__year=year,
+//             updated_date__month=month,
+//         ).order_by('-created_date')
+
+//         total_earn_amount = sell_property_qs.aggregate(total_earn=Sum('earn_amount'))
+//         total_earn = total_earn_amount.get('total_earn') or 0
+
+//         # 7. Final Response
+//         response_data = {
+//             'slab': slab_data,
+//             'sell_property': SellPlotSerializer(sell_property_qs, many=True).data,
+//             'total_earn': total_earn,
+//             'year': year,
+//             'month': month,
+//             'months_list': months_list,
+//             'user_type': user_type, # True if Freelancer, False if Staff
+//             'staff_name': staff.name
+//         }
+        
+//         return Response(response_data, status=status.HTTP_200_OK)

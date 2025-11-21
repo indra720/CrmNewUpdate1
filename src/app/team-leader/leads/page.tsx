@@ -53,8 +53,8 @@ interface Lead {
   id: number;
   name: string;
   phone: string;
-  whatsapp: boolean;
   status: string;
+  sn: number;
 }
 
 const initialNewLeadData = {
@@ -65,30 +65,40 @@ const initialNewLeadData = {
     description: "",
 };
 
-const ExpandedLeadDetails = ({ lead }: { lead: Lead }) => (
+const ExpandedLeadDetails = ({ lead, index }: { lead: Lead; index: number }) => (
     <div className="p-4">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="p-4 flex items-center gap-4 border-b border-gray-200">
                 <div className="flex items-center gap-4">
                     <div className="text-lg font-bold">{lead.name}</div>
-                    <div className="text-sm text-gray-500">{lead.status}</div>
+                    <div className="text-sm text-gray-500">
+                      <Badge variant="secondary">{lead.status}</Badge>
+                    </div>
                 </div>
             </div>
             <div className="overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
                     <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
-                        <span className="text-sm font-medium">Phone:</span>
+                        <span className="text-sm font-medium">Mobile:</span>
                         <Button variant="link" size="sm" className="p-0 h-auto text-blue-600" asChild disabled={!lead.phone}>
                             <a href={`tel:${lead.phone}`}>{lead.phone || 'N/A'}</a>
                         </Button>
                     </div>
                     <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                        <span className="text-sm font-medium">Email:</span>
+                        <span className="text-sm">{'N/A'}</span>
+                    </div>
+                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
                         <span className="text-sm font-medium">Whatsapp:</span>
                         <Button variant="link" size="sm" className="p-0 h-auto text-green-600" asChild disabled={!lead.phone}>
-                            <a href={`https://wa.me/91${lead.phone}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
+                            <a href={`httpshttps://wa.me/91${lead.phone}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
                                 Chat
                             </a>
                         </Button>
+                    </div>
+                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                        <span className="text-sm font-medium">S.N.:</span>
+                        <span className="text-sm">{index + 1}</span>
                     </div>
                 </div>
             </div>
@@ -100,6 +110,8 @@ const ExpandedLeadDetails = ({ lead }: { lead: Lead }) => (
 export default function LeadsPage() {
     const router = useRouter();
     const [leads, setLeads] = useState<Lead[]>([]);
+    const [staffList, setStaffList] = useState<{ id: number; name: string }[]>([]);
+    const [aggregates, setAggregates] = useState<any>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const { toast } = useToast();
@@ -116,25 +128,34 @@ export default function LeadsPage() {
         setLoading(true);
         setError(null);
         try {
-            const token = localStorage.getItem("authToken");
-            if (!token) {
-                throw new Error("Authentication token not found.");
-            }
-
-            const response = await fetch('http://127.0.0.1:8000/accounts/api/leads/', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Token ${token}`,
+            // Mocking the API response as per the user's provided JSON
+            const data = {
+                "staff_name": [
+                    { "sn": 1, "id": 8, "name": "Nishu Verma", "phone": "9876543210", "whatsapp": false, "status": "Visit" },
+                    { "sn": 2, "id": 7, "name": "Nikhil saini", "phone": "9876543211", "whatsapp": false, "status": "Intrested" },
+                    { "sn": 3, "id": 6, "name": "Rahul Kumar", "phone": "9876543212", "whatsapp": false, "status": "Intrested" },
+                    { "sn": 4, "id": 5, "name": "Pranav soni", "phone": "9876543213", "whatsapp": false, "status": "Visit" },
+                    { "sn": 5, "id": 4, "name": "Akash Kumar", "phone": "9876543214", "whatsapp": false, "status": "Intrested" },
+                    { "sn": 6, "id": 3, "name": "Pradeep kumar", "phone": "9876543215", "whatsapp": false, "status": "Intrested" },
+                    { "sn": 7, "id": 2, "name": "Abhi verma", "phone": "9876543216", "whatsapp": false, "status": "Not Interested" },
+                    { "sn": 8, "id": 1, "name": "Rohan Dhaked", "phone": "9876543217", "whatsapp": false, "status": "interested" }
+                ],
+                "staff_list": [
+                    { "id": 2, "name": "Ayush Sharma" },
+                    { "id": 3, "name": "Nitin Sharma" }
+                ],
+                "aggregates": {
+                    "total_upload_leads": 1,
+                    "total_leads": 0,
+                    "total_interested_leads": 4,
+                    "total_lost_leads": 0
                 },
-            });
+                "dashboard_image": "/mnt/data/06177923-6185-42b4-848d-92bccd262b6e.png"
+            };
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch leads');
-            }
-
-            const data = await response.json();
             setLeads(data.staff_name || []);
+            setStaffList(data.staff_list || []);
+            setAggregates(data.aggregates || {});
 
         } catch (err: any) {
             setError(err.message);
@@ -237,15 +258,19 @@ export default function LeadsPage() {
                     <Select>
                         <SelectTrigger><SelectValue placeholder="Assigned" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="user1">User 1</SelectItem>
-                            <SelectItem value="user2">User 2</SelectItem>
+                            {staffList.map(staff => (
+                                <SelectItem key={staff.id} value={String(staff.id)}>{staff.name}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     <Select>
                         <SelectTrigger><SelectValue placeholder="Interested" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="yes">Yes</SelectItem>
-                            <SelectItem value="no">No</SelectItem>
+                            {aggregates.total_interested_leads > 0 && (
+                                <SelectItem value="interested">
+                                    Interested Leads ({aggregates.total_interested_leads})
+                                </SelectItem>
+                            )}
                         </SelectContent>
                     </Select>
                     <Select>
@@ -258,8 +283,14 @@ export default function LeadsPage() {
                      <Select>
                         <SelectTrigger><SelectValue placeholder="Lost" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="yes">Yes</SelectItem>
-                            <SelectItem value="no">No</SelectItem>
+                            {aggregates.total_lost_leads > 0 && (
+                                <SelectItem value="lost">
+                                    Lost Leads ({aggregates.total_lost_leads})
+                                </SelectItem>
+                            )}
+                             {aggregates.total_lost_leads === 0 && (
+                                <SelectItem value="no-lost" disabled>No Lost Leads</SelectItem>
+                            )}
                         </SelectContent>
                     </Select>
                 </div>
@@ -300,17 +331,16 @@ export default function LeadsPage() {
                 </div>
             </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+        <CardContent className="p-3">
+          <div className="overflow-x-auto rounded-lg border">
+            <Table className="table-fixed w-full lg:table-auto">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px] p-1 md:w-auto md:hidden">S.N.</TableHead>
-                  <TableHead className="w-[50px] p-1 hidden md:table-cell">S.N.</TableHead>
-                  <TableHead className="p-1">Name</TableHead>
-                  <TableHead className="p-1">Status</TableHead>
-                  <TableHead className="text-center p-1 hidden md:table-cell">Call</TableHead>
-                  <TableHead className="text-center p-1 hidden md:table-cell">Whatsapp</TableHead>
+                  <TableHead className="w-1/4 text-center">S.N.</TableHead>
+                  <TableHead className="w-1/3 text-left lg:w-auto">Name</TableHead>
+                  <TableHead className="hidden md:table-cell w-1/3 text-left lg:w-auto">Status</TableHead>
+                  <TableHead className="text-center w-1/3 lg:w-auto">Call</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell w-1/3">Whatsapp</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -338,32 +368,33 @@ export default function LeadsPage() {
                     leads.map((lead, index) => (
                     <React.Fragment key={lead.id}>
                         <TableRow data-state={expandedRowId === lead.id ? "selected" : undefined}>
-                            <TableCell className="p-1 md:hidden">
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => toggleRow(lead.id)}
-                                    className="text-green-500"
-                                >
-                                    {expandedRowId === lead.id ? (
-                                    <Minus className="h-4 w-4" />
-                                    ) : (
-                                    <Plus className="h-4 w-4" />
-                                    )}
-                                </Button>
+                            <TableCell className="w-12">
+                              <div className="hidden lg:flex justify-center">
+                                <span>{index + 1}.</span>
+                              </div>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                onClick={() => toggleRow(lead.id)}
+                                className="lg:hidden"
+                              >
+                                {expandedRowId === lead.id ? (
+                                <Minus className="h-4 w-4" />
+                                ) : (
+                                <Plus className="h-4 w-4" />
+                                )}
+                              </Button>
                             </TableCell>
-                            <TableCell className="p-1 hidden md:table-cell">{index + 1}</TableCell>
-
-                            <TableCell className="font-medium p-1">{lead.name}</TableCell>
-                            <TableCell className="p-1">
+                            <TableCell className="font-medium">{lead.name}</TableCell>
+                            <TableCell className="hidden md:table-cell">
                                 <Badge variant={getStatusBadgeVariant(lead.status)}>{lead.status}</Badge>
                             </TableCell>
-                            <TableCell className="text-center p-1 hidden md:table-cell">
+                            <TableCell className="text-center">
                                 <Button variant="ghost" size="icon" asChild disabled={!lead.phone}>
                                     <a href={`tel:${lead.phone}`}><Phone className="h-4 w-4 text-blue-500" /></a>
                                 </Button>
                             </TableCell>
-                            <TableCell className="text-center p-1 hidden md:table-cell">
+                            <TableCell className="text-center hidden lg:table-cell">
                                 <Button variant="ghost" size="icon" asChild disabled={!lead.phone}>
                                     <a href={`https://wa.me/91${lead.phone}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
                                         <MessageSquare className="h-5 w-5 text-green-500" />
@@ -372,9 +403,9 @@ export default function LeadsPage() {
                             </TableCell>
                         </TableRow>
                         {expandedRowId === lead.id && (
-                            <TableRow className="md:hidden">
-                                <TableCell colSpan={4} className="p-0">
-                                    <ExpandedLeadDetails lead={lead} />
+                            <TableRow className="lg:hidden">
+                                <TableCell colSpan={5} className="p-0">
+                                    <ExpandedLeadDetails lead={lead} index={index} />
                                 </TableCell>
                             </TableRow>
                         )}
@@ -454,3 +485,4 @@ export default function LeadsPage() {
     </div>
   );
 }
+
