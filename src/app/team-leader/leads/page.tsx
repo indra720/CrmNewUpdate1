@@ -47,6 +47,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { fetchTeamLeaderLeadsPageData } from '@/lib/api';
 import Link from 'next/link';
 
 interface Lead {
@@ -128,35 +129,10 @@ export default function LeadsPage() {
         setLoading(true);
         setError(null);
         try {
-            // Mocking the API response as per the user's provided JSON
-            const data = {
-                "staff_name": [
-                    { "sn": 1, "id": 8, "name": "Nishu Verma", "phone": "9876543210", "whatsapp": false, "status": "Visit" },
-                    { "sn": 2, "id": 7, "name": "Nikhil saini", "phone": "9876543211", "whatsapp": false, "status": "Intrested" },
-                    { "sn": 3, "id": 6, "name": "Rahul Kumar", "phone": "9876543212", "whatsapp": false, "status": "Intrested" },
-                    { "sn": 4, "id": 5, "name": "Pranav soni", "phone": "9876543213", "whatsapp": false, "status": "Visit" },
-                    { "sn": 5, "id": 4, "name": "Akash Kumar", "phone": "9876543214", "whatsapp": false, "status": "Intrested" },
-                    { "sn": 6, "id": 3, "name": "Pradeep kumar", "phone": "9876543215", "whatsapp": false, "status": "Intrested" },
-                    { "sn": 7, "id": 2, "name": "Abhi verma", "phone": "9876543216", "whatsapp": false, "status": "Not Interested" },
-                    { "sn": 8, "id": 1, "name": "Rohan Dhaked", "phone": "9876543217", "whatsapp": false, "status": "interested" }
-                ],
-                "staff_list": [
-                    { "id": 2, "name": "Ayush Sharma" },
-                    { "id": 3, "name": "Nitin Sharma" }
-                ],
-                "aggregates": {
-                    "total_upload_leads": 1,
-                    "total_leads": 0,
-                    "total_interested_leads": 4,
-                    "total_lost_leads": 0
-                },
-                "dashboard_image": "/mnt/data/06177923-6185-42b4-848d-92bccd262b6e.png"
-            };
-
+            const data = await fetchTeamLeaderLeadsPageData();
             setLeads(data.staff_name || []);
             setStaffList(data.staff_list || []);
             setAggregates(data.aggregates || {});
-
         } catch (err: any) {
             setError(err.message);
             toast({
@@ -213,7 +189,7 @@ export default function LeadsPage() {
                 throw new Error("Authentication token not found.");
             }
 
-            const response = await fetch('http://127.0.0.1:8000/accounts/api/leads/add/', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/leads/add/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -485,4 +461,8 @@ export default function LeadsPage() {
     </div>
   );
 }
+
+
+
+
 

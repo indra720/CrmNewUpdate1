@@ -268,7 +268,7 @@ const LoginPage = () => {
             router.push('/admin/users/team-leader');
             break;
         case "team-leader":
-            router.push('/team-leader/productivity/staff');
+            router.push('/team-leader/');
             break;
         case "staff":
             router.push('/staff/dashboard');

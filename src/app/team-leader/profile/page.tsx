@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -16,18 +14,17 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { MapPin, Mail, Phone, Briefcase, Calendar, FileText, CreditCard, User, Camera, GraduationCap, Tag, Landmark, Hash, Users, Home, Link as LinkIcon, Wallet, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
+import { MapPin, Mail, Phone, Briefcase, Calendar, User, Camera, GraduationCap, Hash, Home, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import React from "react";
+
 
 interface ProfileData {
   id: number;
@@ -80,6 +77,8 @@ const InputField = ({
   required,
   readOnly,
   children,
+  togglePasswordVisibility,
+  isPasswordVisible,
 }: {
   id: string;
   label: string;
@@ -92,6 +91,8 @@ const InputField = ({
   required?: boolean;
   readOnly?: boolean;
   children?: React.ReactElement;
+  togglePasswordVisibility?: () => void;
+  isPasswordVisible?: boolean;
 }) => {
   const inputElement = children ? (
     React.cloneElement(children as React.ReactElement, {
@@ -105,7 +106,7 @@ const InputField = ({
     })
   ) : (
     <Input
-      type={type}
+      type={type === "password" && isPasswordVisible ? "text" : type}
       id={id}
       name={name}
       value={type === "file" ? undefined : (value as string)}
@@ -138,6 +139,17 @@ const InputField = ({
           {Icon && type !== "file" && !readOnly && (
             <Icon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           )}
+          {type === "password" && togglePasswordVisibility && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-400 hover:bg-transparent hover:text-gray-600"
+              onClick={togglePasswordVisibility}
+            >
+              {isPasswordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -165,6 +177,9 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal");
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+
 
   const [editableData, setEditableData] = useState<{
     team_leader_id: string;
@@ -179,13 +194,11 @@ export default function ProfilePage() {
     pancard: string;
     aadharCard: string;
     degree: string;
-    bankName: string;
-    accountNumber: string;
-    ifscCode: string;
-    upiId: string;
     profileImage: File | null;
     panCard: File | null;
     aadharCardFile: File | null;
+    newPassword: string; // Added for Change Password tab
+    confirmNewPassword: string; // Added for Change Password tab
   }>({
     team_leader_id: "",
     name: "",
@@ -199,18 +212,17 @@ export default function ProfilePage() {
     pancard: "",
     aadharCard: "",
     degree: "",
-    bankName: "",
-    accountNumber: "",
-    ifscCode: "",
-    upiId: "",
     profileImage: null,
     panCard: null,
     aadharCardFile: null,
+    newPassword: "",
+    confirmNewPassword: "",
   });
 
   useEffect(() => {
     if (profile) {
-      setEditableData({
+      setEditableData((prevEditableData) => ({
+        ...prevEditableData, // Keep existing newPassword/confirmNewPassword if user typed them
         team_leader_id: profile.team_leader_id,
         name: profile.name,
         email: profile.email,
@@ -223,16 +235,28 @@ export default function ProfilePage() {
         pancard: profile.pancard,
         aadharCard: profile.aadharCard,
         degree: profile.degree,
-        bankName: profile.bank_name,
-        accountNumber: profile.account_number,
-        ifscCode: profile.ifsc_code,
-        upiId: profile.upi_id,
         profileImage: null,
         panCard: null,
         aadharCardFile: null,
-      });
+        // Don't reset newPassword/confirmNewPassword here, only on dialog open or explicit clear
+      }));
     }
   }, [profile]);
+
+  // Reset password fields and active tab when dialog is opened
+  useEffect(() => {
+    if (isEditDialogOpen) {
+        setActiveTab("personal"); // Always start on personal tab
+        setEditableData((prevData) => ({
+            ...prevData,
+            newPassword: "",
+            confirmNewPassword: "",
+        }));
+        setIsNewPasswordVisible(false);
+        setIsConfirmPasswordVisible(false);
+    }
+  }, [isEditDialogOpen]);
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -328,49 +352,83 @@ export default function ProfilePage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate a successful API call
-    console.log("Simulating profile update with data:", editableData);
+    try {
+      // 1. Handle Password Change if fields are provided
+      if (editableData.newPassword || editableData.confirmNewPassword) {
+        if (editableData.newPassword !== editableData.confirmNewPassword) {
+          throw new Error("New password and confirm password do not match.");
+        }
+        if (editableData.newPassword.length < 6) { // Basic validation
+            throw new Error("Password must be at least 6 characters long.");
+        }
+        
+        // Assuming profile.user.id is the staff_user_id (backend uses request.user)
+        await changeTeamLeaderPassword(
+          editableData.newPassword,
+          editableData.confirmNewPassword
+        );
+        toast({
+          title: "Password Updated!",
+          description: "Your password has been changed successfully.",
+          className: 'bg-green-500 text-white'
+        });
+      }
 
-    setTimeout(() => {
-      // Create a new profile object by merging the existing profile with the edited data
-      if (profile) {
-        const updatedProfile: ProfileData = {
-          ...profile,
-          name: editableData.name,
-          email: editableData.email,
-          mobile: editableData.mobile,
-          dob: editableData.dob,
-          address: editableData.address,
-          city: editableData.city,
-          state: editableData.state,
-          pincode: editableData.pincode,
-          pancard: editableData.pancard,
-          aadharCard: editableData.aadharCard,
-          degree: editableData.degree,
-          bank_name: editableData.bankName,
-          account_number: editableData.accountNumber,
-          ifsc_code: editableData.ifscCode,
-          upi_id: editableData.upiId,
-          user: {
-            ...profile.user,
-            name: editableData.name,
-            email: editableData.email,
-            mobile: editableData.mobile,
-            profile_image: editableData.profileImage ? URL.createObjectURL(editableData.profileImage) : profile.user.profile_image,
+      // 2. Handle Profile Update
+      const data = new FormData();
+      // Append all profile fields to FormData
+      for (const key in editableData) {
+        if (editableData[key] !== null && editableData[key] !== undefined && key !== 'newPassword' && key !== 'confirmNewPassword') {
+          // Special handling for image files if needed, currently assumes `profileImage` etc. are `File` objects
+          if (key === 'profileImage' || key === 'panCard' || key === 'aadharCardFile') {
+            if (editableData[key] instanceof File) {
+                data.append(key, editableData[key]);
+            }
+          } else {
+            data.append(key, String(editableData[key]));
           }
-        };
-        setProfile(updatedProfile);
+        }
       }
       
-      setIsSubmitting(false);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/profile/`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Token ${localStorage.getItem("authToken")}`,
+          },
+          body: data,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update profile.");
+      }
+
+      const updatedProfileResponse = await response.json(); // Assuming PATCH returns updated profile
+      setProfile((prevProfile) => ({ ...prevProfile, ...updatedProfileResponse.data }));
+
       setIsEditDialogOpen(false);
+      setEditableData((prevData) => ({ // Clear password fields after submission
+        ...prevData,
+        newPassword: "",
+        confirmNewPassword: "",
+      }));
       toast({
         title: "Profile Updated!",
-        description: "Your profile has been updated successfully (Simulated).",
+        description: "Your profile has been updated successfully.",
         className: 'bg-green-500 text-white'
       });
-
-    }, 1000);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -395,10 +453,6 @@ export default function ProfilePage() {
   const staffId = profile?.team_leader_id || 'N/A';
   const pancard = profile?.pancard || 'N/A';
   const aadharCard = profile?.aadharCard || 'N/A';
-  const accountNumber = profile?.account_number || 'N/A';
-  const upiId = profile?.upi_id || 'N/A';
-  const bankName = profile?.bank_name || 'N/A';
-  const ifscCode = profile?.ifsc_code || 'N/A';
   const salary = profile?.salary ? `₹${parseInt(profile.salary).toLocaleString()}` : 'N/A';
   const referralCode = profile?.referral_code || 'N/A';
   const achievedSlab = profile?.achived_slab || '0';
@@ -444,6 +498,10 @@ export default function ProfilePage() {
               <Label className="text-sm">Date of Birth</Label>
               <p className="font-medium">{dob}</p>
             </div>
+            <div className="space-y-1 border rounded-md p-3">
+              <Label className="text-sm">Pincode</Label>
+              <p className="font-medium">{pincode || 'N/A'}</p>
+            </div>
             <div className="space-y-1 md:col-span-2 border rounded-md p-3">
               <Label className="text-sm">Address</Label>
               <p className="font-medium">{fullAddress || 'N/A'}</p>
@@ -475,8 +533,8 @@ export default function ProfilePage() {
                   <TabsTrigger value="personal">
                     Personal Information
                   </TabsTrigger>
-                  <TabsTrigger value="account">
-                    Account Details
+                  <TabsTrigger value="change-password">
+                    Change Password
                   </TabsTrigger>
                   <TabsTrigger value="review">
                     Review &amp; Submit
@@ -634,46 +692,41 @@ export default function ProfilePage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="account">
+                <TabsContent value="change-password">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                     <InputField
-                      id="edit-bank-name"
-                      label="Bank Name"
-                      name="bankName"
-                      placeholder="State Bank of India"
-                      icon={Landmark}
-                      value={editableData.bankName}
+                      id="staff-user-id"
+                      label="User Email (Read Only)"
+                      name="staffUserId"
+                      placeholder="user@example.com"
+                      icon={Mail}
+                      value={profile?.user.email || ''} // Assuming current user's email is the identifier
+                      readOnly onChange={function (e: any): void {
+                        throw new Error("Function not implemented.");
+                      } }                    />
+                    <InputField
+                      id="new-password"
+                      label="New Password"
+                      name="newPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      icon={Lock} // Lock icon for password
+                      value={editableData.newPassword}
                       onChange={handleEditChange}
-                      required
+                      togglePasswordVisibility={() => setIsNewPasswordVisible(!isNewPasswordVisible)}
+                      isPasswordVisible={isNewPasswordVisible}
                     />
                     <InputField
-                      id="edit-account-number"
-                      label="Account Number"
-                      name="accountNumber"
-                      placeholder="Your Bank Account Number"
-                      icon={Wallet}
-                      value={editableData.accountNumber}
+                      id="confirm-new-password"
+                      label="Confirm New Password"
+                      name="confirmNewPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      icon={Lock} // Lock icon for password
+                      value={editableData.confirmNewPassword}
                       onChange={handleEditChange}
-                      required
-                    />
-                    <InputField
-                      id="edit-ifsc"
-                      label="IFSC Code"
-                      name="ifscCode"
-                      placeholder="SBIN000000"
-                      icon={Hash}
-                      value={editableData.ifscCode}
-                      onChange={handleEditChange}
-                      required
-                    />
-                    <InputField
-                      id="edit-upi"
-                      label="UPI ID (Optional)"
-                      name="upiId"
-                      placeholder="yourname@upi"
-                      icon={LinkIcon}
-                      value={editableData.upiId}
-                      onChange={handleEditChange}
+                      togglePasswordVisibility={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                      isPasswordVisible={isConfirmPasswordVisible}
                     />
                   </div>
                 </TabsContent>
@@ -747,29 +800,24 @@ export default function ProfilePage() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-foreground border-b pb-2">
-                        Account Details
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <ReviewDetailItem
-                          label="Bank Name"
-                          value={editableData.bankName}
-                        />
-                        <ReviewDetailItem
-                          label="Account No."
-                          value={editableData.accountNumber}
-                        />
-                        <ReviewDetailItem
-                          label="IFSC Code"
-                          value={editableData.ifscCode}
-                        />
-                        <ReviewDetailItem
-                          label="UPI ID"
-                          value={editableData.upiId}
-                        />
-                      </div>
-                    </div>
+                    {/* New Password Review - only if provided */}
+                    {(editableData.newPassword || editableData.confirmNewPassword) && (
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                                Password Change
+                            </h3>
+                            <div className="grid grid-cols-1 gap-4">
+                                <ReviewDetailItem
+                                    label="New Password"
+                                    value="•••••••• (hidden)"
+                                />
+                                <ReviewDetailItem
+                                    label="Confirm Password"
+                                    value="•••••••• (hidden)"
+                                />
+                            </div>
+                        </div>
+                    )}
                   </div>
                 </TabsContent>
               </div>
@@ -780,11 +828,11 @@ export default function ProfilePage() {
                   type="button"
                   variant="outline"
                   onClick={() =>
-                    activeTab === "account"
-                      ? setActiveTab("personal")
-                      : activeTab === "review"
-                        ? setActiveTab("account")
-                        : setIsEditDialogOpen(false)
+                    activeTab === "review"
+                      ? setActiveTab("change-password")
+                      : activeTab === "change-password"
+                        ? setActiveTab("personal")
+                        : setIsEditDialogOpen(false) // This closes the dialog if on personal tab
                   }
                   className={cn(activeTab === "personal" && "invisible")}
                 >
@@ -796,7 +844,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() =>
                       activeTab === "personal"
-                        ? setActiveTab("account")
+                        ? setActiveTab("change-password")
                         : setActiveTab("review")
                     }
                   >
@@ -820,38 +868,6 @@ export default function ProfilePage() {
   );
 }
 
-
-
-
-
-
-
-// {
-//     "id": 2,
-//     "user": {
-//         "id": 5,
-//         "email": "indra720@gmail.com",
-//         "name": "Indrajeet ",
-//         "mobile": "6789567890",
-//         "profile_image": null,
-//         "is_admin": false,
-//         "is_team_leader": true,
-//         "is_staff_new": false,
-//         "created_date": "2025-11-18T13:00:05.394903Z",
-//         "user_active": true
-//     },
-//     "team_leader_id": "0c03d164-9ca3-44ba-a3c7-d1cb550d85a1",
-//     "name": "Indrajeet ",
-//     "email": "indra720@gmail.com",
-//     "mobile": "6789567890",
-//     "address": "JAIPUR",
-//     "city": "jaipur",
-//     "pincode": "302019",
-//     "state": "Rajasthan",
-//     "dob": null,
-//     "created_date": "2025-11-18T13:00:06.300085Z",
-//     "updated_date": "2025-11-18T13:00:06.300085Z"
-// }
 
 
 
@@ -901,34 +917,3 @@ export default function ProfilePage() {
         
 //     def post(self, request, format=None):
 //         return self.patch(request, format)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

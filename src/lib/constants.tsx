@@ -232,14 +232,18 @@ export const TEAM_LEADER_SIDENAV_ITEMS = [
     },
     {
         title: 'Leads Report',
-        path: '/team-leader/reports',
+        path: '/team-leader/leads-report',
         icon: <FileBarChart className="h-5 w-5" />,
         submenu: true,
         subMenuItems: [
-            { title: 'Interested', path: '/team-leader/reports/interested' },
-            { title: 'Visit', path: '/team-leader/reports/visit' },
+            { title: 'Today Followups', path: '/team-leader/leads-report/today-followups' },
+            { title: 'Pending Followups', path: '/team-leader/leads-report/pending-followups' },
+            { title: 'Tomorrow Followups', path: '/team-leader/leads-report/tomorrow-followups' },
+            { title: 'Interested', path: '/team-leader/leads-report/interested' },
+            { title: 'Visit', path: '/team-leader/leads-report/visit' },
         ],
     },
+
     {
         title: 'Marketing',
         path: '/team-leader/marketing', 

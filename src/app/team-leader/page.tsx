@@ -223,7 +223,7 @@ export default function TeamLeaderDashboardPage() {
     setUsers([]);
     setDashboardData(null);
     try {
-      let url = 'http://127.0.0.1:8000/accounts/api/team-leader/staff-dashboard/';
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff-dashboard/`;
       const params = new URLSearchParams();
       if (start) params.append("start_date", start);
       if (end) params.append("end_date", end);
@@ -343,7 +343,7 @@ export default function TeamLeaderDashboardPage() {
       }
 
       const response = await fetch(
-        "http://127.0.0.1:8000/accounts/api/team-leader/add-staff/",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/add-staff/`,
         {
           method: "POST",
           credentials: "include",
@@ -388,7 +388,7 @@ export default function TeamLeaderDashboardPage() {
             }
         }
 
-        const response = await fetch(`http://127.0.0.1:8000/accounts/api/team-leader/staff/edit/${editingUser.id}/`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff/edit/${editingUser.id}/`, {
             method: 'PATCH',
             credentials: 'include',
             body: data,
@@ -680,7 +680,7 @@ export default function TeamLeaderDashboardPage() {
                         <TableCell>{staff.createdDate}</TableCell>
                         <TableCell>{staff.duration}</TableCell>
                         <TableCell>
-                          <Link href="/team-leader/leads/staff">
+                          <Link href={`/team-leader/leads/staff?id=${staff.id}`}>
                             <Button
                               variant="link"
                               size="sm"
@@ -738,7 +738,7 @@ export default function TeamLeaderDashboardPage() {
                                     </div>
                                     <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
                                       <span className="text-sm font-medium">Leads:</span>
-                                      <Link href="/team-leader/leads/staff">
+                                      <Link href={`/team-leader/leads/staff?id=${staff.id}`}>
                                         <Button variant="link" size="sm" className="p-0 h-auto text-green-600">View</Button>
                                       </Link>
                                     </div>
@@ -1323,3 +1323,54 @@ export default function TeamLeaderDashboardPage() {
     </div>
   );
 }
+
+
+
+
+
+// // class TeamLeaderStaffLeadsListAPIView(APIView):
+//     """
+//     API endpoint for 'teamleader_perticular_leads'.
+//     GET: Fetches list of leads for a specific staff, filtered by status (tag).
+//     ONLY TEAM LEADER can access this.
+//     """
+//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
+//     pagination_class = StandardResultsSetPagination
+
+//     def get(self, request, staff_id, tag, format=None):
+//         # 1. Verify Team Leader & Staff Relationship
+//         try:
+//             tl_instance = Team_Leader.objects.get(user=request.user)
+//             staff = Staff.objects.get(id=staff_id)
+//             if staff.team_leader != tl_instance:
+//                  return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+//         except (Team_Leader.DoesNotExist, Staff.DoesNotExist):
+//             return Response({"error": "Invalid Team Leader or Staff."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 2. Filter Leads based on Tag
+//         base_qs = LeadUser.objects.filter(assigned_to=staff)
+        
+//         if tag == "Intrested":
+//             leads = base_qs.filter(status='Intrested')
+//         elif tag == "Not Interested":
+//             leads = base_qs.filter(status='Not Interested')
+//         elif tag == "Other Location":
+//             leads = base_qs.filter(status='Other Location')
+//         elif tag == "Lost":
+//             leads = base_qs.filter(status='Lost')
+//         elif tag == "Visit":
+//             leads = base_qs.filter(status='Visit')
+//         else:
+//             leads = base_qs # All leads if tag doesn't match
+
+//         leads = leads.order_by('-updated_date')
+
+//         # 3. Paginate & Serialize
+//         paginator = self.pagination_class()
+//         page = paginator.paginate_queryset(leads, request, view=self)
+//         if page is not None:
+//             serializer = ApiLeadUserSerializer(page, many=True)
+//             return paginator.get_paginated_response(serializer.data)
+
+//         serializer = ApiLeadUserSerializer(leads, many=True)
+//         return Response(serializer.data)

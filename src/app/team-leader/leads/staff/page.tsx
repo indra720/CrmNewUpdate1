@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -32,23 +33,45 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Phone, MessageSquare, Calendar, FileDown, Plus, Minus } from 'lucide-react';
+import { Search, Phone, MessageSquare, Calendar, FileDown, Plus, Minus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-
-
-const mockLeads = [
-    { id: 1, name: 'Mahesh Sharma', staff: 'chanchal-staff', status: 'Leads', call: '9876543210', updated_date: 'Nov. 19, 2025, 9:12 a.m.'},
-    { id: 2, name: 'Qutubuddin', staff: 'chanchal-staff', status: 'Leads', call: '9876543211', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
-    { id: 3, name: 'Ashok Agarwal', staff: 'chanchal-staff', status: 'Leads', call: '9876543212', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
-    { id: 4, name: 'Giriraj Maheshwari', staff: 'chanchal-staff', status: 'Leads', call: '9876543213', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
-    { id: 5, name: 'Laxmi Narayan', staff: 'chanchal-staff', status: 'Leads', call: '9876543214', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
-    { id: 6, name: 'Mahesh Agarwal', staff: 'chanchal-staff', status: 'Leads', call: '9876543215', updated_date: 'Nov. 19, 2025, 9:12 a.m.' },
-];
+import { fetchTeamLeaderStaffLeadsReportByTag } from '@/lib/api';
 
 export default function StaffLeadsPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const staffId = searchParams.get('id');
+
+    const [leads, setLeads] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+    const [selectedTag, setSelectedTag] = useState('Intrested');
+    
+    const tags = ['Intrested', 'Not Interested', 'Other Location', 'Lost', 'Visit'];
+
+    useEffect(() => {
+      async function fetchLeads() {
+        if (!staffId) {
+          setError("Staff ID is missing.");
+          setLoading(false);
+          return;
+        }
+  
+        try {
+          setLoading(true);
+          setError(null);
+          const data = await fetchTeamLeaderStaffLeadsReportByTag(Number(staffId), selectedTag);
+          setLeads(data.results || data || []);
+        } catch (err: any) {
+          setError(err.message || 'Failed to fetch leads.');
+        } finally {
+          setLoading(false);
+        }
+      }
+      fetchLeads();
+    }, [staffId, selectedTag]);
 
     const toggleRow = (rowId: number) => {
         setExpandedRowId(expandedRowId === rowId ? null : rowId);
@@ -80,19 +103,15 @@ export default function StaffLeadsPage() {
                     </div>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="status" className="sr-only">Status</Label>
-                    <Select name="status">
+                    <Label htmlFor="status">Status</Label>
+                    <Select name="status" value={selectedTag} onValueChange={setSelectedTag}>
                         <SelectTrigger id="status">
                             <SelectValue placeholder="Open this select menu" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Leads">Leads</SelectItem>
-                            <SelectItem value="Intrested">Intrested</SelectItem>
-                            <SelectItem value="Not Interested">Not Interested</SelectItem>
-                            <SelectItem value="Other Location">Other Location</SelectItem>
-                            <SelectItem value="Not Picked">Not Picked</SelectItem>
-                            <SelectItem value="Lost">Lost</SelectItem>
-                            <SelectItem value="Visit">Visit</SelectItem>
+                            {tags.map(tag => (
+                                <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
@@ -146,110 +165,130 @@ export default function StaffLeadsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockLeads.map((lead, index) => (
-                  <React.Fragment key={lead.id}>
-                    <TableRow
-                      data-state={
-                        expandedRowId === lead.id ? "selected" : undefined
-                      }
-                    >
-                      <TableCell className="w-12">
-                        <div className="hidden lg:flex justify-center">
-                          <span>{index + 1}.</span>
-                        </div>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          onClick={() => toggleRow(lead.id)}
-                          className="lg:hidden"
-                        >
-                          {expandedRowId === lead.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                        </Button>
-                      </TableCell>
-                      <TableCell className="font-medium">{lead.name}</TableCell>
-                      <TableCell className="hidden md:table-cell">{lead.staff}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                         <Button variant="ghost" size="icon" asChild>
-                           <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
-                         </Button>
-                      </TableCell>
-                      <TableCell className="text-center hidden lg:table-cell">
-                          <Button variant="ghost" size="icon" asChild>
-                              <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
-                                  <MessageSquare className="h-5 w-5 text-green-500" />
-                              </a>
-                          </Button>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">{lead.updated_date}</TableCell>
-                    </TableRow>
-                    {expandedRowId === lead.id && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="p-0">
-                          <div className="p-4">
-                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
-                                <div className="flex items-center gap-4">
-                                  <div className="text-lg font-bold">{lead.name}</div>
-                                  <div className="text-sm text-gray-500">
-                                    <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="overflow-hidden">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Staff:</span>
-                                    <span className="text-sm">{lead.staff || 'N/A'}</span>
-                                  </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Status:</span>
-                                    <span className="text-sm">
-                                      <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status || 'N/A'}</Badge>
-                                    </span>
-                                  </div>
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Call:</span>
-                                    <span className="text-sm">
-                                      <Button variant="ghost" size="icon" asChild>
-                                        <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
-                                      </Button>
-                                    </span>
-                                  </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Whatsapp:</span>
-                                    <span className="text-sm">
-                                      <Button variant="ghost" size="icon" asChild>
-                                          <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
-                                              <MessageSquare className="h-5 w-5 text-green-500" />
-                                          </a>
-                                      </Button>
-                                    </span>
-                                  </div>
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">Updated Date:</span>
-                                    <span className="text-sm">{lead.updated_date || 'N/A'}</span>
-                                  </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
-                                    <span className="text-sm font-medium">S.N.:</span>
-                                    <span className="text-sm">{index + 1}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                            <Loader2 className="mx-auto h-8 w-8 animate-spin" />
                         </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
-                ))}
-              </TableBody>
+                    </TableRow>
+                ) : error ? (
+                    <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center text-red-500">
+                            {error}
+                        </TableCell>
+                    </TableRow>
+                ) : leads.length > 0 ? (
+                    leads.map((lead, index) => (
+                    <React.Fragment key={lead.id}>
+                        <TableRow
+                        data-state={
+                            expandedRowId === lead.id ? "selected" : undefined
+                        }
+                        >
+                        <TableCell className="w-12">
+                            <div className="hidden lg:flex justify-center">
+                            <span>{index + 1}.</span>
+                            </div>
+                            <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => toggleRow(lead.id)}
+                            className="lg:hidden"
+                            >
+                            {expandedRowId === lead.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            </Button>
+                        </TableCell>
+                        <TableCell className="font-medium">{lead.name}</TableCell>
+                        <TableCell className="hidden md:table-cell">{lead.staff}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                            <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                            <Button variant="ghost" size="icon" asChild>
+                            <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
+                            </Button>
+                        </TableCell>
+                        <TableCell className="text-center hidden lg:table-cell">
+                            <Button variant="ghost" size="icon" asChild>
+                                <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
+                                    <MessageSquare className="h-5 w-5 text-green-500" />
+                                </a>
+                            </Button>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">{lead.updated_date}</TableCell>
+                        </TableRow>
+                        {expandedRowId === lead.id && (
+                        <TableRow>
+                            <TableCell colSpan={7} className="p-0">
+                            <div className="p-4">
+                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                    <div className="flex items-center gap-4">
+                                    <div className="text-lg font-bold">{lead.name}</div>
+                                    <div className="text-sm text-gray-500">
+                                        <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
+                                    </div>
+                                    </div>
+                                </div>
+                                <div className="overflow-hidden">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                        <span className="text-sm font-medium">Staff:</span>
+                                        <span className="text-sm">{lead.staff || 'N/A'}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                        <span className="text-sm font-medium">Status:</span>
+                                        <span className="text-sm">
+                                        <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status || 'N/A'}</Badge>
+                                        </span>
+                                    </div>
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                        <span className="text-sm font-medium">Call:</span>
+                                        <span className="text-sm">
+                                        <Button variant="ghost" size="icon" asChild>
+                                            <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
+                                        </Button>
+                                        </span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                        <span className="text-sm font-medium">Whatsapp:</span>
+                                        <span className="text-sm">
+                                        <Button variant="ghost" size="icon" asChild>
+                                            <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
+                                                <MessageSquare className="h-5 w-5 text-green-500" />
+                                            </a>
+                                        </Button>
+                                        </span>
+                                    </div>
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                        <span className="text-sm font-medium">Updated Date:</span>
+                                        <span className="text-sm">{lead.updated_date || 'N/A'}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                        <span className="text-sm font-medium">S.N.:</span>
+                                        <span className="text-sm">{index + 1}</span>
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            </TableCell>
+                        </TableRow>
+                        )}
+                    </React.Fragment>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                            No leads found.
+                        </TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
             </Table>
-          </div>
+            </div>
         </CardContent>
-      </Card>
+        </Card>
       
       <Pagination>
         <PaginationContent>
@@ -267,7 +306,6 @@ export default function StaffLeadsPage() {
     </div>
   );
 }
-
 
 
 
