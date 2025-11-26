@@ -87,7 +87,7 @@ const ExpandedSlabDetails = ({ slab, currentSlab }: { slab: Slab; currentSlab: S
         <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
         <span className="text-sm font-medium">Min:</span>
         <span className="text-sm font-bold text-green-600">
-          ₹{slab.min_amount.toLocaleString()}
+          ₹{slab.min_amount?.toLocaleString() || '0'}
         </span>
       </div>
        <div className="p-3">
@@ -95,7 +95,7 @@ const ExpandedSlabDetails = ({ slab, currentSlab }: { slab: Slab; currentSlab: S
         <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
         <span className="text-sm font-medium">Max:</span>
         <span className="text-sm font-bold text-green-600">
-          {slab.max_amount === 0 ? 'No Limit' : `₹${slab.max_amount.toLocaleString()}`}
+          {slab.max_amount === 0 ? 'No Limit' : `₹${slab.max_amount?.toLocaleString() || 'N/A'}`}
         </span>
       </div>
     </div>
