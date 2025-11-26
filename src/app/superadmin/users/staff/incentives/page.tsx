@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Filter, Loader2 } from 'lucide-react';
+import { Filter, Loader2, Plus, Minus, DollarSign } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 
 interface SellProperty {
@@ -36,9 +36,9 @@ interface SellProperty {
   earn_amount: number;
   created_date: string;
   updated_date: string;
-  plot_no: string; // Assumed field
-  sale_gaj: number; // Assumed field
-  amount: number; // Assumed field
+  plot_no: string;
+  sale_gaj: number;
+  amount: number;
   staff: {
     id: number;
     name: string;
@@ -70,6 +70,47 @@ interface StaffMember {
   name: string;
 }
 
+const ExpandedSlabDetails = ({ slab, currentSlab }: { slab: Slab; currentSlab: Slab | null }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="p-4 border-b border-gray-200">
+      <div className="flex items-center gap-2">
+        <div className="text-sm font-bold">{slab.slab_name}</div>
+        {currentSlab?.id === slab.id && (
+          <Badge className="bg-green-100 text-green-800 border-green-300">
+            Current
+          </Badge>
+        )}
+      </div>
+    </div>
+    <div className="p-3">
+      <div className="flex items-center gap-4">
+        <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
+        <span className="text-sm font-medium">Min:</span>
+        <span className="text-sm font-bold text-green-600">
+          ₹{slab.min_amount.toLocaleString()}
+        </span>
+      </div>
+       <div className="p-3">
+      <div className="flex items-center gap-4">
+        <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
+        <span className="text-sm font-medium">Max:</span>
+        <span className="text-sm font-bold text-green-600">
+          {slab.max_amount === 0 ? 'No Limit' : `₹${slab.max_amount.toLocaleString()}`}
+        </span>
+      </div>
+    </div>
+       <div className="p-3">
+      <div className="flex items-center gap-4">
+        <span className="text-sm font-medium">Percentage:</span>
+        <span className="text-sm font-bold text-green-600">
+          {slab.incentive_percentage}%
+        </span>
+      </div>
+    </div>
+    </div>
+  </div>
+);
+
 export default function StaffIncentivesPage() {
   const [sellProperties, setSellProperties] = useState<SellProperty[]>([]);
   const [slabs, setSlabs] = useState<Slab[]>([]);
@@ -78,18 +119,28 @@ export default function StaffIncentivesPage() {
   const [incentiveAmount, setIncentiveAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [staffId, setStaffId] = useState(''); // Default staff ID
+  const [staffId, setStaffId] = useState('');
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [monthsList, setMonthsList] = useState<[number, string][]>([]);
   const [userType, setUserType] = useState(false);
-  const [staffList, setStaffList] = useState<StaffMember[]>([]);
-  const [notFound, setNotFound] = useState(false); // New state for 404
-
-
-  const { toast } = useToast();
-
-  const yearsList = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 5 + i);
+    const [staffList, setStaffList] = useState<StaffMember[]>([]);
+    const [notFound, setNotFound] = useState(false);
+    const [expandedRowId, setExpandedRowId] = useState<number | null>(null); // For sellProperties (not slabs)
+    const [expandedSlabId, setExpandedSlabId] = useState<number | null>(null); // For slabs
+  
+  
+    const { toast } = useToast();
+  
+    const yearsList = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 5 + i);
+  
+    const toggleRow = (rowId: number) => {
+      setExpandedRowId(expandedRowId === rowId ? null : rowId);
+    };
+  
+    const toggleSlab = (slabId: number) => {
+      setExpandedSlabId(expandedSlabId === slabId ? null : slabId);
+    };
 
   const fetchStaffList = async () => {
     try {
@@ -106,7 +157,6 @@ export default function StaffIncentivesPage() {
       const staff = data.staff_list.map((s: any) => ({ id: s.id, name: s.name }));
       setStaffList(staff);
 
-      // Set initial staffId to the first staff member if list is not empty
       if (staff.length > 0) {
         setStaffId(String(staff[0].id));
       }
@@ -120,11 +170,11 @@ export default function StaffIncentivesPage() {
   };
 
   const fetchIncentiveData = async () => {
-    if (!staffId) return; // Don't fetch if no staffId is selected
+    if (!staffId) return;
 
     setLoading(true);
     setError('');
-    setNotFound(false); // Reset 404 state on new fetch
+    setNotFound(false);
     
     try {
       const token = localStorage.getItem("authToken");
@@ -150,7 +200,7 @@ export default function StaffIncentivesPage() {
         setTotalEarn(0);
         setIncentiveAmount(0);
         setCurrentSlab(null);
-        return; // Exit function, as we're handling this specific case
+        return;
       }
 
       if (!response.ok) {
@@ -198,17 +248,11 @@ export default function StaffIncentivesPage() {
     fetchStaffList();
   }, []);
 
-
   useEffect(() => {
     fetchIncentiveData();
   }, [staffId, year, month]);
 
-  const getSlabBadgeColor = (slab: Slab) => {
-    if (currentSlab?.id === slab.id) {
-      return 'bg-green-100 text-green-800 border-green-300';
-    }
-    return slab.is_active ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800';
-  };
+
 
   return (
     <div className="space-y-6">
@@ -222,7 +266,6 @@ export default function StaffIncentivesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div>
               <Label className="text-sm font-medium">Staff</Label>
@@ -275,12 +318,11 @@ export default function StaffIncentivesPage() {
             </div>
           </div>
 
-          {/* Loading State */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : notFound ? ( // New condition for 404
+          ) : notFound ? (
             <div className="text-center text-gray-500 py-10">
               <p>No incentive data found for the selected staff member.</p>
             </div>
@@ -293,31 +335,85 @@ export default function StaffIncentivesPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Incentive Slabs */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Incentive Slabs</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {slabs.map((slab) => (
-                    <Card key={slab.id} className={`${currentSlab?.id === slab.id ? 'ring-2 ring-green-500' : ''}`}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold">{slab.slab_name}</h4>
-                          <Badge className={getSlabBadgeColor(slab)}>
-                            {currentSlab?.id === slab.id ? 'Current' : slab.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </div>
-                        <div className="space-y-1 text-sm">
-                          <p>Min: ₹{slab.min_amount.toLocaleString()}</p>
-                          <p>Max: {slab.max_amount === 0 ? 'No Limit' : `₹${slab.max_amount.toLocaleString()}`}</p>
-                          <p className="font-medium text-green-600">{slab.incentive_percentage}% Incentive</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="overflow-x-auto rounded-lg border">
+                  <Table className="w-full table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-1/3">Slab Name</TableHead>
+                        <TableHead className="w-1/2 md:w-1/3">Min - Max</TableHead>
+                        <TableHead className="w-1/3 hidden md:table-cell">Percentage</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {slabs.length > 0 ? (
+                        slabs.map((slab) => (
+                          <React.Fragment key={slab.id}>
+                            <TableRow 
+                              data-state={expandedSlabId === slab.id && 'selected'}
+                              className={`${currentSlab?.id === slab.id ? 'bg-green-50' : ''}`}
+                            >
+                              <TableCell className="w-1/2 md:w-1/3 font-medium">
+                                <>
+                                  <div className="md:hidden flex items-center justify-between w-full">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="text-green-600 h-6 w-6 p-0"
+                                      onClick={() => toggleSlab(slab.id)}
+                                    >
+                                      {expandedSlabId === slab.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                    </Button>
+                                    {currentSlab?.id === slab.id && (
+                                      <Badge className="bg-green-100 text-green-800 border-green-300">
+                                        Current
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="hidden md:block">
+                                    <div className="flex items-center gap-2">
+                                      {slab.slab_name}
+                                      {currentSlab?.id === slab.id && (
+                                        <Badge className="bg-green-100 text-green-800 border-green-300">
+                                          Current
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              </TableCell>
+                              <TableCell className="w-1/2 md:w-1/3">
+                                ₹{slab.min_amount?.toLocaleString() || '0'} - {' '}
+                                {slab.max_amount === 0 
+                                  ? "No Limit" 
+                                  : `₹${slab.max_amount?.toLocaleString() || 'N/A'}`}
+                              </TableCell>
+                              <TableCell className="w-1/3 hidden md:table-cell font-semibold text-green-600">
+                                {slab.incentive_percentage != null ? `${slab.incentive_percentage}%` : '0%'}
+                              </TableCell>
+                            </TableRow>
+                            {expandedSlabId === slab.id && (
+                              <TableRow className="md:hidden">
+                                <TableCell colSpan={3} className="p-0">
+                                  <ExpandedSlabDetails slab={slab} currentSlab={currentSlab} />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </React.Fragment>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="h-24 text-center">
+                            No slabs available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
 
-              {/* Incentive Plan Details */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Incentive Plan Details ({sellProperties.length})</h3>
                 <div className="overflow-x-auto rounded-lg border">
@@ -339,10 +435,14 @@ export default function StaffIncentivesPage() {
                               {new Date(property.created_date).toLocaleDateString()}
                             </TableCell>
                             <TableCell>{property.plot_no || 'N/A'}</TableCell>
-                            <TableCell>{property.sale_gaj?.toLocaleString() || 'N/A'}</TableCell>
-                            <TableCell>₹{property.amount?.toLocaleString() || 'N/A'}</TableCell>
+                            <TableCell>
+                              {property.sale_gaj != null ? property.sale_gaj.toLocaleString() : 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              {property.amount != null ? `₹${property.amount.toLocaleString()}` : 'N/A'}
+                            </TableCell>
                             <TableCell className="font-semibold text-green-600">
-                              ₹{property.earn_amount?.toLocaleString() || 'N/A'}
+                              {property.earn_amount != null ? `₹${property.earn_amount.toLocaleString()}` : 'N/A'}
                             </TableCell>
                           </TableRow>
                         ))
@@ -368,20 +468,3 @@ export default function StaffIncentivesPage() {
     </div>
   );
 }
-
-
-
-
-// page.tsx:310 Uncaught TypeError: Cannot read properties of undefined (reading 'toLocaleString')
-//     at page.tsx:310:53
-//     at Array.map (<anonymous>)
-//     at StaffIncentivesPage (page.tsx:300:26)
-// (anonymous)	@	page.tsx:310
-// StaffIncentivesPage	@	page.tsx:300
-// "use client"		
-// Function.all	@	VM2171 <anonymous>:1
-// Function.all	@	VM2171 <anonymous>:1
-// Function.all	@	VM2171 <anonymous>:1
-// Function.all	@	VM2171 <anonymous>:1
-// Function.all	@	VM2171 <anonymous>:1
-
