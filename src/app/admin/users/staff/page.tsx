@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { format } from "date-fns";
 import {
   Card,
   CardContent,
@@ -35,10 +36,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Pencil,
   PlusCircle,
+  Plus,
+  Minus,
   Users,
   Check,
   Phone,
@@ -66,8 +69,9 @@ import {
   FileUp,
   DollarSign,
   Search,
+  X,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
@@ -76,76 +80,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-const mockUsers = [
-  {
-    id: 1,
-    name: 'staff',
-    teamLeader: 'teamlead',
-    mobile: '9632587410',
-    created_date: '2025-10-11T12:00:00.000Z',
-    self_user: { user_active: true },
-    email: 'staff1@example.com',
-    password: 'password123',
-    dob: '1995-01-01',
-    address: '789 Staff St, Worktown',
-    city: 'Worktown',
-    state: 'Gujarat',
-    pincode: '987654',
-    degree: 'B.Com',
-    pancard: 'STAFF1234F',
-    aadharCard: '567890123456',
-    bank_name: 'Axis Bank',
-    account_number: '5678901234',
-    ifsc_code: 'UTIB000000',
-    upi_id: 'staff1@upi',
-    salary: '30000',
-    referralCode: 'STAFF123',
-  },
-   {
-    id: 2,
-    name: 'staff2',
-    teamLeader: 'teamlead',
-    mobile: '9876543211',
-    created_date: '2025-10-12T12:00:00.000Z',
-    self_user: { user_active: false },
-    email: 'staff2@example.com',
-    password: 'password456',
-    dob: '1998-05-15',
-    address: '101 Staff Ave, Jobville',
-    city: 'Jobville',
-    state: 'Maharashtra',
-    pincode: '456789',
-    degree: 'B.A',
-    pancard: 'STAFF5678K',
-    aadharCard: '678901234567',
-    bank_name: 'ICICI Bank',
-    account_number: '6789012345',
-    ifsc_code: 'ICIC000000',
-    upi_id: 'staff2@upi',
-    salary: '35000',
-    referralCode: 'STAFF456',
-  },
-];
+import { fetchAdminStaffs, fetchAdminTeamLeaders } from '@/lib/api';
+import { DatePicker } from '@/components/ui/date-picker';
 
-const kpiCounts = {
-    total_leads: 15,
-    total_visit: 2,
-    interested: 2,
-    not_interested: 2,
-    other_location: 1,
-    not_picked: 2,
-    total_earning: "0.00"
-};
-
-const kpiData = [
-    { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/admin/reports/total-leads" },
-    { title: "Total Visit", valueKey: "total_visit", icon: Eye, color: "text-green-500", link: "/admin/reports/visit" },
-    { title: "Interested", valueKey: "interested", icon: Check, color: "text-teal-500", link: "/admin/reports/interested" },
-    { title: "Not Interested", valueKey: "not_interested", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested" },
-    { title: "Other Location", valueKey: "other_location", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location" },
-    { title: "Not Picked", valueKey: "not_picked", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked" },
-    { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500" },
-];
+import { useToast } from '@/hooks/use-toast';
 
 const initialFormData = {
     id: null,
@@ -167,18 +105,19 @@ const initialFormData = {
     upi_id: "",
     salary: "",
     referralCode: "",
-    teamLeader: "",
+    team_leader: "",
     admin: "",
 };
+
 
 
 const KpiCard = ({ title, value, icon, color, link }: { title: string, value: string | number, icon: React.ElementType, color: string, link?: string }) => {
   const cardContent = (
      <Card className="shadow-lg rounded-2xl hover:shadow-xl transition-shadow duration-300">
       <CardContent className="p-3 flex flex-col items-center justify-center text-center">
-        <div className={`text-3xl ${color} mb-1`}>
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 20 }} className={`text-3xl ${color} mb-1`}>
           {React.createElement(icon, { className: "h-6 w-6" })}
-        </div>
+        </motion.div>
         <div className="font-semibold text-foreground text-sm">{title}</div>
         <div className="text-muted-foreground text-xs mt-1">{value}</div>
       </CardContent>
@@ -227,55 +166,47 @@ const ReviewDetailItem = ({ label, value }: { label: string, value: string | und
     </div>
 );
 
-const UserDetailsDialog = ({ user, open, onOpenChange }: { user: any, open: boolean, onOpenChange: (open: boolean) => void }) => {
-    if (!user) return null;
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md bg-card shadow-2xl rounded-2xl p-0">
-                <DialogHeader className="p-6 pb-4 text-center">
-                    <DialogTitle className="text-xl">Staff Full Details</DialogTitle>
-                </DialogHeader>
-                <div className="p-6 pt-0 grid grid-cols-1 gap-5 max-h-[60vh] overflow-y-auto">
-                    <ReviewDetailItem label="Name" value={user.name} />
-                    <ReviewDetailItem label="Mobile No" value={user.mobile} />
-                    <ReviewDetailItem label="Team Leader" value={user.teamLeader} />
-                    <ReviewDetailItem label="Created Date" value={new Date(user.created_date).toLocaleDateString()} />
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">Active Status</p>
-                      <Switch
-                        id={`active-status-modal-${user.id}`}
-                        checked={user.self_user?.user_active}
-                        disabled
-                      />
-                    </div>
-                </div>
-                <DialogFooter className="p-4 border-t bg-muted/50 rounded-b-2xl flex-row justify-end gap-2">
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline" className="w-full text-foreground hover:bg-primary hover:text-primary-foreground">
-                            Close
-                        </Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
 export default function StaffManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
+  const [kpiCounts, setKpiCounts] = useState<any>({
+    total_leads: 0,
+    total_visit: 0,
+    interested: 0,
+    not_interested: 0,
+    other_location: 0,
+    not_picked: 0,
+    total_earning: 0,
+    lost: 0,
+  });
   const [search, setSearch] = useState('');
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [formData, setFormData] = useState<any>(initialFormData);
   const [editingUser, setEditingUser] = useState<any>(null);
 
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [teamLeaders, setTeamLeaders] = useState<any[]>([]);
+
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+
   const [activeTab, setActiveTab] = useState("personal");
 
-  const { toast } = useToast();
-
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+    const [isFilterActive, setIsFilterActive] = useState(false);
+      const [isLoading, setIsLoading] = useState(true);
+      const [error, setError] = useState<string | null>(null);
+    
+      const { toast } = useToast();  const kpiData = [
+    { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/admin/reports/total-leads" },
+    { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/admin/reports/visit" },
+    { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/admin/reports/interested" },
+    { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested" },
+    { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location" },
+    { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked" },
+    { title: "Lost", valueKey: "total_lost_leads", icon: XCircle, color: "text-gray-500", link: "/admin/reports/lost" },
+    { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500", link: "/admin/reports/total-earning" },
+  ];
 
   const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -288,6 +219,7 @@ export default function StaffManagementPage() {
   };
   
   const handleAddFormSelectChange = (name: string, value: string) => {
+    console.log(`Setting ${name} to ${value}`);
     setFormData({ ...formData, [name]: value });
   };
   
@@ -303,26 +235,120 @@ export default function StaffManagementPage() {
     setIsEditFormOpen(true);
   }
 
-  const handleOpenDetailsView = (user: any) => {
-    setSelectedUser(user);
-    setIsDetailsOpen(true);
-  }
-  
   const handleCloseAddForm = () => {
     setIsAddFormOpen(false);
     setFormData(initialFormData);
   }
   
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const loadStaffs = async (start?: string, end?: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await fetchAdminStaffs(start, end);
+      setUsers(data.staff_list || []);
+      setKpiCounts(data.lead_counts);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch staff data.');
+      toast({ title: "Error", description: err.message || 'Failed to fetch staff data.', variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAdminsAndTeamLeaders = async () => {
+    try {
+      const data = await fetchAdminTeamLeaders();
+      const teamLeadersList = data.team_leaders_list || [];
+      setTeamLeaders(teamLeadersList);
+      
+      const adminList = teamLeadersList.map((tl: any) => tl.admin).filter((admin: any, index: number, self: any[]) => admin && self.findIndex(a => a.id === admin.id) === index);
+      setAdmins(adminList);
+
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to fetch admins and team leaders.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleFilterClick = () => {
+    if (isFilterActive) {
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setIsFilterActive(false);
+      loadStaffs();
+    } else {
+      if (startDate && endDate) {
+        const formattedStartDate = format(startDate, "yyyy-MM-dd");
+        const formattedEndDate = format(endDate, "yyyy-MM-dd");
+        loadStaffs(formattedStartDate, formattedEndDate);
+        setIsFilterActive(true);
+      } else {
+        toast({
+          title: "Incomplete Date Range",
+          description: "Please select both a start and end date to apply the filter.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newUser = {...formData, id: Date.now(), created_date: new Date().toISOString(), self_user: { user_active: true }};
-    setUsers([...users, newUser]);
-    toast({
+    console.log("Form Data on submit:", formData);
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Authentication token not found. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const data = new FormData();
+    // Append all form data. If a value is null, append it as an empty string.
+    for (const key in formData) {
+      data.append(key, formData[key] ?? '');
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/add-staff/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        if (response.status === 415) {
+             throw new Error('Unsupported Media Type: The server rejected the request format. This is an unexpected error.');
+        }
+        const errorData = await response.json();
+        const errorMessages = Object.entries(errorData).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('; ');
+        throw new Error(errorMessages || 'Failed to add staff.');
+      }
+
+      toast({
         title: "Staff Added!",
         description: `${formData.name} has been added successfully.`,
         className: 'bg-green-500 text-white'
-    });
-    handleCloseAddForm();
+      });
+
+      handleCloseAddForm();
+      loadStaffs();
+
+    } catch (error: any) {
+      toast({
+        title: 'Error Adding Staff',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -334,22 +360,75 @@ export default function StaffManagementPage() {
     setEditingUser({ ...editingUser, [name]: value });
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
-    setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
-    toast({
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Authentication token not found. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const data = new FormData();
+    // Append all form data. If a value is null, append it as an empty string.
+    for (const key in editingUser) {
+      // Ensure the team_leader field is sent with the correct key
+      if (key === 'team_leader' || key === 'admin') {
+        data.append(key, editingUser[key] ?? '');
+      } else if (key !== 'id') { // Don't send id in form data, it's in the URL
+        data.append(key, editingUser[key] ?? '');
+      }
+    }
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/accounts/api/admin/staff/edit/${editingUser.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        if (response.status === 415) {
+             throw new Error('Unsupported Media Type: The server rejected the request format. This is an unexpected error.');
+        }
+        const errorData = await response.json();
+        const errorMessages = Object.entries(errorData).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('; ');
+        throw new Error(errorMessages || 'Failed to update staff.');
+      }
+
+      toast({
         title: "Staff Updated!",
         description: `${editingUser.name} has been updated successfully.`,
         className: 'bg-green-500 text-white'
-    });
-    setIsEditFormOpen(false);
-    setEditingUser(null);
+      });
+
+      setIsEditFormOpen(false);
+      setEditingUser(null);
+      loadStaffs(); // Reload the list
+
+    } catch (error: any) {
+      toast({
+        title: 'Error Updating Staff',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
   };
 
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
 
   useEffect(() => {
-    setUsers(mockUsers);
+    loadStaffs();
+    fetchAdminsAndTeamLeaders();
   }, []);
 
   const handleToggle = async (id: number, isActive: boolean) => {
@@ -388,12 +467,12 @@ export default function StaffManagementPage() {
   return (
     <div className="space-y-6">
         <h1 className="text-2xl font-bold tracking-tight">Staff Users</h1>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {kpiData.map((card, index) => (
                 <KpiCard 
                   key={index} 
                   title={card.title} 
-                  value={kpiCounts[card.valueKey as keyof typeof kpiCounts]}
+                  value={kpiCounts[card.valueKey as keyof typeof kpiCounts] || 0}
                   icon={card.icon}
                   color={card.color}
                   link={card.link}
@@ -402,142 +481,234 @@ export default function StaffManagementPage() {
         </div>
 
       <Card className="shadow-lg rounded-2xl">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <CardTitle>Staff List</CardTitle>
-                <CardDescription className="hidden sm:block">View and manage staff users.</CardDescription>
+        <CardHeader className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+              <div className="flex flex-1 flex-col gap-4 md:flex-row md:items-center">
+                <div className="grid flex-shrink-0 grid-cols-1 sm:grid-cols-2 gap-2">
+                  <DatePicker date={startDate} setDate={setStartDate} />
+                  <DatePicker date={endDate} setDate={setEndDate} />
+                </div>
+                <div className="relative w-full md:w-auto md:flex-1 lg:flex-none lg:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-10 w-full"
+                    />
+                </div>
+              </div>
+              <div className="flex gap-2 self-end lg:self-center">
+                <Button variant={isFilterActive ? "destructive" : "outline"} onClick={handleFilterClick}>
+                    {isFilterActive ? <X className="h-4 w-4 md:mr-2" /> : <Filter className="h-4 w-4 md:mr-2" />}
+                    <span className="hidden md:inline">{isFilterActive ? "Clear" : "Filter"}</span>
+                </Button>
+                <Button onClick={handleOpenAddForm}>
+                    <PlusCircle className="h-4 w-4" />
+                    <span className="hidden md:inline ml-2">Add Staff</span>
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 sm:flex-initial lg:w-64 pl-10"
-                />
-            </div>
-            <Button size="icon" className="sm:hidden" onClick={handleOpenAddForm}>
-              <PlusCircle className="h-4 w-4" />
-               <span className="sr-only">Add Staff</span>
-            </Button>
-            <Button className="hidden sm:flex" onClick={handleOpenAddForm}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add new staff
-            </Button>
-          </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-base md:text-sm">SR. NO</TableHead>
-                  <TableHead className="text-base md:text-sm">Name</TableHead>
-                  <TableHead className="hidden sm:table-cell text-base md:text-sm">Team Lead</TableHead>
-                  <TableHead className="hidden md:table-cell text-base md:text-sm">Mobile No</TableHead>
-                  <TableHead className="hidden lg:table-cell text-base md:text-sm">Created Date</TableHead>
-                  <TableHead className="text-base md:text-sm">Leads</TableHead>
-                  <TableHead className="text-base md:text-sm">Active/Non-Active</TableHead>
-                  <TableHead className="text-base md:text-sm">Earn</TableHead>
-                  <TableHead className="text-base md:text-sm">Incentives</TableHead>
-                  <TableHead className="text-right text-base md:text-sm">Edit Now</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user, index) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="text-base md:text-sm">{index + 1}</TableCell>
-                    <TableCell className="font-medium text-base md:text-sm">{user.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-base md:text-sm">{user.teamLeader}</TableCell>
-                    <TableCell className="hidden md:table-cell text-base md:text-sm">{user.mobile}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-base md:text-sm">
-                      {new Date(user.created_date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Link href="/admin/leads/staff">
-                        <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700">
-                            <Eye className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">View</span>
-                        </Button>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-base md:text-sm">
-                      <Switch
-                        checked={user.self_user?.user_active}
-                        onCheckedChange={(checked) =>
-                          handleToggle(user.id, checked)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                       <Link href="/admin/users/staff/earn">
-                        <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700">
-                           <Eye className="h-4 w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Earn</span>
-                        </Button>
-                      </Link>
-                    </TableCell>
-                     <TableCell>
-                       <Link href="/admin/users/staff/incentives">
-                        <Button variant="outline" size="sm">Incentives</Button>
-                        </Link>
-                    </TableCell>
-                    <TableCell className="text-right text-base md:text-sm">
-                       <div className="flex items-center justify-end gap-2">
-                            <div className="hidden sm:flex items-center gap-2">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                             <Button
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() => handleOpenEditForm(user)}
-                                                className="h-8 w-8"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                                <span className="sr-only">Edit</span>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Edit</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                          
-
-                        <div className="sm:hidden">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                               <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                  <span className="sr-only">More</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                               <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleOpenDetailsView(user)}>
-                                <Eye className="mr-2 h-4 w-4" /> View Details
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-                ) : (
+          {isLoading ? (
+            <div className="text-center py-8">Loading staff data...</div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-500">{error}</div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={10} className="h-24 text-center">
-                      No matching records found
-                    </TableCell>
+                    <TableHead>S.N.</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Team Lead</TableHead>
+                    <TableHead className="hidden md:table-cell">Mobile No</TableHead>
+                    <TableHead className="hidden lg:table-cell">Created Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Leads</TableHead>
+                    <TableHead className="text-center hidden md:table-cell">Active/Non-Active</TableHead>
+                    <TableHead className="hidden md:table-cell">Earn</TableHead>
+                    <TableHead className="hidden md:table-cell">Incentives</TableHead>
+                    <TableHead className="text-right">Edit</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user, index) => (
+                    <React.Fragment key={user.id}>
+                      <TableRow data-state={expandedRowId === user.id && 'selected'}>
+                        <TableCell>
+                          <>
+                            <div className="lg:hidden">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="text-green-600"
+                                onClick={() => toggleRow(user.id)}
+                              >
+                                {expandedRowId === user.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                            <div className="hidden lg:block">
+                              {index + 1}.
+                            </div>
+                          </>
+                        </TableCell>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{user.teamLeader || 'N/A'}</TableCell>
+                        <TableCell className="hidden md:table-cell">{user.mobile}</TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {user.created_date ? new Date(user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Link href={`/admin/leads/staff?id=${user.id}`}>
+                            <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700">
+                                <Eye className="h-4 w-4 mr-2" />
+                                <span className="hidden sm:inline">View</span>
+                            </Button>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-center hidden md:table-cell">
+                          <Switch
+                            checked={user.self_user?.user_active}
+                            onCheckedChange={(checked) =>
+                              handleToggle(user.id, checked)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Link href={`/admin/users/staff/earn?id=${user.id}`}>
+                            <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700">
+                              <Eye className="h-4 w-4 mr-2" />
+                              <span className="hidden sm:inline">Earn</span>
+                            </Button>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Link href={`/admin/users/staff/incentives`}>
+                            <Button variant="outline" size="sm">Incentives</Button>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => handleOpenEditForm(user)}
+                                        className="h-8 w-8"
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                        <span className="sr-only">Edit</span>
+                                    </Button>
+                                 </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Edit</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                        </TableCell>
+                      </TableRow>
+                      {expandedRowId === user.id && (
+                        <TableRow className="lg:hidden">
+                          <TableCell colSpan={10} className="p-0">
+                            <div className="p-4">
+                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                  <div className="flex items-center gap-4">
+                                    <div className="text-lg font-bold">{user.name}</div>
+                                    <div className="text-sm text-gray-500">{user.self_user?.user_active ? 'Active' : 'Inactive'}</div>
+                                  </div>
+                                </div>
+                                <div className="overflow-hidden">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                      <div className="flex items-center">
+                                        <Users className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium">Team Lead:</span>
+                                      </div>
+                                      <span className="text-sm capitalize ml-auto md:ml-0">{user.teamLeader || 'N/A'}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                      <div className="flex items-center">
+                                        <Phone className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium">Mobile:</span>
+                                      </div>
+                                      <span className="text-sm ml-auto md:ml-0">{user.mobile || 'N/A'}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                      <div className="flex items-center">
+                                        <Calendar className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium">Created Date:</span>
+                                      </div>
+                                      <span className="text-sm ml-auto md:ml-0">{user.created_date ? new Date(user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}</span>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                      <div className="flex items-center">
+                                        <Eye className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium">Leads:</span>
+                                      </div>
+                                      <Link href="/admin/leads/staff" className="ml-auto md:ml-0">
+                                        <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700">
+                                          View
+                                        </Button>
+                                      </Link>
+                                    </div>
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                      <div className="flex items-center">
+                                        <Check className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium">Active Status:</span>
+                                      </div>
+                                      <Switch
+                                        checked={user.self_user?.user_active}
+                                        onCheckedChange={(checked) =>
+                                          handleToggle(user.id, checked)
+                                        }
+                                        className="ml-auto md:ml-0"
+                                      />
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                      <div className="flex items-center">
+                                        <DollarSign className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium">Earn:</span>
+                                      </div>
+                                      <Link href="/admin/users/staff/earn" className="ml-auto md:ml-0">
+                                        <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700">
+                                          View
+                                        </Button>
+                                      </Link>
+                                    </div>
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-center md:justify-end">
+                                      <Link href="/admin/users/staff/incentives">
+                                        <Button size="sm" variant="outline">Incentives</Button>
+                                      </Link>
+                                    </div>
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-center md:justify-end">
+                                      <Button size="sm" onClick={() => handleOpenEditForm(user)}>
+                                        <Pencil className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  {filteredUsers.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={10} className="h-24 text-center">
+                        No matching records found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -556,17 +727,19 @@ export default function StaffManagementPage() {
                             <SelectValue placeholder="Select Admin" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="admin1">Admin User 1</SelectItem>
-                            <SelectItem value="admin2">Admin User 2</SelectItem>
+                          {admins.map(admin => (
+                            <SelectItem key={admin.id} value={String(admin.id)}>{admin.name}</SelectItem>
+                          ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => handleAddFormSelectChange("teamLeader", value)} name="teamLeader" defaultValue={formData.teamLeader}>
+                    <Select onValueChange={(value) => handleAddFormSelectChange("team_leader", value)} name="team_leader" defaultValue={formData.team_leader}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select Team-Leader" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="teamlead">teamlead</SelectItem>
-                            <SelectItem value="teamlead2">teamlead2</SelectItem>
+                          {teamLeaders.map(tl => (
+                            <SelectItem key={tl.id} value={String(tl.id)}>{tl.name}</SelectItem>
+                          ))}
                         </SelectContent>
                     </Select>
                 </div>
@@ -592,17 +765,7 @@ export default function StaffManagementPage() {
                               <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleAddFormChange} required />
                               <InputField id="email" label="E-Mail Address" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleAddFormChange} required />
                               <InputField id="password" label="Password" name="password" type="password" placeholder="••••••••" icon={Lock} value={formData.password} onChange={handleAddFormChange} required />
-                               <InputField id="teamLeader" label="Team Leader" name="teamLeader" value={formData.teamLeader} onChange={handleAddFormChange}>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("teamLeader", value)} name="teamLeader" defaultValue={formData.teamLeader}>
-                                    <SelectTrigger className="pl-10 pr-4 h-11">
-                                    <SelectValue placeholder="Select Team Leader" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                    <SelectItem value="teamlead">teamlead</SelectItem>
-                                    <SelectItem value="teamlead2">teamlead2</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                              </InputField>
+
                               <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} />
                               <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} />
                               <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} />
@@ -651,7 +814,7 @@ export default function StaffManagementPage() {
                       </Button>
                     )}
                     {activeTab === 'personal' ? (
-                      <Button type="button" onClick={() => setActiveTab('account')}>
+                      <Button type="button" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>
                         Next
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -696,14 +859,15 @@ export default function StaffManagementPage() {
                               <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={editingUser.name} onChange={handleEditFormChange} required />
                               <InputField id="email" label="E-Mail Address" name="email" type="email" placeholder="you@example.com" icon={Mail} value={editingUser.email} onChange={handleEditFormChange} required />
                               <InputField id="password" label="Password" name="password" type="password" placeholder="Leave unchanged" icon={Lock} value={editingUser.password} onChange={handleEditFormChange} />
-                               <InputField id="teamLeader" label="Team Leader" name="teamLeader" value={editingUser.teamLeader} onChange={handleEditFormChange}>
-                                <Select onValueChange={(value) => handleEditSelectChange("teamLeader", value)} name="teamLeader" defaultValue={editingUser.teamLeader}>
+                               <InputField id="teamLeader" label="Team Leader" name="team_leader" value={editingUser.team_leader} onChange={handleEditFormChange}>
+                                <Select onValueChange={(value) => handleEditSelectChange("team_leader", value)} name="team_leader" defaultValue={editingUser.team_leader}>
                                     <SelectTrigger className="pl-10 pr-4 h-11">
                                     <SelectValue placeholder="Select Team Leader" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                    <SelectItem value="teamlead">teamlead</SelectItem>
-                                    <SelectItem value="teamlead2">teamlead2</SelectItem>
+                                      {teamLeaders.map(tl => (
+                                        <SelectItem key={tl.id} value={String(tl.id)}>{tl.name}</SelectItem>
+                                      ))}
                                     </SelectContent>
                                 </Select>
                               </InputField>
@@ -755,7 +919,7 @@ export default function StaffManagementPage() {
                       </Button>
                     )}
                     {activeTab === 'personal' ? (
-                      <Button type="button" onClick={() => setActiveTab('account')}>
+                      <Button type="button" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>
                         Next
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -766,16 +930,8 @@ export default function StaffManagementPage() {
               </Tabs>
             </form>
         </DialogContent>
-    </Dialog>
+      </Dialog>
     )}
-      
-      {selectedUser && (
-        <UserDetailsDialog 
-            user={selectedUser} 
-            open={isDetailsOpen} 
-            onOpenChange={setIsDetailsOpen}
-        />
-      )}
     </div>
   );
 }

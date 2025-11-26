@@ -47,7 +47,7 @@ function InterestedLeadsPage() {
       try {
         setLoading(true);
         const data = await fetchInterestedLeads();
-        setLeads(data.results);
+        setLeads(data || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -231,8 +231,8 @@ function InterestedLeadsPage() {
             </div>
 
             <div className="w-full rounded-md border overflow-x-hidden md:overflow-x-auto">
-              <Table>
-                <TableHeader>
+              <Table className="table-auto min-w-full">
+                <TableHeader className="min-w-full">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {

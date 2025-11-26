@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -20,77 +20,137 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar } from 'lucide-react';
+import { Calendar, Plus, Minus, Filter, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const ProductivityAssociatesPage = () => {
-  const [admins] = useState([
-    { id: '1', name: 'Admin 1' },
-    { id: '2', name: 'Admin 2' },
-  ]);
-  const [selectedAdmin, setSelectedAdmin] = useState('');
+  const [teamLeaders, setTeamLeaders] = useState<any[]>([]);
+  const [selectedTeamLeader, setSelectedTeamLeader] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [data, setData] = useState<any[]>([]);
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
-  // Fake data simulation (replace this with fetch)
-  const fetchData = () => {
-    setData([
-      {
-        id: 1,
-        name: 'Ravi Sharma',
-        total_calls: 120,
-        interested: 35,
-        not_interested: 20,
-        other_location: 5,
-        lost: 10,
-        visit: 25,
-        interested_percentage: 29,
-        visit_percentage: 21,
-      },
-      {
-        id: 2,
-        name: 'Priya Verma',
-        total_calls: 80,
-        interested: 25,
-        not_interested: 10,
-        other_location: 3,
-        lost: 5,
-        visit: 15,
-        interested_percentage: 31,
-        visit_percentage: 19,
-      },
-    ]);
+  const [associatesData, setAssociatesData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTeamLeaders = async () => {
+    const token = localStorage.getItem('authToken');
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/team-leader-report/`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Token ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      // Use team_leaders_list directly
+      const teamLeadersList = data.team_leaders_list || [];
+      setTeamLeaders(teamLeadersList);
+      console.log('Team Leaders fetched successfully', teamLeadersList);
+    } catch (error: any) {
+      console.error('Error fetching team leaders:', error.message);
+      setError(error.message);
+    }
+  };
+
+  const fetchAssociatesData = async () => {
+    const token = localStorage.getItem('authToken');
+    setLoading(true);
+    setError(null);
+    try {
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/productivity/freelancer-report/`;
+      const params = new URLSearchParams();
+      if (selectedTeamLeader && selectedTeamLeader !== 'all-team-leaders') {
+        params.append('team_leader', selectedTeamLeader);
+      }
+      if (isFiltered) {
+        if (startDate) params.append('start_date', startDate);
+        if (endDate) params.append('end_date', endDate);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setAssociatesData(data);
+      console.log('Data fetched successfully', data);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [selectedAdmin, startDate, endDate]);
+    fetchTeamLeaders();
+    fetchAssociatesData();
+  }, []);
 
-  const handleAdminChange = (value: string) => {
-    const isAdminDeselected = value === 'all-admins';
-    setSelectedAdmin(isAdminDeselected ? '' : value);
+  useEffect(() => {
+    fetchAssociatesData();
+  }, [selectedTeamLeader, isFiltered]);
+
+  useEffect(() => {
+    if (isFiltered) {
+      fetchAssociatesData();
+    }
+  }, [startDate, endDate]);
+
+  const handleTeamLeaderChange = (value: string) => {
+    setSelectedTeamLeader(value);
   };
 
-  // Calculate totals
-  const total = data.reduce(
-    (acc, row) => {
-      acc.calls += row.total_calls;
-      acc.interested += row.interested;
-      acc.not_interested += row.not_interested;
-      acc.other_location += row.other_location;
-      acc.lost += row.lost;
-      acc.visit += row.visit;
-      return acc;
-    },
-    {
-      calls: 0,
-      interested: 0,
-      not_interested: 0,
-      other_location: 0,
-      lost: 0,
-      visit: 0,
+  const handleFilterToggle = () => {
+    if (isFiltered) {
+      setStartDate('');
+      setEndDate('');
     }
-  );
+    setIsFiltered(!isFiltered);
+  };
+
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8 text-lg">
+        Loading associates productivity data...
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="text-center py-8 text-lg text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
+  if (!associatesData) {
+    return (
+      <div className="text-center py-8 text-lg">
+        No associates productivity data available.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -98,25 +158,25 @@ const ProductivityAssociatesPage = () => {
 
       <Card className="shadow-lg rounded-2xl">
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="admin-select">Admin</Label>
-              <Select value={selectedAdmin} onValueChange={handleAdminChange}>
-                <SelectTrigger id="admin-select">
-                  <SelectValue placeholder="Select Admin" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="space-y-2 lg:w-48">
+              <Label htmlFor="team-leader-select">Team Leader</Label>
+              <Select value={selectedTeamLeader} onValueChange={handleTeamLeaderChange}>
+                <SelectTrigger id="team-leader-select">
+                  <SelectValue placeholder="Select Team Leader" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-admins">All Admins</SelectItem>
-                  {admins.map((admin) => (
-                    <SelectItem key={admin.id} value={admin.id}>
-                      {admin.name}
+                  <SelectItem value="all-team-leaders">All Team Leaders</SelectItem>
+                  {teamLeaders.map((teamLeader) => (
+                    <SelectItem key={teamLeader.id} value={teamLeader.id}>
+                      {teamLeader.name || teamLeader.email}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 lg:w-48">
               <Label htmlFor="start-date">Start Date</Label>
               <div className="relative">
                 <Input
@@ -130,7 +190,7 @@ const ProductivityAssociatesPage = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 lg:w-48">
               <Label htmlFor="end-date">End Date</Label>
               <div className="relative">
                 <Input
@@ -140,72 +200,175 @@ const ProductivityAssociatesPage = () => {
                   onChange={(e) => setEndDate(e.target.value)}
                   className="pl-10"
                 />
-                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filter</Label>
+              <Button
+                className="w-full bg-orange-500 text-black flex items-center gap-2"
+                onClick={handleFilterToggle}
+              >
+                {isFiltered ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+                {isFiltered ? 'Clear Filter' : 'Apply Filter'}
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid">
-        <Card className="shadow-lg rounded-2xl">
-            <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                    <Table className="min-w-[800px]">
-                    <TableHeader>
-                        <TableRow>
-                        <TableHead>SN</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="text-center">Total Calls</TableHead>
-                        <TableHead className="text-center">Interested</TableHead>
-                        <TableHead className="text-center">Not Interested</TableHead>
-                        <TableHead className="text-center">Other Location</TableHead>
-                        <TableHead className="text-center">Lost</TableHead>
-                        <TableHead className="text-center">Visit</TableHead>
-                        <TableHead className="text-center">Interested %</TableHead>
-                        <TableHead className="text-center">Visit %</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.map((row, i) => (
-                        <TableRow key={row.id}>
-                            <TableCell>{i + 1}</TableCell>
-                            <TableCell className="font-medium">{row.name}</TableCell>
-                            <TableCell className="text-center">{row.total_calls}</TableCell>
-                            <TableCell className="text-center text-blue-600">{row.interested}</TableCell>
-                            <TableCell className="text-center text-red-500">{row.not_interested}</TableCell>
-                            <TableCell className="text-center">{row.other_location}</TableCell>
-                            <TableCell className="text-center">{row.lost}</TableCell>
-                            <TableCell className="text-center text-green-600">{row.visit}</TableCell>
-                            <TableCell className="text-center font-medium">{row.interested_percentage}%</TableCell>
-                            <TableCell className="text-center font-medium">{row.visit_percentage}%</TableCell>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                    <TableFooter>
-                        <TableRow className="bg-muted/50 font-semibold">
-                        <TableCell>Total</TableCell>
-                        <TableCell className="text-center">{data.length}</TableCell>
-                        <TableCell className="text-center">{total.calls}</TableCell>
-                        <TableCell className="text-center">{total.interested}</TableCell>
-                        <TableCell className="text-center">{total.not_interested}</TableCell>
-                        <TableCell className="text-center">{total.other_location}</TableCell>
-                        <TableCell className="text-center">{total.lost}</TableCell>
-                        <TableCell className="text-center">{total.visit}</TableCell>
-                        <TableCell className="text-center">
-                            {total.calls > 0 ? Math.round((total.interested / total.calls) * 100) : 0}%
+      <Card className="shadow-lg rounded-2xl">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>S.N.</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="hidden md:table-cell">Total Calls</TableHead>
+                  <TableHead className="hidden md:table-cell">Interested</TableHead>
+                  <TableHead className="hidden lg:table-cell">Not Interested</TableHead>
+                  <TableHead className="hidden lg:table-cell">Lost</TableHead>
+                  <TableHead className="hidden lg:table-cell">Visit</TableHead>
+                  <TableHead className="hidden lg:table-cell">Interested %</TableHead>
+                  <TableHead className="text-right">Visit %</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {associatesData.team_leader_data && associatesData.team_leader_data.map((row: any, i: number) => (
+                  <React.Fragment key={row.id}>
+                    <TableRow data-state={expandedRowId === row.id && 'selected'}>
+                      <TableCell>
+                        
+                          <div className="lg:hidden">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-green-600"
+                              onClick={() => toggleRow(row.id)}
+                            >
+                              {expandedRowId === row.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                          
+                          <div className="hidden lg:block">
+                            {i + 1}.
+                          </div>
+                        
+                      </TableCell>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{row.total_calls}</TableCell>
+                      <TableCell className="hidden md:table-cell">{row.interested}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.not_interested}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.lost}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.visit}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{row.interested_percentage}%</TableCell>
+                      <TableCell className="text-right">{row.visit_percentage}%</TableCell>
+                    </TableRow>
+                    {expandedRowId === row.id && (
+                      <TableRow className="lg:hidden">
+                        <TableCell colSpan={9} className="p-0">
+                          <div className="p-4">
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                              <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="text-lg font-bold">{row.name}</div>
+                                </div>
+                              </div>
+                              <div className="overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Total Calls:</span>
+                                    </div>
+                                    <span className="text-sm capitalize ml-auto md:ml-0">{row.total_calls}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Interested:</span>
+                                    </div>
+                                    <span className="text-sm ml-auto md:ml-0">{row.interested}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Not Interested:</span>
+                                    </div>
+                                    <span className="text-sm ml-auto md:ml-0">{row.not_interested}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Other Location:</span>
+                                    </div>
+                                    <span className="text-sm ml-auto md:ml-0">{row.other_location}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Lost:</span>
+                                    </div>
+                                    <span className="text-sm ml-auto md:ml-0">{row.lost}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Visit:</span>
+                                    </div>
+                                    <span className="text-sm ml-auto md:ml-0">{row.visit}</span>
+                                  </div>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Interested %:</span>
+                                    </div>
+                                    <span className="text-sm ml-auto md:ml-0">{row.interested_percentage}%</span>
+                                  </div>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">Visit %:</span>
+                                    </div>
+                                    <span className="text-sm ml-auto md:ml-0">{row.visit_percentage}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-center">
-                            {total.calls > 0 ? Math.round((total.visit / total.calls) * 100) : 0}%
-                        </TableCell>
-                        </TableRow>
-                    </TableFooter>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
-      </div>
-
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))}
+                 {(!associatesData.team_leader_data || associatesData.team_leader_data.length === 0) && (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-24 text-center">
+                      Data is not found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow className="bg-muted/50 font-semibold">
+                  <TableCell colSpan={2}>Total</TableCell>
+                  <TableCell className="hidden md:table-cell">{associatesData.counts?.total_all_calls || 0}</TableCell>
+                  <TableCell className="hidden md:table-cell">{associatesData.counts?.total_all_interested || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{associatesData.counts?.total_all_not_interested || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{associatesData.counts?.total_all_lost || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{associatesData.counts?.total_all_visit || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    {associatesData.counts?.total_all_calls > 0
+                      ? Math.round((associatesData.counts.total_all_interested / associatesData.counts.total_all_calls) * 100)
+                      : 0}
+                    %
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {associatesData.counts?.total_all_calls > 0
+                      ? Math.round((associatesData.counts.total_all_visit / associatesData.counts.total_all_calls) * 100)
+                      : 0}
+                    %
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

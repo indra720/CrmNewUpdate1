@@ -10,69 +10,166 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { useToast } from '@/hooks/use-toast';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Added Table imports
+import { fetchAdminStaffs } from '@/lib/api'; // Import fetchAdminStaffs
 
-const mockData = {
-  "structured_calendar_data": [
-    [{"day": 0}, {"day": 0}, {"day": 0}, {"day": 1, "day_name": "Wed"}, {"day": 2, "day_name": "Thu"}, {"day": 3, "day_name": "Fri"}, {"day": 4, "day_name": "Sat"}],
-    [{"day": 5, "day_name": "Sun"}, {"day": 6, "day_name": "Mon"}, {"day": 7, "day_name": "Tue"}, {"day": 8, "day_name": "Wed"}, {"day": 9, "day_name": "Thu"}, {"day": 10, "day_name": "Fri"}, {"day": 11, "day_name": "Sat"}],
-    [{"day": 12, "day_name": "Sun"}, {"day": 13, "day_name": "Mon"}, {"day": 14, "day_name": "Tue"}, {"day": 15, "day_name": "Wed"}, {"day": 16, "day_name": "Thu"}, {"day": 17, "day_name": "Fri"}, {"day": 18, "day_name": "Sat"}],
-    [{"day": 19, "day_name": "Sun"}, {"day": 20, "day_name": "Mon"}, {"day": 21, "day_name": "Tue"}, {"day": 22, "day_name": "Wed"}, {"day": 23, "day_name": "Thu"}, {"day": 24, "day_name": "Fri"}, {"day": 25, "day_name": "Sat"}],
-    [{"day": 26, "day_name": "Sun"}, {"day": 27, "day_name": "Mon"}, {"day": 28, "day_name": "Tue"}, {"day": 29, "day_name": "Wed"}, {"day": 30, "day_name": "Thu"}, {"day": 31, "day_name": "Fri"}, {"day": 0}]
-  ],
-  "productivity_data": {
-    "1": {"leads": 5, "salary": 200}, "2": {"leads": 12, "salary": 500}, "3": {"leads": 16, "salary": 800},
-    "4": {"leads": 0, "salary": 0}, "5": {"leads": 8, "salary": 300}, "6": {"leads": 11, "salary": 450},
-    "7": {"leads": 18, "salary": 900}, "8": {"leads": 3, "salary": 150}, "9": {"leads": 7, "salary": 280},
-    "10": {"leads": 14, "salary": 600}, "11": {"leads": 2, "salary": 100}, "12": {"leads": 19, "salary": 1000},
-    "13": {"leads": 0, "salary": 0}, "14": {"leads": 5, "salary": 200}, "15": {"leads": 9, "salary": 350},
-    "16": {"leads": 13, "salary": 550}, "17": {"leads": 1, "salary": 50}, "18": {"leads": 20, "salary": 1200},
-    "19": {"leads": 4, "salary": 180}, "20": {"leads": 6, "salary": 250}, "21": {"leads": 10, "salary": 400},
-    "22": {"leads": 17, "salary": 850}, "23": {"leads": 0, "salary": 0}, "24": {"leads": 8, "salary": 300},
-    "25": {"leads": 15, "salary": 750}, "26": {"leads": 1, "salary": 50}, "27": {"leads": 9, "salary": 350},
-    "28": {"leads": 11, "salary": 450}, "29": {"leads": 18, "salary": 900}, "30": {"leads": 0, "salary": 0},
-    "31": {"leads": 22, "salary": 1500}
-  },
-  "monthly_salary": 15000,
-  "total_salary": 12360
-};
+// Type definitions
+interface DayData {
+  day: number;
+  date: string;
+  day_name: string;
+  leads: number;
+  salary: number;
+}
+
+interface StaffData {
+  id: number; // Added id here as it's needed for selection
+  name: string;
+  email: string;
+  mobile: string;
+  salary: string;
+}
+
+interface ApiResponse {
+  staff: StaffData;
+  year: number;
+  month: number;
+  monthly_salary: string;
+  total_salary: number;
+  months_list: [number, string][];
+  daily_productivity_data: DayData[];
+}
 
 export default function EarnCalendarPage() {
-  const [month, setMonth] = useState(new Date().getMonth());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
-  const [calendarData, setCalendarData] = useState([]);
-  const [productivityData, setProductivityData] = useState({});
+  const [calendarData, setCalendarData] = useState<DayData[]>([]);
+  const [staffData, setStaffData] = useState<StaffData | null>(null);
   const [monthlySalary, setMonthlySalary] = useState(0);
   const [totalSalary, setTotalSalary] = useState(0);
+  const [monthsList, setMonthsList] = useState<[number, string][]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [allStaffs, setAllStaffs] = useState<any[]>([]); // New state for all staff
+  const [staffId, setStaffId] = useState(''); // Default staff ID will be set after fetching the staff list
 
-  const monthsList = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
+  const { toast } = useToast();
   
   const yearsList = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 5 + i);
 
   async function fetchCalendar() {
     setLoading(true);
     setError("");
+    if (!staffId) {
+      setError("No staff selected.");
+      setLoading(false);
+      return;
+    }
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)); 
-      const data = mockData;
-      setCalendarData(data.structured_calendar_data || []);
-      setProductivityData(data.productivity_data || {});
-      setMonthlySalary(data.monthly_salary || 0);
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("Authentication token not found.");
+      }
+
+      console.log("=== FETCHING STAFF CALENDAR ===");
+      console.log("Staff ID:", staffId);
+      console.log("Year:", year);
+      console.log("Month:", month);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-calendar/${staffId}/?year=${year}&month=${month}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      console.log("API Response Status:", response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ApiResponse = await response.json();
+      console.log("API Response Data:", data);
+
+      setCalendarData(data.daily_productivity_data || []);
+      setStaffData(data.staff);
+      setMonthlySalary(parseFloat(data.monthly_salary) || 0);
       setTotalSalary(data.total_salary || 0);
+      setMonthsList(data.months_list || []);
+
+      toast({
+        title: "Success",
+        description: "Calendar data loaded successfully",
+        className: "bg-green-500 text-white",
+      });
+
     } catch (err: any) {
+      console.error("=== API ERROR ===");
+      console.error("Error:", err);
       setError(err.message);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to fetch calendar data",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   }
 
+  // Function to fetch staff list for selection
+  const fetchStaffListForSelection = async () => {
+    try {
+      // Assuming fetchAdminStaffs is correctly imported from '@/lib/api'
+      // and returns a structure like { staff_list: [{ id, name, ... }] }
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("Authentication token not found.");
+      }
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-report/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      setAllStaffs(data.staff_list || []);
+      if (data.staff_list && data.staff_list.length > 0) {
+        setStaffId(String(data.staff_list[0].id)); // Set first staff as default
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to fetch staff list for selection",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
-    fetchCalendar();
-  }, []);
+    fetchStaffListForSelection(); // Fetch staff list on component mount
+  }, []); // Empty dependency array means this runs once on mount
+
+  useEffect(() => {
+    // Only fetch if staffId is valid
+    if (staffId && !isNaN(Number(staffId))) {
+      fetchCalendar();
+    }
+  }, [staffId, year, month]); // fetchCalendar is now stable and doesn't need to be in dependencies if not using outside scope
 
   function handleFilterSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,25 +177,19 @@ export default function EarnCalendarPage() {
   }
 
   function getCellBgColor(leads?: number) {
-    if (leads === undefined || leads === 0) return "bg-card";
-    if (leads >= 15) return "bg-green-500/20 text-green-800 dark:bg-green-500/10 dark:text-green-300";
-    if (leads >= 10) return "bg-blue-500/20 text-blue-800 dark:bg-blue-500/10 dark:text-blue-300";
-    return "bg-amber-500/20 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300";
+    if (leads === undefined || leads === 0) return "bg-red-100 border border-red-200 text-red-800"; // Red for 0 leads
+    return "bg-green-100 border border-green-200 text-green-800"; // Green for any leads > 0
   }
 
-  const DayCell = ({ day }: { day: any }) => {
-    if (day.day === 0) {
-      return <div className="p-2 h-24 md:h-28 hidden sm:block"></div>;
-    }
-    const dayProd = productivityData[day.day as keyof typeof productivityData] || { leads: 0, salary: 0 };
-    const bgColor = getCellBgColor(dayProd.leads);
+  const DayCell = ({ dayData }: { dayData: DayData }) => {
+    const bgColor = getCellBgColor(dayData.leads);
 
     return (
-      <div className={cn("p-2 h-full flex flex-col justify-between rounded-lg", bgColor)}>
-        <div className="font-bold text-lg text-right">{day.day}</div>
+      <div className={cn("p-3 h-24 md:h-28 flex flex-col justify-between rounded-lg transition-all hover:scale-105", bgColor)}>
+        <div className="font-bold text-lg text-right">{dayData.day}</div>
         <div className="text-sm">
-          <div>Leads: {dayProd.leads}</div>
-          <div>Earn: ₹{dayProd.salary}</div>
+          <div className="font-medium">Leads: {dayData.leads}</div>
+          <div className="font-medium">Earn: ₹{dayData.salary}</div>
         </div>
       </div>
     );
@@ -107,19 +198,42 @@ export default function EarnCalendarPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Earn Calendar</h1>
+      
+      {staffData && (
+        <Card>
+          <CardHeader>
+            <div className="text-lg font-semibold">
+              Staff: {staffData.name} ({staffData.email})
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <form onSubmit={handleFilterSubmit} className="flex flex-col sm:flex-row gap-4 items-center">
+            <Select value={String(staffId)} onValueChange={setStaffId} disabled={allStaffs.length === 0}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Select Staff" />
+              </SelectTrigger>
+              <SelectContent>
+                {allStaffs.map(staff => (
+                  <SelectItem key={staff.id} value={String(staff.id)}>{staff.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
             <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Select Month" />
               </SelectTrigger>
               <SelectContent>
-                {monthsList.map((name, idx) => (
-                  <SelectItem key={idx} value={String(idx)}>{name}</SelectItem>
+                {monthsList.map(([monthNum, monthName]) => (
+                  <SelectItem key={monthNum} value={String(monthNum)}>{monthName}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            
             <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
               <SelectTrigger className="w-full sm:w-[120px]">
                 <SelectValue placeholder="Select Year" />
@@ -130,6 +244,7 @@ export default function EarnCalendarPage() {
                 ))}
               </SelectContent>
             </Select>
+            
             <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Filter
@@ -142,20 +257,64 @@ export default function EarnCalendarPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
             ) : error ? (
-                <div className="text-center text-red-500 py-10">{error}</div>
+                <div className="text-center text-red-500 py-10">
+                  <p>{error}</p>
+                  <Button onClick={fetchCalendar} className="mt-4">
+                    Try Again
+                  </Button>
+                </div>
             ) : (
              <>
-                <div className="grid grid-cols-7 gap-2">
+                {/* Color Legend */}
+                <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+                  <h3 className="text-sm font-semibold mb-3">Performance Legend:</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+                      <span>0 Leads</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
+                      <span>1+ Leads</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="hidden md:grid grid-cols-7 gap-2 mb-4">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} className="text-center font-semibold text-muted-foreground pb-2 hidden md:block">{day}</div>
+                        <div key={day} className="text-center font-semibold text-muted-foreground pb-2">{day}</div>
                     ))}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-                    {calendarData.flat().map((day, index) => <DayCell key={index} day={day} />)}
+                <div className="hidden md:grid grid-cols-7 gap-2">
+                    {calendarData.map((dayData, index) => (
+                      <DayCell key={index} dayData={dayData} />
+                    ))}
+                </div>
+                <div className="md:hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Week</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Earn</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {calendarData.map((dayData, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{dayData.day}</TableCell>
+                          <TableCell>{dayData.day_name}</TableCell>
+                          <TableCell>{dayData.leads > 0 ? "Leads" : "No Leads"}</TableCell>
+                          <TableCell>₹{dayData.salary}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
                 <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-muted/50 rounded-lg">
                     <div className="text-lg font-semibold">Monthly Salary: <span className="text-primary">₹{monthlySalary.toLocaleString()}</span></div>
-                    <div className="text-lg font-semibold">Total Earned: <span className="text-green-600">₹{totalSalary.toLocaleString()}</span></div>
+                    <div className="text-lg font-semibold">Total Earned: <span className="bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text">₹{totalSalary.toLocaleString()}</span></div>
                 </div>
              </>
             )}

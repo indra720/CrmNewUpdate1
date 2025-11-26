@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { format } from "date-fns";
 import {
   Card,
   CardContent,
@@ -67,6 +68,8 @@ import {
   ArrowRight,
   FileUp,
   Search,
+  X,
+  DollarSign,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -76,95 +79,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { fetchAdminTeamLeaders, fetchAdminStaffLeadsKpiCountByTag } from '@/lib/api';
+import { DatePicker } from "@/components/ui/date-picker";
 
-// Mock User Data for Team Leader view
-const mockUsers = [
-  {
-    id: 1,
-    name: 'teamlead',
-    mobile: '3216549870',
-    email: 'leader1@example.com',
-    admin: { name: 'admin' },
-    created_date: '2025-10-11T12:00:00.000Z',
-    self_user: { user_active: true },
-    dob: '1990-01-01',
-    address: '123 Leader St, Anytown',
-    city: 'Anytown',
-    state: 'Rajasthan',
-    pincode: '123456',
-    degree: 'B.Eng',
-    pancard: 'LEADR1234F',
-    aadharCard: '123456789012',
-    bank_name: 'State Bank of India',
-    account_number: '1234567890',
-    ifsc_code: 'SBIN000000',
-    upi_id: 'leader1@upi',
-    salary: '80000',
-    referralCode: 'LEAD123',
-    marksheets: null,
-  },
-  {
-    id: 2,
-    name: 'teamlead2',
-    mobile: '3216549871',
-    email: 'leader2@example.com',
-    admin: { name: 'admin' },
-    created_date: '2025-10-12T12:00:00.000Z',
-    self_user: { user_active: false },
-    dob: '1992-05-15',
-    address: '456 Oak Ave, Othertown',
-    city: 'Othertown',
-    state: 'Maharashtra',
-    pincode: '654321',
-    degree: 'M.B.A',
-    pancard: 'LEADR5678K',
-    aadharCard: '987654321098',
-    bank_name: 'HDFC Bank',
-    account_number: '0987654321',
-    ifsc_code: 'HDFC000000',
-    upi_id: 'leader2@upi',
-    salary: '95000',
-    referralCode: 'LEAD456',
-    marksheets: null,
-  },
-];
-
-const mockLeadsData = {
-  results: [
-    { id: 1, name: 'Aarav Sharma', status: 'New' },
-    { id: 2, name: 'Saanvi Patel', status: 'Contacted' },
-    { id: 3, name: 'Vihaan Singh', status: 'Interested' },
-    { id: 4, name: 'Myra Reddy', status: 'Not Interested' },
-    { id: 5, name: 'Kabir Verma', status: 'New' },
-    { id: 6, name: 'Diya Gupta', status: 'Remaining' },
-    { id: 7, name: 'Ishaan Kumar', status: 'New' },
-    { id: 8, name: 'Advika Joshi', status: 'Not Interested' },
-    { id: 9, name: 'Reyansh Mehra', status: 'Interested' },
-    { id: 10, name: 'Ananya Desai', status: 'New' },
-    { id: 11, name: 'Aryan Mehta', status: 'Visit' },
-    { id: 12, name: 'Kiara Sen', status: 'Visit' },
-    { id: 13, name: 'Arjun Rao', status: 'Not Picked' },
-    { id: 14, name: 'Zara Khan', status: 'Not Picked' },
-    { id: 15, name: 'Samaira Iyer', status: 'Other Location' },
-  ],
-};
-
-const kpiCounts = {
-  total_leads: mockLeadsData.results.length,
-  total_visit: mockLeadsData.results.filter(l => l.status === 'Visit').length,
-  total_interested: mockLeadsData.results.filter(l => l.status === 'Interested').length,
-  total_not_interested: mockLeadsData.results.filter(l => l.status === 'Not Interested').length,
-  total_other_location: mockLeadsData.results.filter(l => l.status === 'Other Location').length,
-  total_not_picked: mockLeadsData.results.filter(l => l.status === 'Not Picked').length,
-};
 
 const kpiData = [
   { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/admin/reports/total-leads" },
-  { title: "Total Visit", valueKey: "total_visit", icon: Eye, color: "text-green-500", link: "/admin/reports/visit" },
-  { title: "Interested", valueKey: "total_interested", icon: Check, color: "text-teal-500", link: "/admin/reports/interested" },
-  { title: "Not Interested", valueKey: "total_not_interested", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested" },
-  { title: "Other Location", valueKey: "total_other_location", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location" },
-  { title: "Not Picked", valueKey: "total_not_picked", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked" },
+  { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/admin/reports/visit" },
+  { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/admin/reports/interested" },
+  { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested" },
+  { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location" },
+  { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked" },
+  // { title: "Lost", valueKey: "total_lost_leads", icon: XCircle, color: "text-gray-500", link: "/admin/reports/lost" }, // Removed as backend does not support 'lost' tag
+  { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500", link: "/admin/reports/total-earning" },
 ];
 
 
@@ -228,19 +155,31 @@ const ReviewDetailItem = ({ label, value }: { label: string, value: string | und
 
 export default function TeamLeaderManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
+  const [kpiCounts, setKpiCounts] = useState<any>({
+    total_leads: 0,
+    total_interested_leads: 0,
+    total_not_interested_leads: 0,
+    total_other_location_leads: 0,
+    total_not_picked_leads: 0,
+    total_lost_leads: 0,
+    total_visits_leads: 0,
+    total_earning: 0
+  });
   const [search, setSearch] = useState('');
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [formData, setFormData] = useState<any>(initialFormData);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
   const [activeTab, setActiveTab] = useState("personal");
   const [editActiveTab, setEditActiveTab] = useState("personal");
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [isFilterActive, setIsFilterActive] = useState(false);
 
   const { toast } = useToast();
 
@@ -275,16 +214,123 @@ export default function TeamLeaderManagementPage() {
     setFormData(initialFormData);
   }
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const loadTeamLeaders = async (start?: string, end?: string) => {
+    setIsLoading(true);
+    try {
+      const teamLeadersData = await fetchAdminTeamLeaders(start, end);
+      setUsers(teamLeadersData.team_leaders_list);
+
+      const newKpiCounts: { [key: string]: number } = {};
+      const kpiPromises = kpiData.map(async (card) => {
+        let tag = card.valueKey;
+        // Adjust tag for backend mapping if necessary
+        if (card.valueKey === 'total_leads') tag = 'total_lead';
+        else if (card.valueKey === 'total_visits_leads') tag = 'visits';
+        else if (card.valueKey === 'total_interested_leads') tag = 'interested'; // Corrected to 'interested'
+        else if (card.valueKey === 'total_not_interested_leads') tag = 'not_interested';
+        else if (card.valueKey === 'total_other_location_leads') tag = 'other_location';
+        else if (card.valueKey === 'total_not_picked_leads') tag = 'not_picked';
+        // Removed 'lost' tag mapping as the card is removed.
+        else if (card.valueKey === 'total_earning') tag = 'Total_earning'; // Match backend else block tag
+
+        try {
+          const count = await fetchAdminStaffLeadsKpiCountByTag(tag, start, end);
+          newKpiCounts[card.valueKey] = count;
+        } catch (kpiError) {
+          console.error(`Failed to fetch KPI for ${card.title}:`, kpiError);
+          newKpiCounts[card.valueKey] = 0; // Default to 0 on error
+        }
+      });
+
+      await Promise.all(kpiPromises);
+      setKpiCounts(newKpiCounts);
+
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to fetch team leaders or KPI data: ${error.message}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFilterClick = () => {
+    if (isFilterActive) {
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setIsFilterActive(false);
+      loadTeamLeaders();
+    } else {
+      if (startDate && endDate) {
+        const formattedStartDate = format(startDate, "yyyy-MM-dd");
+        const formattedEndDate = format(endDate, "yyyy-MM-dd");
+        loadTeamLeaders(formattedStartDate, formattedEndDate);
+        setIsFilterActive(true);
+      } else {
+        toast({
+          title: "Incomplete Date Range",
+          description: "Please select both a start and end date to apply the filter.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newUser = { ...formData, id: Date.now(), admin: { name: 'Super Admin' }, created_date: new Date().toISOString(), self_user: { user_active: true } };
-    setUsers([...users, newUser]);
-    toast({
-      title: "Team Leader Added!",
-      description: `${formData.name} has been added successfully.`,
-      className: 'bg-green-500 text-white'
-    });
-    handleCloseAddForm();
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Authentication token not found. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const data = new FormData();
+    // Append all form data. If a value is null, append it as an empty string.
+    for (const key in formData) {
+      data.append(key, formData[key] ?? '');
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/add-team-leader/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        if (response.status === 415) {
+             throw new Error('Unsupported Media Type: The server rejected the request format. This is an unexpected error.');
+        }
+        const errorData = await response.json();
+        const errorMessages = Object.entries(errorData).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('; ');
+        throw new Error(errorMessages || 'Failed to add team leader.');
+      }
+
+      toast({
+        title: "Team Leader Added!",
+        description: `${formData.name} has been added successfully.`,
+        className: 'bg-green-500 text-white'
+      });
+
+      handleCloseAddForm();
+      loadTeamLeaders();
+
+    } catch (error: any) {
+      toast({
+        title: 'Error Adding Team Leader',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,17 +342,60 @@ export default function TeamLeaderManagementPage() {
     setEditingUser({ ...editingUser, [name]: value });
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
-    setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
-    toast({
-      title: "Team Leader Updated!",
-      description: `${editingUser.name} has been updated successfully.`,
-      className: 'bg-green-500 text-white'
-    });
-    setIsEditFormOpen(false);
-    setEditingUser(null);
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Authentication token not found. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const data = new FormData();
+    data.append('name', editingUser.name);
+    data.append('email', editingUser.email);
+    data.append('mobile', editingUser.mobile);
+    if (editingUser.password) {
+      data.append('password', editingUser.password);
+    }
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/team-leader/edit/${editingUser.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessages = Object.entries(errorData).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('; ');
+        throw new Error(errorMessages || 'Failed to update team leader.');
+      }
+
+      toast({
+        title: "Team Leader Updated!",
+        description: `${editingUser.name} has been updated successfully.`,
+        className: 'bg-green-500 text-white'
+      });
+
+      setIsEditFormOpen(false);
+      setEditingUser(null);
+      loadTeamLeaders(); // Reload the list
+
+    } catch (error: any) {
+      toast({
+        title: 'Error Updating Team Leader',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const toggleRow = (rowId: number) => {
@@ -314,13 +403,14 @@ export default function TeamLeaderManagementPage() {
   };
 
   useEffect(() => {
-    setUsers(mockUsers);
-  }, []);
+    loadTeamLeaders();
+  }, []); 
+
 
   const handleToggle = async (id: number, isActive: boolean) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setUsers(users.map(u => u.id === id ? { ...u, self_user: { ...u.self_user, user_active: isActive } } : u));
+      await new Promise(resolve => setTimeout(resolve, 300)); 
+      setUsers(users.map(u => u.id === id ? { ...u, user: { ...u.user, user_active: isActive } } : u)); 
       toast({
         title: 'Status Updated',
         description: `User status changed to ${isActive ? 'Active' : 'Inactive'}.`,
@@ -337,12 +427,9 @@ export default function TeamLeaderManagementPage() {
   };
 
   const filteredUsers = users.filter((u) =>
-    Object.values(u).some(
-      (val: any) =>
-        val &&
-        (typeof val === 'string' || typeof val === 'number' || (typeof val === 'object' && val.name)) &&
-        (val.name || val).toString().toLowerCase().includes(search.trim().toLowerCase())
-    )
+    (u.name?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (u.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (u.mobile?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   const KpiCard = ({ title, value, icon, color, link }: { title: string, value: number, icon: React.ElementType, color: string, link?: string }) => {
@@ -382,7 +469,7 @@ export default function TeamLeaderManagementPage() {
             <KpiCard
               key={index}
               title={card.title}
-              value={kpiCounts[card.valueKey as keyof typeof kpiCounts]}
+              value={kpiCounts[card.valueKey as keyof typeof kpiCounts] || 0}
               icon={card.icon}
               color={card.color}
               link={card.link} />
@@ -390,46 +477,39 @@ export default function TeamLeaderManagementPage() {
         </div>
 
         <Card className="shadow-lg rounded-2xl">
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                <div className="space-y-2 flex-1">
-                  <Label htmlFor="start-date" className="sr-only">Start Date</Label>
-                  <div className="relative">
-                    <Input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="pl-10" />
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  </div>
+          <CardHeader className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+              <div className="flex flex-1 flex-col gap-4 md:flex-row md:items-center">
+                <div className="grid flex-shrink-0 grid-cols-1 sm:grid-cols-2 gap-2">
+                  <DatePicker date={startDate} setDate={setStartDate} />
+                  <DatePicker date={endDate} setDate={setEndDate} />
                 </div>
-                <div className="space-y-2 flex-1">
-                  <Label htmlFor="end-date" className="sr-only">End Date</Label>
-                  <div className="relative">
-                    <Input id="end-date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="pl-10" />
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  </div>
+                <div className="relative w-full md:w-auto md:flex-1 lg:flex-none lg:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search..." 
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 w-full"
+                  />
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 sm:w-auto lg:w-64"
-                />
+              <div className="flex gap-2 self-end lg:self-center">
+                <Button variant={isFilterActive ? "destructive" : "outline"} onClick={handleFilterClick}>
+                  {isFilterActive ? <X className="h-4 w-4 md:mr-2" /> : <Filter className="h-4 w-4 md:mr-2" />}
+                  <span className="hidden md:inline">{isFilterActive ? "Clear" : "Filter"}</span>
+                </Button>
+                <Button onClick={handleOpenAddForm}>
+                  <PlusCircle className="h-4 w-4" />
+                  <span className="hidden md:inline ml-2">Add Team Leader</span>
+                </Button>
               </div>
-              <Button>
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
-              <Button onClick={handleOpenAddForm}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Team Leader
-              </Button>
             </div>
           </CardHeader>
           <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8">Loading team leaders...</div>
+            ) : (
             <div className="overflow-x-auto rounded-lg border">
               <Table>
                 <TableHeader>
@@ -441,7 +521,7 @@ export default function TeamLeaderManagementPage() {
                     <TableHead className="hidden lg:table-cell">Created Date</TableHead>
                     <TableHead className="hidden lg:table-cell">Leads Report</TableHead>
                     <TableHead className="text-center hidden lg:table-cell">Active/Non-Active</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">Edit</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -460,7 +540,6 @@ export default function TeamLeaderManagementPage() {
                                 {expandedRowId === user.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                               </Button>
                             </div>
-                            {/* lg+: only number */}
                             <div className="hidden lg:block">
                               {index + 1}.
                             </div>
@@ -470,7 +549,7 @@ export default function TeamLeaderManagementPage() {
                         <TableCell className="hidden md:table-cell">{user.admin?.name || 'N/A'}</TableCell>
                         <TableCell className="hidden md:table-cell">{user.mobile}</TableCell>
                         <TableCell className="hidden lg:table-cell">
-                          {new Date(user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-')}
+                          {new Date(user.user?.created_date || user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-')}
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <select className="form-select form-select-sm w-full bg-background border border-input rounded-md px-2 py-1 text-sm" onChange={(e) => e.target.value && window.location.assign(e.target.value)}>
@@ -484,14 +563,14 @@ export default function TeamLeaderManagementPage() {
                         </TableCell>
                         <TableCell className="text-center hidden lg:table-cell">
                           <Switch
-                            checked={user.self_user?.user_active}
+                            checked={user.user?.user_active}
                             onCheckedChange={(checked) =>
                               handleToggle(user.id, checked)
                             }
                           />
                         </TableCell>
                         <TableCell className="text-right">
-                           <div className="hidden lg:flex items-center justify-end gap-2">
+                           <div className="flex items-center justify-end gap-2">
                             <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -510,42 +589,6 @@ export default function TeamLeaderManagementPage() {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                          </div>
-                          {/* MD screen: Edit button only */}
-                          <div className="hidden md:flex lg:hidden items-center justify-end gap-2">
-                            <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                      <Button
-                                          variant="outline"
-                                          size="icon"
-                                          onClick={() => handleOpenEditForm(user)}
-                                          className="h-8 w-8"
-                                      >
-                                          <Pencil className="h-4 w-4" />
-                                          <span className="sr-only">Edit</span>
-                                      </Button>
-                                   </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Edit</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                          </div>
-                           <div className="md:hidden">
-                               <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                        <MoreVertical className="h-4 w-4" />
-                                        <span className="sr-only">More</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
-                                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -557,13 +600,11 @@ export default function TeamLeaderManagementPage() {
                                 <div className="p-4 flex items-center gap-4 border-b border-gray-200">
                                   <div className="flex items-center gap-4">
                                     <div className="text-lg font-bold">{user.name}</div>
-                                    <div className="text-sm text-gray-500">{user.self_user?.user_active ? 'Active' : 'Inactive'}</div>
+                                    <div className="text-sm text-gray-500">{user.user?.user_active ? 'Active' : 'Inactive'}</div>
                                   </div>
                                 </div>
-                                {/* Table-like grid for details: 2 cols on md+, 1 on mobile */}
                                 <div className="overflow-hidden">
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
-                                    {/* Row 1: Admin | Mobile */}
                                     <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                       <div className="flex items-center">
                                         <Users className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
@@ -578,13 +619,12 @@ export default function TeamLeaderManagementPage() {
                                       </div>
                                       <span className="text-sm ml-auto md:ml-0">{user.mobile || 'N/A'}</span>
                                     </div>
-                                    {/* Row 2: Created Date | Leads Report */}
                                     <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                       <div className="flex items-center">
                                         <Calendar className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
                                         <span className="text-sm font-medium">Created Date:</span>
                                       </div>
-                                      <span className="text-sm ml-auto md:ml-0">{user.created_date ? new Date(user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}</span>
+                                      <span className="text-sm ml-auto md:ml-0">{user.user?.created_date ? new Date(user.user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}</span>
                                     </div>
                                     <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                       <div className="flex items-center">
@@ -600,14 +640,13 @@ export default function TeamLeaderManagementPage() {
                                           <option value={`/admin/reports/visit`}>Visit</option>
                                       </select>
                                     </div>
-                                    {/* Row 3: Active Status | Edit Button */}
                                     <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                       <div className="flex items-center">
                                         <Check className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
                                         <span className="text-sm font-medium">Active Status:</span>
                                       </div>
                                       <Switch
-                                        checked={user.self_user?.user_active}
+                                        checked={user.user?.user_active}
                                         onCheckedChange={(checked) =>
                                           handleToggle(user.id, checked)
                                         }
@@ -639,12 +678,13 @@ export default function TeamLeaderManagementPage() {
                 </TableBody>
               </Table>
             </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
+        <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)]  max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
           <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
             <DialogTitle className="text-xl font-bold">Add New Team Leader</DialogTitle>
             <DialogDescription>
@@ -713,7 +753,7 @@ export default function TeamLeaderManagementPage() {
                   </motion.div>
                 </AnimatePresence>
               </div>
-              <DialogFooter className="p-6 pt-4 border-t bg-muted/50 flex justify-between w-full flex-shrink-0">
+              <DialogFooter className="p-6 pt-4 border-t gap-2 bg-muted/50 flex justify-between w-full flex-shrink-0">
                 {activeTab === 'personal' ? (
                   <div></div>
                 ) : (
@@ -723,7 +763,7 @@ export default function TeamLeaderManagementPage() {
                   </Button>
                 )}
                 {activeTab === 'personal' ? (
-                  <Button type="button" onClick={() => setActiveTab('account')}>
+                  <Button type="button" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>
                     Next
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -772,8 +812,71 @@ export default function TeamLeaderManagementPage() {
       )}
     </>
   );
-}; 
+};
 
 
 
 
+// class AdminnStaffLeadsAPIView(APIView):
+//     """
+//     API endpoint for 'super_user_side_staff_leads' (Admin Side).
+//     GET: Fetches list of leads for an Admin based on status tags.
+//     ONLY ADMIN (is_admin=True) can access this.
+//     """
+    
+//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
+//     pagination_class = StandardResultsSetPagination
+
+//     def get(self, request, tag, format=None):
+//         paginator = self.pagination_class()
+        
+//         # 1. Get Admin Profile
+//         try:
+//             # 'self_user' field logged-in user se link hota hai
+//             admin_instance = Admin.objects.get(self_user=request.user)
+//         except Admin.DoesNotExist:
+//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 2. Get Team Leaders under this Admin
+//         team_leaders = Team_Leader.objects.filter(admin=admin_instance)
+
+//         # 3. Base Queryset: Filter leads belonging to these Team Leaders
+//         # (LeadUser model me 'team_leader' field hota hai)
+//         base_qs = LeadUser.objects.filter(team_leader__in=team_leaders).order_by('-updated_date')
+
+//         # 4. Apply Tag Filters (Based on your function)
+//         if tag == 'total_lead':
+//             leads = base_qs.filter(status="Leads")
+//         elif tag == 'visits':
+//             leads = base_qs.filter(status="Visit")
+//         elif tag == 'interested':
+//             leads = base_qs.filter(status="Intrested") # Note spelling 'Intrested' from models
+//         elif tag == 'not_interested':
+//             leads = base_qs.filter(status="Not Interested")
+//         elif tag == 'other_location':
+//             leads = base_qs.filter(status="Other Location")
+//         elif tag == 'not_picked':
+//             leads = base_qs.filter(status="Not Picked")
+//         elif tag == 'Total_earning': # Adding this just in case, though not in your 'if' block context list
+//             leads = base_qs.filter(status="Total_earning")
+//         else:
+//             return Response(
+//                 {"error": f"Invalid tag: {tag}. Valid tags are: total_lead, visits, interested, not_interested, other_location, not_picked, Total_earning"},
+//                 status=status.HTTP_400_BAD_REQUEST
+//             )
+
+//         # 5. Paginate and Serialize
+//         page = paginator.paginate_queryset(leads, request, view=self)
+        
+//         if page is not None:
+//             serializer = ApiLeadUserSerializer(page, many=True)
+//             return paginator.get_paginated_response(serializer.data)
+
+//         serializer = ApiLeadUserSerializer(leads, many=True)
+//         return Response(serializer.data)
+
+
+
+
+
+    

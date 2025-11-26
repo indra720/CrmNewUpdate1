@@ -1,21 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { ReactNode, useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -24,190 +17,1264 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, Filter, Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { Filter, Loader2, Plus, Minus, Hash, DollarSign } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
-const mockData = {
-    sell_property: [
-        { date: '2024-10-05', plot_no: 'A-12', size_in_gaj: 100, slab_amount: 5000, earn_amount: 500 },
-        { date: '2024-10-12', plot_no: 'B-03', size_in_gaj: 150, slab_amount: 7500, earn_amount: 750 },
-        { date: '2024-10-21', plot_no: 'C-34', size_in_gaj: 200, slab_amount: 10000, earn_amount: 1000 },
-    ],
-    slab: [
-        { start_value: 0, end_value: 100, amount: 500 },
-        { start_value: 101, end_value: 200, amount: 750 },
-        { start_value: 201, end_value: 500, amount: 1000 },
-    ],
-    total_earn: 2250,
-    user_type: true
-};
+interface SellProperty {
+  size_in_gaj: string;
+  id: number;
+  property_name: string;
+  earn_amount: number;
+  created_date: string;
+  updated_date: string;
+  plot_no: string;
+  sale_gaj: number;
+  amount: number;
+  staff: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
 
-export default function IncentiveDetailPage() {
-  const [month, setMonth] = useState(String(new Date().getMonth()));
-  const [year, setYear] = useState(String(new Date().getFullYear()));
-  const [sellProperty, setSellProperty] = useState([]);
-  const [slab, setSlab] = useState([]);
+interface Slab {
+  id: number;
+  start_value: string; // API se string aa raha hai
+  end_value: string; // API se string aa raha hai
+  amount: string; // API se string aa raha hai
+  flat_percent: string; // API se string aa raha hai
+  created_date: string;
+  updated_date: string;
+}
+
+interface ApiResponse {
+  sell_property: SellProperty[];
+  slab: Slab[];
+  total_earn: number;
+  year: number;
+  month: number;
+  months_list: [number, string][];
+  user_type: boolean;
+}
+
+const ExpandedPropertyDetails = ({ property }: { property: SellProperty }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+      <div className="flex items-center gap-4 flex-1">
+        <div className="text-lg font-bold">{property.property_name}</div>
+      </div>
+    </div>
+    <div className="overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+        {/* Row 1: Plot No - only on mobile */}
+        <div className="p-3 border-b border-r md:border-r-0 border-gray-200 block md:hidden">
+          <div className="flex items-center gap-4">
+            {/* <Hash className="h-4 w-4 text-gray-500 flex-shrink-0" /> */}
+            <span className="text-sm">Plot No. - {property.plot_no || 'N/A'}</span>
+          </div>
+        </div>
+        {/* Row 1: Amount */}
+        <div className="p-3 border-b border-l md:border-l-0 border-gray-200 md:border-b-0">
+          <div className="flex items-center gap-4">
+            <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
+            <span className="text-sm font-medium">Amount:</span>
+            <span className="text-sm font-semibold text-green-600">
+              ₹{(property.amount ?? 0).toLocaleString()}
+            </span>
+          </div>
+        </div>
+        {/* Row 2: Earning */}
+        <div className="p-3 border-b md:col-span-2 flex items-center gap-4 border-t pt-2">
+          <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
+          <span className="text-sm font-medium">Earning:</span>
+          <span className="text-sm font-bold text-green-600">
+            ₹{(property.earn_amount ?? 0).toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const ExpandedSlabDetails = ({ slab, currentSlab }: { slab: Slab; currentSlab: Slab | null }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="p-4 border-b border-gray-200">
+      <div className="flex items-center gap-2">
+        <div className="text-sm font-bold">Slab {slab.id}</div>
+        {currentSlab?.id === slab.id && (
+          <Badge className="bg-green-100 text-green-800 border-green-300">
+            Current
+          </Badge>
+        )}
+      </div>
+    </div>
+    <div className="p-3">
+      <div className="flex items-center gap-4">
+        <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
+        <span className="text-sm font-medium">Amount:</span>
+        <span className="text-sm font-bold text-green-600">
+          ₹{parseFloat(slab.amount).toLocaleString()}
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+export default function StaffIncentivesPage() {
+  const [sellProperties, setSellProperties] = useState<SellProperty[]>([]);
+  const [slabs, setSlabs] = useState<Slab[]>([]);
   const [totalEarn, setTotalEarn] = useState(0);
-  const [userType, setUserType] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [currentSlab, setCurrentSlab] = useState<Slab | null>(null);
+  const [incentiveAmount, setIncentiveAmount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [monthsList, setMonthsList] = useState<[number, string][]>([]);
+  const [notFound, setNotFound] = useState(false);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+  const [expandedSlabId, setExpandedSlabId] = useState<number | null>(null);
+  
+  // New state variables for staff fetching
+  const [staffId, setStaffId] = useState<number | null>(null);
+  const [staffs, setStaffs] = useState<any[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  const monthsList = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
-  ];
-  const yearsList = Array.from({length: 10}, (_, i) => new Date().getFullYear() - 5 + i);
+  const { toast } = useToast();
 
-  async function fetchData() {
+  const yearsList = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
+
+  const toggleRow = (rowId: number) => {
+    setExpandedRowId(expandedRowId === rowId ? null : rowId);
+  };
+
+  const toggleSlab = (slabId: number) => {
+    setExpandedSlabId(expandedSlabId === slabId ? null : slabId);
+  };
+
+  // New useEffect to fetch staff list and set initial staffId
+  useEffect(() => {
+    const fetchStaffList = async () => {
+      setInitialLoading(true);
+      setError('');
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          throw new Error("Authentication token not found.");
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-report/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Token ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setStaffs(data.staff_list || []);
+
+        if (data.staff_list && data.staff_list.length > 0) {
+          setStaffId(data.staff_list[0].id); // Use the first staff's ID
+        } else {
+          setError("No staff members found.");
+        }
+
+        if (data.dropdown_data?.months) {
+          const formattedMonths = data.dropdown_data.months.map((m: any) => [m.id, m.name]);
+          setMonthsList(formattedMonths);
+        }
+
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch staff list.");
+        toast({
+          title: "Error",
+          description: err.message || "Failed to fetch staff list.",
+          variant: "destructive",
+        });
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    fetchStaffList();
+  }, [toast]); // Dependency on toast
+
+  const fetchIncentiveData = async () => {
+    if (staffId === null) {
+      setLoading(false);
+      return; // Do not fetch if no staffId is set yet
+    }
+
     setLoading(true);
-    setError("");
+    setError('');
+    setNotFound(false);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // In a real app: const res = await fetch(`${apiUrl}?month=${month}&year=${year}`);
-      // if (!res.ok) throw new Error("Failed to fetch data");
-      // const data = await res.json();
-      const data = mockData;
-      setSellProperty(data.sell_property || []);
-      setSlab(data.slab || []);
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("Authentication token not found.");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-incentive/${staffId}/?year=${year}&month=${month}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 404) {
+        setNotFound(true);
+        setSellProperties([]);
+        setSlabs([]);
+        setTotalEarn(0);
+        setIncentiveAmount(0);
+        setCurrentSlab(null);
+        // Do not reset monthsList here, as it's set by staff-report API
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ApiResponse = await response.json();
+
+      setSellProperties(data.sell_property || []);
+      setSlabs(data.slab || []);
       setTotalEarn(data.total_earn || 0);
-      setUserType(data.user_type ?? true);
+      // setMonthsList(data.months_list || []); // Remove this line, monthsList is from staff-report
+
+      // Current slab calculate karna - API me is_active field nahi hai
+      const activeSlab = data.slab.find(slab => {
+        const startValue = parseFloat(slab.start_value);
+        const endValue = parseFloat(slab.end_value);
+        const totalEarnValue = data.total_earn;
+        
+        return totalEarnValue >= startValue && 
+               (endValue === 0 || totalEarnValue <= endValue);
+      });
+
+      setCurrentSlab(activeSlab || null);
+
+      if (activeSlab) {
+        // flat_percent use karke incentive calculate karna
+        const incentive = parseFloat(activeSlab.flat_percent);
+        setIncentiveAmount(incentive);
+      } else {
+        setIncentiveAmount(0);
+      }
+
     } catch (err: any) {
       setError(err.message);
+      setSellProperties([]);
+      setSlabs([]);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to fetch incentive data",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (staffId !== null) { // Only fetch incentive data if staffId is available
+      fetchIncentiveData();
+    }
+  }, [staffId, year, month]);
 
-  function handleFilterSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    fetchData();
-  }
+  const getSlabBadgeColor = (slab: Slab) => {
+    if (currentSlab?.id === slab.id) {
+      return 'bg-green-100 text-green-800 border-green-300';
+    }
+    return 'bg-blue-100 text-blue-800';
+  };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Incentive Detail</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Staff Incentives</h1>
 
       <Card className="shadow-lg rounded-2xl">
         <CardHeader>
-            <form onSubmit={handleFilterSubmit} className="flex flex-col sm:flex-row gap-4 items-center">
-                <Select value={month} onValueChange={setMonth}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Select Month" />
-                </SelectTrigger>
-                <SelectContent>
-                    {monthsList.map((name, idx) => (
-                    <SelectItem key={idx} value={String(idx)}>{name}</SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-                <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="w-full sm:w-[120px]">
-                    <SelectValue placeholder="Select Year" />
-                </SelectTrigger>
-                <SelectContent>
-                    {yearsList.map((y) => (
-                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Filter className="mr-2 h-4 w-4"/>}
-                    Filter
-                </Button>
-            </form>
+          <CardTitle>Incentive Management</CardTitle>
+          <CardDescription>
+            View your incentive slabs and earnings data.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-            {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div>
+              <Label className="text-sm font-medium">Select Staff</Label>
+              <Select value={staffId?.toString()} onValueChange={(value) => setStaffId(Number(value))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Staff" />
+                </SelectTrigger>
+                <SelectContent>
+                  {staffs.length > 0 ? (
+                    staffs.map((staff) => (
+                      <SelectItem key={staff.id} value={staff.id.toString()}>{staff.name}</SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-staff" disabled>No staff available</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Month</Label>
+              <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthsList.length > 0 ? (
+                    monthsList.map(([monthNum, monthName]) => (
+                      <SelectItem key={monthNum} value={String(monthNum)}>{monthName}</SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value={String(new Date().getMonth() + 1)} disabled>
+                      {new Date().toLocaleString('default', { month: 'long' })}
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Year</Label>
+              <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearsList.map((y) => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-end">
+              <Button onClick={fetchIncentiveData} disabled={loading || initialLoading} className="w-full">
+                {(loading || initialLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {(loading || initialLoading) ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : notFound ? (
+            <div className="text-center text-gray-500 py-10">
+              <p>No incentive data found for the selected staff member.</p>
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-500 py-10">
+              <p>{error}</p>
+              <Button onClick={fetchIncentiveData} className="mt-4">
+                Try Again
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Incentive Slabs */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Incentive Slabs</h3>
+                <div className="overflow-x-auto rounded-lg border">
+                  <Table className="w-full table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-1/3">Slab</TableHead>
+                        <TableHead className="w-1/2 md:w-1/3">Min - Max</TableHead>
+                        <TableHead className="w-1/3 hidden md:table-cell">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {slabs.length > 0 ? (
+                        slabs.map((slab) => (
+                          <React.Fragment key={slab.id}>
+                            <TableRow 
+                              data-state={expandedSlabId === slab.id && 'selected'}
+                              className={`${currentSlab?.id === slab.id ? 'bg-green-50' : ''}`}
+                            >
+                              <TableCell className="w-1/2 md:w-1/3 font-medium">
+                                <>
+                                  <div className="md:hidden flex items-center justify-between w-full">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="text-green-600 h-6 w-6 p-0"
+                                      onClick={() => toggleSlab(slab.id)}
+                                    >
+                                      {expandedSlabId === slab.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                    </Button>
+                                    {currentSlab?.id === slab.id && (
+                                      <Badge className="bg-green-100 text-green-800 border-green-300">
+                                        Current
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="hidden md:block">
+                                    <div className="flex items-center gap-2">
+                                      {slab.id}
+                                      {currentSlab?.id === slab.id && (
+                                        <Badge className="bg-green-100 text-green-800 border-green-300">
+                                          Current
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              </TableCell>
+                              <TableCell className="w-1/2 md:w-1/3">
+                                ₹{parseFloat(slab.start_value).toLocaleString()} - {' '}
+                                {parseFloat(slab.end_value) === 0 
+                                  ? "No Limit" 
+                                  : `₹${parseFloat(slab.end_value).toLocaleString()}`}
+                              </TableCell>
+                              <TableCell className="w-1/3 hidden md:table-cell font-semibold text-green-600">
+                                ₹{parseFloat(slab.amount).toLocaleString()}
+                              </TableCell>
+                            </TableRow>
+                            {expandedSlabId === slab.id && (
+                              <TableRow className="md:hidden">
+                                <TableCell colSpan={2} className="p-0">
+                                  <ExpandedSlabDetails slab={slab} currentSlab={currentSlab} />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </React.Fragment>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="h-24 text-center">
+                            No slabs available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-            ) : error ? (
-                <div className="text-center text-red-500 py-10">{error}</div>
-            ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    <div className="lg:col-span-3">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Incentive Plan Detail</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Plot No</TableHead>
-                                        <TableHead>Sale (Gaj)</TableHead>
-                                        <TableHead>Amount</TableHead>
-                                        <TableHead className="text-right">Earning</TableHead>
-                                    </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                    {sellProperty.map((data: any, idx) => (
-                                        <TableRow key={idx}>
-                                        <TableCell>{data.date}</TableCell>
-                                        <TableCell>{data.plot_no}</TableCell>
-                                        <TableCell>{data.size_in_gaj}</TableCell>
-                                        <TableCell>₹{data.slab_amount.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right font-medium text-green-600">₹{data.earn_amount.toLocaleString()}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                    </TableBody>
-                                </Table>
+              </div>
+
+              {/* Incentive Plan Details */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">
+                  Incentive Plan Details ({sellProperties.length})
+                </h3>
+                <div className="overflow-x-auto rounded-lg border">
+                  <Table className="w-full table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[60px]">S.N.</TableHead>
+                        <TableHead className="w-auto md:w-1/4 lg:w-1/6">Date</TableHead>
+                        <TableHead className="hidden md:table-cell w-auto md:w-1/4 lg:w-1/6">Plot No</TableHead>
+                        <TableHead className="w-auto md:w-1/4 lg:w-1/6">Sale (gaj)</TableHead>
+                        <TableHead className="hidden lg:table-cell w-auto lg:w-1/6">Amount</TableHead>
+                        <TableHead className="hidden lg:table-cell w-1/6 text-right">Earning</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sellProperties.map((property, index) => (
+                        <React.Fragment key={property.id}>
+                          <TableRow data-state={expandedRowId === property.id && 'selected'}>
+                            <TableCell className="w-[60px]">
+                              <>
+                                <div className="lg:hidden flex items-center">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-green-600 h-6 w-6 p-0"
+                                    onClick={() => toggleRow(property.id)}
+                                  >
+                                    {expandedRowId === property.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                  </Button>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="lg:col-span-2">
-                         <Card>
-                            <CardHeader>
-                                <CardTitle>Incentive Plan</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Slab</TableHead>
-                                            <TableHead className="text-right">Amount</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                    {slab.map((data: any, idx) => (
-                                        <TableRow key={idx}>
-                                            <TableCell>{data.start_value}-{data.end_value}</TableCell>
-                                            <TableCell className="text-right">
-                                            ₹{(userType ? data.amount : data.amount - 100).toLocaleString()}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    </TableBody>
-                                </Table>
+                                <div className="hidden lg:block">
+                                  {index + 1}.
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                              </>
+                            </TableCell>
+                            <TableCell className="w-auto md:w-1/4 lg:w-1/6 font-medium">
+                              {new Date(property.created_date).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell w-auto md:w-1/4 lg:w-1/6">
+                              {property.plot_no || 'N/A'}
+                            </TableCell>
+                            <TableCell className="w-auto md:w-1/4 lg:w-1/6">
+                              {property.size_in_gaj || 'N/A'}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell w-auto lg:w-1/6">
+                              ₹{(property.amount ?? 0).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell w-1/6 text-right font-semibold text-green-600">
+                              ₹{(property.earn_amount ?? 0).toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                          {expandedRowId === property.id && (
+                            <>
+                              {/* Mobile Expanded Row */}
+                              <TableRow className="md:hidden">
+                                <TableCell colSpan={3} className="p-0">
+                                  <ExpandedPropertyDetails property={property} />
+                                </TableCell>
+                              </TableRow>
+                              {/* Tablet Expanded Row */}
+                              <TableRow className="hidden md:table-row lg:hidden">
+                                <TableCell colSpan={4} className="p-0">
+                                  <ExpandedPropertyDetails property={property} />
+                                </TableCell>
+                              </TableRow>
+                            </>
+                          )}
+                        </React.Fragment>
+                      ))}
+                      {sellProperties.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center">
+                            No properties sold in this period
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-            )}
+                <div className="flex justify-end items-center mt-4 pr-4">
+                  <h3 className="text-lg font-bold">Total Incentive:</h3>
+                  <p className="text-xl font-bold ml-4 text-green-600">
+                    ₹{incentiveAmount.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {!loading && !error && (
-        <Card className="shadow-lg rounded-2xl bg-primary text-primary-foreground">
-            <CardContent className="p-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <DollarSign className="h-8 w-8" />
-                    <p className="text-xl font-bold">Total Incentive</p>
-                </div>
-                <p className="text-3xl font-extrabold">
-                    ₹{totalEarn.toLocaleString()}/-
-                </p>
-            </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
+
+
+
+
+
+
+// class AdminStaffIncentiveAPIView(APIView):
+//     """
+//     GET: Returns incentive details for a specific staff (month/year filter)
+//     Accessible only by Admin users.
+//     """
+//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
+//     authentication_classes = [BasicAuthentication]  # Important for Basic Auth
+
+//     def get(self, request, staff_id, format=None):
+//         admin_profile = None
+
+//         try:
+//             staff_instance = get_object_or_404(Staff, id=staff_id)
+
+//             # Try to get admin profile
+//             try:
+//                 admin_profile = Admin.objects.get(self_user=request.user)
+//             except Admin.DoesNotExist:
+//                 try:
+//                     admin_profile = Admin.objects.get(email=request.user.email or request.user.username)
+//                 except Admin.DoesNotExist:
+//                     return Response(
+//                         {"error": "Admin profile not found."},
+//                         status=status.HTTP_404_NOT_FOUND,
+//                     )
+
+//         except Exception as e:
+//             return Response(
+//                 {"error": f"Staff with ID {staff_id} not found or invalid access."},
+//                 status=status.HTTP_404_NOT_FOUND,
+//             )
+
+//         # Security Check
+//         if not staff_instance.team_leader or staff_instance.team_leader.admin != admin_profile:
+//             return Response(
+//                 {"error": "You do not have permission to view this staff member's incentives."},
+//                 status=status.HTTP_403_FORBIDDEN,
+//             )
+
+//         # Filters
+//         year = int(request.query_params.get("year", datetime.now().year))
+//         month = int(request.query_params.get("month", datetime.now().month))
+//         months_list = [(i, calendar.month_name[i]) for i in range(1, 13)]
+
+//         # Staff type safely
+//         user_type = False
+//         if hasattr(staff_instance, 'user') and staff_instance.user:
+//             user_type = staff_instance.user.is_freelancer
+
+//         # Slab and sales
+//         slab = Slab.objects.all()
+//         sell_property = Sell_plot.objects.filter(
+//             staff=staff_instance,
+//             updated_date__year=year,
+//             updated_date__month=month,
+//         ).order_by("-created_date")
+
+//         total_earn = sell_property.aggregate(total_earn=Sum("earn_amount"))["total_earn"] or 0
+
+//         context = {
+//             "slab": SlabSerializer(slab, many=True).data,
+//             "sell_property": SellPlotSerializer(sell_property, many=True).data,
+//             "total_earn": total_earn,
+//             "year": year,
+//             "month": month,
+//             "months_list": months_list,
+//             "user_type": user_type,
+//         }
+//         return Response(context, status=status.HTTP_200_OK)
+
+
+
+// {
+//     "lead_counts": {
+//         "total_leads": 0,
+//         "total_interested_leads": 4,
+//         "total_not_interested_leads": 1,
+//         "total_other_location_leads": 0,
+//         "total_not_picked_leads": 0,
+//         "total_lost_leads": 1,
+//         "total_visits_leads": 2
+//     },
+//     "staff_list": [
+//         {
+//             "id": 2,
+//             "name": "Ayush Sharma",
+//             "staff_id": "VRI315",
+//             "email": "ayush720@gmail.com",
+//             "mobile": "7865431249"
+//         },
+//         {
+//             "id": 3,
+//             "name": "Nitin Sharma",
+//             "staff_id": "VRI316",
+//             "email": "nitin720@gmail.com",
+//             "mobile": "7689097834"
+//         },
+//         {
+//             "id": 4,
+//             "name": "Nishu kumari",
+//             "staff_id": "VRI317",
+//             "email": "nishu720@gmail.com",
+//             "mobile": "7896424567"
+//         }
+//     ],
+//     "productivity_report": {
+//         "total_salary_all_staff": 1199.68,
+//         "staff_productivity_details": {
+//             "2": {
+//                 "name": "Ayush Sharma",
+//                 "productivity_data": {
+//                     "1": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "2": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "3": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "4": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "5": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "6": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "7": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "8": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "9": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "10": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "11": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "12": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "13": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "14": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "15": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "16": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "17": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "18": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "19": {
+//                         "leads": 4,
+//                         "salary": 1199.68
+//                     },
+//                     "20": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "21": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "22": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "23": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "24": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "25": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "26": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "27": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "28": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "29": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "30": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     }
+//                 },
+//                 "total_salary": 1199.68
+//             },
+//             "3": {
+//                 "name": "Nitin Sharma",
+//                 "productivity_data": {
+//                     "1": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "2": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "3": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "4": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "5": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "6": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "7": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "8": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "9": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "10": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "11": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "12": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "13": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "14": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "15": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "16": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "17": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "18": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "19": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "20": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "21": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "22": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "23": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "24": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "25": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "26": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "27": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "28": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "29": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "30": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     }
+//                 },
+//                 "total_salary": 0
+//             },
+//             "4": {
+//                 "name": "Nishu kumari",
+//                 "productivity_data": {
+//                     "1": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "2": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "3": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "4": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "5": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "6": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "7": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "8": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "9": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "10": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "11": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "12": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "13": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "14": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "15": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "16": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "17": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "18": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "19": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "20": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "21": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "22": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "23": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "24": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "25": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "26": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "27": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "28": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "29": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     },
+//                     "30": {
+//                         "leads": 0,
+//                         "salary": 0
+//                     }
+//                 },
+//                 "total_salary": 0
+//             }
+//         }
+//     },
+//     "calendar_structure": [
+//         [
+//             {
+//                 "day": 0,
+//                 "day_name": "Monday"
+//             },
+//             {
+//                 "day": 0,
+//                 "day_name": "Tuesday"
+//             },
+//             {
+//                 "day": 0,
+//                 "day_name": "Wednesday"
+//             },
+//             {
+//                 "day": 0,
+//                 "day_name": "Thursday"
+//             },
+//             {
+//                 "day": 0,
+//                 "day_name": "Friday"
+//             },
+//             {
+//                 "day": 1,
+//                 "day_name": "Saturday"
+//             },
+//             {
+//                 "day": 2,
+//                 "day_name": "Sunday"
+//             }
+//         ],
+//         [
+//             {
+//                 "day": 3,
+//                 "day_name": "Monday"
+//             },
+//             {
+//                 "day": 4,
+//                 "day_name": "Tuesday"
+//             },
+//             {
+//                 "day": 5,
+//                 "day_name": "Wednesday"
+//             },
+//             {
+//                 "day": 6,
+//                 "day_name": "Thursday"
+//             },
+//             {
+//                 "day": 7,
+//                 "day_name": "Friday"
+//             },
+//             {
+//                 "day": 8,
+//                 "day_name": "Saturday"
+//             },
+//             {
+//                 "day": 9,
+//                 "day_name": "Sunday"
+//             }
+//         ],
+//         [
+//             {
+//                 "day": 10,
+//                 "day_name": "Monday"
+//             },
+//             {
+//                 "day": 11,
+//                 "day_name": "Tuesday"
+//             },
+//             {
+//                 "day": 12,
+//                 "day_name": "Wednesday"
+//             },
+//             {
+//                 "day": 13,
+//                 "day_name": "Thursday"
+//             },
+//             {
+//                 "day": 14,
+//                 "day_name": "Friday"
+//             },
+//             {
+//                 "day": 15,
+//                 "day_name": "Saturday"
+//             },
+//             {
+//                 "day": 16,
+//                 "day_name": "Sunday"
+//             }
+//         ],
+//         [
+//             {
+//                 "day": 17,
+//                 "day_name": "Monday"
+//             },
+//             {
+//                 "day": 18,
+//                 "day_name": "Tuesday"
+//             },
+//             {
+//                 "day": 19,
+//                 "day_name": "Wednesday"
+//             },
+//             {
+//                 "day": 20,
+//                 "day_name": "Thursday"
+//             },
+//             {
+//                 "day": 21,
+//                 "day_name": "Friday"
+//             },
+//             {
+//                 "day": 22,
+//                 "day_name": "Saturday"
+//             },
+//             {
+//                 "day": 23,
+//                 "day_name": "Sunday"
+//             }
+//         ],
+//         [
+//             {
+//                 "day": 24,
+//                 "day_name": "Monday"
+//             },
+//             {
+//                 "day": 25,
+//                 "day_name": "Tuesday"
+//             },
+//             {
+//                 "day": 26,
+//                 "day_name": "Wednesday"
+//             },
+//             {
+//                 "day": 27,
+//                 "day_name": "Thursday"
+//             },
+//             {
+//                 "day": 28,
+//                 "day_name": "Friday"
+//             },
+//             {
+//                 "day": 29,
+//                 "day_name": "Saturday"
+//             },
+//             {
+//                 "day": 30,
+//                 "day_name": "Sunday"
+//             }
+//         ]
+//     ],
+//     "dropdown_data": {
+//         "months": [
+//             {
+//                 "id": 1,
+//                 "name": "January"
+//             },
+//             {
+//                 "id": 2,
+//                 "name": "February"
+//             },
+//             {
+//                 "id": 3,
+//                 "name": "March"
+//             },
+//             {
+//                 "id": 4,
+//                 "name": "April"
+//             },
+//             {
+//                 "id": 5,
+//                 "name": "May"
+//             },
+//             {
+//                 "id": 6,
+//                 "name": "June"
+//             },
+//             {
+//                 "id": 7,
+//                 "name": "July"
+//             },
+//             {
+//                 "id": 8,
+//                 "name": "August"
+//             },
+//             {
+//                 "id": 9,
+//                 "name": "September"
+//             },
+//             {
+//                 "id": 10,
+//                 "name": "October"
+//             },
+//             {
+//                 "id": 11,
+//                 "name": "November"
+//             },
+//             {
+//                 "id": 12,
+//                 "name": "December"
+//             }
+//         ]
+//     }
+// }

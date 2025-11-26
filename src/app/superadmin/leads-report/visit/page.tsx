@@ -40,7 +40,7 @@ function VisitLeadsPage() {
         setLoading(true);
         const token = localStorage.getItem("authToken");
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/dashboard/super-admin/`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-leads/visits/`,
           {
             headers: {
               Authorization: `Token ${token}`,
@@ -52,7 +52,7 @@ function VisitLeadsPage() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setLeads(data.total_visits || []);
+        setLeads(data || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -241,8 +241,8 @@ function VisitLeadsPage() {
             </div>
 
             <div className="w-full rounded-md border overflow-x-hidden md:overflow-x-auto">
-              <Table>
-                <TableHeader>
+              <Table className="table-auto min-w-full">
+                <TableHeader className="min-w-full">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {

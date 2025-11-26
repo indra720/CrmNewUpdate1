@@ -46,16 +46,16 @@ export const SIDENAV_ITEMS = [
   },
   {
     title: 'Leads Report',
-    path: '/admin/reports',
+    path: '/admin/leads-report',
     icon: <FileBarChart className="h-5 w-5" />,
     submenu: true,
     subMenuItems: [
-        { title: 'Leads', path: '/admin/reports/total-leads' },
-        { title: 'Interested', path: '/admin/reports/interested' },
-        { title: 'Not Interested', path: '/admin/reports/not-interested' },
-        { title: 'Visit', path: '/admin/reports/visit' },
-        { title: 'Not Picked', path: '/admin/reports/not-picked' },
-        { title: 'Other Location', path: '/admin/reports/other-location' },
+        { title: 'Leads', path: '/admin/leads-report/total-leads' },
+        { title: 'Interested', path: '/admin/leads-report/interested' },
+        { title: 'Not Interested', path: '/admin/leads-report/not-interested' },
+        { title: 'Visit', path: '/admin/leads-report/visit' },
+        { title: 'Not Picked', path: '/admin/leads-report/not-picked' },
+        { title: 'Other Location', path: '/admin/leads-report/other-location' },
     ],
   },
   {
