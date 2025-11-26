@@ -111,6 +111,45 @@ const ExpandedSlabDetails = ({ slab, currentSlab }: { slab: Slab; currentSlab: S
   </div>
 );
 
+const ExpandedPropertyDetails = ({ property }: { property: SellProperty }) => (
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="p-4 flex items-center gap-4 border-b border-gray-200">
+      <div className="flex items-center gap-4 flex-1">
+        <div className="text-lg font-bold">{property.property_name}</div>
+      </div>
+    </div>
+    <div className="overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+        {/* Row 1: Plot No - only on mobile */}
+        <div className="p-3 border-b border-r md:border-r-0 border-gray-200 block md:hidden">
+          <div className="flex items-center gap-4">
+            {/* <Hash className="h-4 w-4 text-gray-500 flex-shrink-0" /> */}
+            <span className="text-sm">Plot No. - {property.plot_no || 'N/A'}</span>
+          </div>
+        </div>
+        {/* Row 1: Amount */}
+        <div className="p-3 border-b border-l md:border-l-0 border-gray-200 md:border-b-0">
+          <div className="flex items-center gap-4">
+            <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
+            <span className="text-sm font-medium">Amount:</span>
+            <span className="text-sm font-semibold text-green-600">
+              ₹{(property.amount ?? 0).toLocaleString()}
+            </span>
+          </div>
+        </div>
+        {/* Row 2: Earning */}
+        <div className="p-3 border-b md:col-span-2 flex items-center gap-4 border-t pt-2">
+          <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
+          <span className="text-sm font-medium">Earning:</span>
+          <span className="text-sm font-bold text-green-600">
+            ₹{(property.earn_amount ?? 0).toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function StaffIncentivesPage() {
   const [sellProperties, setSellProperties] = useState<SellProperty[]>([]);
   const [slabs, setSlabs] = useState<Slab[]>([]);
@@ -420,35 +459,72 @@ export default function StaffIncentivesPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Plot No</TableHead>
-                        <TableHead>Sale (gaj)</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Earning</TableHead>
+                        <TableHead className="w-[60px]">S.N.</TableHead>
+                        <TableHead className="w-auto md:w-1/4 lg:w-1/6">Date</TableHead>
+                        <TableHead className="hidden md:table-cell w-auto md:w-1/4 lg:w-1/6">Plot No</TableHead>
+                        <TableHead className="w-auto md:w-1/4 lg:w-1/6">Sale (gaj)</TableHead>
+                        <TableHead className="hidden lg:table-cell w-auto lg:w-1/6">Amount</TableHead>
+                        <TableHead className="hidden lg:table-cell w-1/6 text-right">Earning</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sellProperties.length > 0 ? (
-                        sellProperties.map((property) => (
-                          <TableRow key={property.id}>
-                            <TableCell>
+                      {sellProperties.map((property, index) => (
+                        <React.Fragment key={property.id}>
+                          <TableRow data-state={expandedRowId === property.id && 'selected'}>
+                            <TableCell className="w-[60px]">
+                              <>
+                                <div className="lg:hidden flex items-center">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-green-600 h-6 w-6 p-0"
+                                    onClick={() => toggleRow(property.id)}
+                                  >
+                                    {expandedRowId === property.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                  </Button>
+                                </div>
+                                <div className="hidden lg:block">
+                                  {index + 1}.
+                                </div>
+                              </>
+                            </TableCell>
+                            <TableCell className="w-auto md:w-1/4 lg:w-1/6 font-medium">
                               {new Date(property.created_date).toLocaleDateString()}
                             </TableCell>
-                            <TableCell>{property.plot_no || 'N/A'}</TableCell>
-                            <TableCell>
-                              {property.sale_gaj != null ? property.sale_gaj.toLocaleString() : 'N/A'}
+                            <TableCell className="hidden md:table-cell w-auto md:w-1/4 lg:w-1/6">
+                              {property.plot_no || 'N/A'}
                             </TableCell>
-                            <TableCell>
-                              {property.amount != null ? `₹${property.amount.toLocaleString()}` : 'N/A'}
+                            <TableCell className="w-auto md:w-1/4 lg:w-1/6">
+                              {property.size_in_gaj || 'N/A'}
                             </TableCell>
-                            <TableCell className="font-semibold text-green-600">
-                              {property.earn_amount != null ? `₹${property.earn_amount.toLocaleString()}` : 'N/A'}
+                            <TableCell className="hidden lg:table-cell w-auto lg:w-1/6">
+                              ₹{(property.amount ?? 0).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell w-1/6 text-right font-semibold text-green-600">
+                              ₹{(property.earn_amount ?? 0).toLocaleString()}
                             </TableCell>
                           </TableRow>
-                        ))
-                      ) : (
+                          {expandedRowId === property.id && (
+                            <>
+                              {/* Mobile Expanded Row */}
+                              <TableRow className="md:hidden">
+                                <TableCell colSpan={6} className="p-0">
+                                  <ExpandedPropertyDetails property={property} />
+                                </TableCell>
+                              </TableRow>
+                              {/* Tablet Expanded Row */}
+                              <TableRow className="hidden md:table-row lg:hidden">
+                                <TableCell colSpan={6} className="p-0">
+                                  <ExpandedPropertyDetails property={property} />
+                                </TableCell>
+                              </TableRow>
+                            </>
+                          )}
+                        </React.Fragment>
+                      ))}
+                      {sellProperties.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="h-24 text-center">
+                          <TableCell colSpan={6} className="h-24 text-center">
                             No properties sold in this period
                           </TableCell>
                         </TableRow>
