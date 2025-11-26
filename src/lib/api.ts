@@ -1670,6 +1670,39 @@ export async function updateAdminLeadStatus(
 }
 
 
+// Function to fetch current logged-in user's profile
+export async function fetchCurrentUserProfile(): Promise<{ name: string; email: string; /* ... other profile fields */ }> {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/profile/`; // Assuming this endpoint exists
+    console.log(`Fetching current user profile from:`, url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error(`Failed to fetch current user profile:`, error);
+    throw new Error(`Failed to fetch user profile: ${error.message || "Unknown error"}`);
+  }
+}
+
+
 // class AdminUpdateLeadAPIView(APIView):
 //     """
 //     API for Admin to update a lead's status (e.g., Leads -> Interested).

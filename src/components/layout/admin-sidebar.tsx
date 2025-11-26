@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { fetchCurrentUserProfile } from '../../lib/api'; // Import the new function
 import { SIDENAV_ITEMS } from '@/lib/constants';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -156,11 +157,34 @@ export function AdminSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, setIs
   setIsCollapsed: (collapsed: boolean) => void 
 }) {
   const router = useRouter();
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [loadingUser, setLoadingUser] = useState<boolean>(true);
+  const [userError, setUserError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUserProfile = async () => {
+      try {
+        setLoadingUser(true);
+        const profile = await fetchCurrentUserProfile();
+        setUserName(profile.name);
+        setUserEmail(profile.email);
+      } catch (err: any) {
+        setUserError(err.message);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    getUserProfile();
+  }, []);
   
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('userRole');
+      localStorage.removeItem('authToken'); // Also clear auth token
     }
+    setUserName(null); // Clear user state on logout
+    setUserEmail(null);
     router.push('/login');
   };
 
@@ -168,7 +192,9 @@ export function AdminSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, setIs
     <div className={cn("flex items-center h-20 border-b border-sidebar-border", isCollapsed ? "justify-center" : "px-4 justify-between")}>
       <div className="flex items-center">
         <Avatar className="h-10 w-10 bg-primary text-primary-foreground">
-          <AvatarFallback>A</AvatarFallback>
+          <AvatarFallback className='bg-orange-500'>
+            {userName ? userName.charAt(0).toUpperCase() : 'A'}
+          </AvatarFallback>
         </Avatar>
         {!isCollapsed && <h1 className="ml-3 text-2xl font-bold text-white">Admin</h1>}
       </div>
@@ -205,12 +231,14 @@ export function AdminSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, setIs
             <DropdownMenuTrigger asChild>
               <div className="flex items-center cursor-pointer group w-full">
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback>A</AvatarFallback>
+                  <AvatarFallback>{userName ? userName.charAt(0).toUpperCase() : 'A'}</AvatarFallback>
                 </Avatar>
                 {!isCollapsed && (
                   <div className="ml-3">
-                    <p className="text-sm font-medium">Admin User</p>
-                    <p className="text-xs text-muted-foreground group-hover:text-sidebar-foreground/80">admin@nexus.com</p>
+                    <p className="text-sm font-medium">{userName || 'Admin User'}</p>
+                    <p className="text-xs text-muted-foreground group-hover:text-sidebar-foreground/80">
+                      {userEmail || 'admin@nexus.com'}
+                    </p>
                   </div>
                 )}
               </div>
@@ -218,9 +246,9 @@ export function AdminSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, setIs
             <DropdownMenuContent className="w-56 mb-2 ml-2 bg-popover border-border text-popover-foreground" align="end" forceMount>
                  <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">Admin User</p>
+                        <p className="text-sm font-medium leading-none">{userName || 'Admin User'}</p>
                         <p className="text-xs leading-none text-muted-foreground">
-                        admin@nexus.com
+                        {userEmail || 'admin@nexus.com'}
                         </p>
                     </div>
                 </DropdownMenuLabel>
