@@ -339,7 +339,7 @@ export default function StaffIncentivesPage() {
                               {new Date(property.created_date).toLocaleDateString()}
                             </TableCell>
                             <TableCell>{property.plot_no || 'N/A'}</TableCell>
-                            <TableCell>{property.size_in_gaj || 'N/A'}</TableCell>
+                            <TableCell>{property.sale_gaj?.toLocaleString() || 'N/A'}</TableCell>
                             <TableCell>₹{property.amount?.toLocaleString() || 'N/A'}</TableCell>
                             <TableCell className="font-semibold text-green-600">
                               ₹{property.earn_amount?.toLocaleString() || 'N/A'}
