@@ -20,8 +20,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { fetchTeamLeaderAllLeadsByTag } from '@/lib/api';
+
 import { BackButton } from '@/components/ui/back-button';
+import { toast } from '@/hooks/use-toast';
 
 type Lead = any;
 
@@ -33,20 +34,11 @@ function LostLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+
+
   useEffect(() => {
-    async function fetchLeads() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchTeamLeaderAllLeadsByTag('total_lost_tag');
-        setLeads(data.results || []);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch leads.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLeads();
+    setLoading(false);
+    setLeads([]);
   }, []);
 
   const toggleRow = (rowId: number) => {
@@ -103,7 +95,7 @@ function LostLeadsPage() {
       accessorKey: 'whatsapp',
       header: 'Whatsapp',
       cell: ({ row }) => (
-        <a 
+        <a
           href={`https://wa.me/${row.getValue('call')}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -140,7 +132,7 @@ function LostLeadsPage() {
         const timeString = date.toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
-          hour12: true, 
+          hour12: true,
         });
         return (
           <div className="flex flex-col">
@@ -180,7 +172,7 @@ function LostLeadsPage() {
       <div className="grid gap-4">
         <Card className="overflow-hidden">
           <CardContent className="p-2 md:p-6 md:pt-0">
-            
+
             <div className="flex items-center justify-between mb-4 px-2 pt-4 md:px-0">
               <div className="relative w-full max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -206,9 +198,9 @@ function LostLeadsPage() {
                             {header.isPlaceholder
                               ? null
                               : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
                           </TableHead>
                         );
                       })}
@@ -260,10 +252,10 @@ function LostLeadsPage() {
                                     </div>
                                     <div className="flex items-center">
                                       <MessageSquare className="h-4 w-4 mr-3 text-gray-500" />
-                                      <a 
-                                        href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`} 
-                                        target="_blank" 
-                                        rel="noreferrer" 
+                                      <a
+                                        href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
+                                        target="_blank"
+                                        rel="noreferrer"
                                         className="text-sm"
                                       >
                                         Whatsapp

@@ -20,7 +20,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { fetchTeamLeaderAllLeadsByTag } from '@/lib/api';
+
+
 import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
@@ -38,8 +39,28 @@ function InterestedLeadsPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchTeamLeaderAllLeadsByTag('interested');
-        setLeads(data.results || []);
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+          throw new Error("Authentication token not found.");
+        }
+        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-leads/interested/`;
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Token ${token}`,
+            },
+          });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
+        }
+        const data = await response.json();
+        setLeads(data || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {

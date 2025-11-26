@@ -20,7 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { fetchTeamLeaderAllLeadsByTag } from '@/lib/api';
+
 import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
@@ -34,19 +34,8 @@ function NotInterestedLeadsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchLeads() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchTeamLeaderAllLeadsByTag('total_not_interested_tag');
-        setLeads(data.results || []);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch leads.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLeads();
+    setLoading(false);
+    setLeads([]);
   }, []);
 
   const toggleRow = (rowId: number) => {
