@@ -36,9 +36,33 @@ function LostLeadsPage() {
 
 
 
+  const fetchdata = async () => {
+    const token = localStorage.getItem('authToken');
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/lost-leads/`, {
+        method: 'GET',
+        headers: {
+          "content-type": "application/json",
+          "Authorization": `Token ${token}`
+
+        }
+      })
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setLeads(data.results.leads);
+    } catch (error) {
+      setError("failed to fetch data ")
+      toast({ title: "Error", description: "something went wrong while fetching data ." })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    setLoading(false);
-    setLeads([]);
+    fetchdata();
   }, []);
 
   const toggleRow = (rowId: number) => {
@@ -324,3 +348,116 @@ function LostLeadsPage() {
 }
 
 export default LostLeadsPage;
+
+
+
+
+// {
+//     "count": 4,
+//     "next": null,
+//     "previous": null,
+//     "results": {
+//         "leads": [
+//             {
+//                 "id": 7,
+//                 "name": "Nikhil saini",
+//                 "email": "nikhil720@gmail.com",
+//                 "call": "7878906545",
+//                 "send": null,
+//                 "status": "Intrested",
+//                 "message": null,
+//                 "team_leader": "Indrajeet",
+//                 "follow_up_date": null,
+//                 "follow_up_time": null,
+//                 "created_date": "2025-11-19T11:53:21.859264Z",
+//                 "assigned_to": {
+//                     "id": 2,
+//                     "name": "Ayush Sharma",
+//                     "staff_id": "VRI315",
+//                     "email": "ayush720@gmail.com",
+//                     "mobile": "7865431249"
+//                 },
+//                 "project_id": null,
+//                 "project": null
+//             },
+//             {
+//                 "id": 4,
+//                 "name": "Akash Kumar",
+//                 "email": "akash720@gmail.com",
+//                 "call": "6780909877",
+//                 "send": null,
+//                 "status": "Intrested",
+//                 "message": "",
+//                 "team_leader": "Indrajeet",
+//                 "follow_up_date": null,
+//                 "follow_up_time": null,
+//                 "created_date": "2025-11-19T05:19:04.882103Z",
+//                 "assigned_to": {
+//                     "id": 2,
+//                     "name": "Ayush Sharma",
+//                     "staff_id": "VRI315",
+//                     "email": "ayush720@gmail.com",
+//                     "mobile": "7865431249"
+//                 },
+//                 "project_id": null,
+//                 "project": null
+//             },
+//             {
+//                 "id": 6,
+//                 "name": "Rahul Kumar",
+//                 "email": "rahul720@gmail.com",
+//                 "call": "7867908978",
+//                 "send": null,
+//                 "status": "Intrested",
+//                 "message": "",
+//                 "team_leader": "Indrajeet",
+//                 "follow_up_date": null,
+//                 "follow_up_time": null,
+//                 "created_date": "2025-11-19T07:15:44.511070Z",
+//                 "assigned_to": {
+//                     "id": 2,
+//                     "name": "Ayush Sharma",
+//                     "staff_id": "VRI315",
+//                     "email": "ayush720@gmail.com",
+//                     "mobile": "7865431249"
+//                 },
+//                 "project_id": null,
+//                 "project": null
+//             },
+//             {
+//                 "id": 3,
+//                 "name": "Pradeep kumar",
+//                 "email": "pradeep720@gmail.com",
+//                 "call": "7879008765",
+//                 "send": null,
+//                 "status": "Intrested",
+//                 "message": null,
+//                 "team_leader": "Indrajeet",
+//                 "follow_up_date": null,
+//                 "follow_up_time": null,
+//                 "created_date": "2025-11-19T05:05:15.047240Z",
+//                 "assigned_to": {
+//                     "id": 2,
+//                     "name": "Ayush Sharma",
+//                     "staff_id": "VRI315",
+//                     "email": "ayush720@gmail.com",
+//                     "mobile": "7865431249"
+//                 },
+//                 "project_id": 1,
+//                 "project": {
+//                     "id": 1,
+//                     "name": "Hotel Booking",
+//                     "message": "<p>Hello,hotel stasff</p>",
+//                     "youtube_link": null,
+//                     "media_file": "http://127.0.0.1:8000/media/project/2bedrooms.jpg",
+//                     "created_date": "2025-11-19T05:07:38.615989Z",
+//                     "updated_date": "2025-11-19T05:07:38.615989Z",
+//                     "user": 6,
+//                     "admin": 1,
+//                     "team_leader": 2,
+//                     "staff": 2
+//                 }
+//             }
+//         ]
+//     }
+// }
