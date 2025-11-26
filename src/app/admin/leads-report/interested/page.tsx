@@ -15,16 +15,37 @@ import {
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Phone, MessageSquare, ArrowUpDown, Search, Plus, Minus, Tag, Calendar, Loader2 } from 'lucide-react';
+import { Phone, MessageSquare, ArrowUpDown, Search, Plus, Minus, Tag, Calendar, Loader2, History } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { updateAdminLeadStatus } from '@/lib/api';
 
 
 import { BackButton } from '@/components/ui/back-button';
+import { useToast } from '@/hooks/use-toast';
+
 
 type Lead = any;
+
+const LEAD_STATUS_OPTIONS = [
+  'Leads',
+  'Interested',
+  'Not Interested',
+  'Visit',
+  'Not Picked',
+  'Other Location',
+  'Lost',
+];
 
 function InterestedLeadsPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -33,6 +54,8 @@ function InterestedLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchLeads() {
@@ -44,7 +67,7 @@ function InterestedLeadsPage() {
         if (!token) {
           throw new Error("Authentication token not found.");
         }
-        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-leads/interested/`;
+        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/lost-leads/`;
         const response = await fetch(url, {
             method: "GET",
             headers: {
@@ -60,7 +83,7 @@ function InterestedLeadsPage() {
           );
         }
         const data = await response.json();
-        setLeads(data || []);
+        setLeads(data.results.leads || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -73,6 +96,35 @@ function InterestedLeadsPage() {
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
+
+  const handleStatusChange = async (leadId: number, newStatus: string) => {
+    try {
+      // Optimistically update the UI
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+      await updateAdminLeadStatus(leadId, newStatus);
+      toast({
+        title: 'Success',
+        description: `Lead status updated to ${newStatus}.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to update lead status: ${err.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+      // Revert UI on error (optional, but good for UX)
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: lead.status } : lead
+        )
+      );
+    }
+  };
+
 
   const columns: ColumnDef<Lead>[] = [
     {
@@ -147,29 +199,35 @@ function InterestedLeadsPage() {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="capitalize">{row.getValue('status')}</div>,
+      cell: ({ row }) => (
+        <Select
+          value={row.original.status}
+          onValueChange={(newStatus) => handleStatusChange(row.original.id, newStatus)}
+        >
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {LEAD_STATUS_OPTIONS.map((statusOption) => (
+              <SelectItem key={statusOption} value={statusOption}>
+                {statusOption}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
       meta: {
         className: 'hidden sm:table-cell',
       },
     },
     {
-      accessorKey: 'created_date',
-      header: 'Time and Date',
-      cell: ({ row }) => {
-        const date = new Date(row.getValue('created_date'));
-        const dateString = date.toLocaleDateString('en-GB').replace(/\//g, '-');
-        const timeString = date.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true, 
-        });
-        return (
-          <div className="flex flex-col">
-            <span>{dateString}</span>
-            <span className="text-muted-foreground text-xs">{timeString}</span>
-          </div>
-        );
-      },
+      id: 'history_action', // Use a unique ID for action columns
+      header: 'History',
+      cell: ({ row }) => (
+        <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/lead-history?leadId=${row.original.id}`)}>
+          <History className="h-5 w-5 text-gray-500" />
+        </Button>
+      ),
       meta: {
         className: 'hidden sm:table-cell',
       },

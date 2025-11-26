@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { fetchAdminDashboardLeadHistoryById } from '@/lib/api'
+import { fetchAdminDashboardLeadHistoryById } from '@/lib/api';
 
 
 interface LeadHistory {
@@ -377,53 +377,7 @@ export default function LeadHistoryPage() {
 
 //         serializer = LeadsHistorySerializer(history_qs, many=True)
 //         return Response(serializer.data)
+    
 
+﻿
 
-
-// {
-//     "count": 1,
-//     "next": null,
-//     "previous": null,
-//     "results": [
-//         {
-//             "id": 2,
-//             "lead_id": 3,
-//             "status": "Intrested",
-//             "name": "Pradeep kumar",
-//             "message": null,
-//             "created_date": "2025-11-19T05:21:52.790812Z",
-//             "updated_date": "2025-11-19T05:21:52.790812Z",
-//             "leads": 3
-//         }
-//     ]
-// }
-
-
-
-
-
-// installHook.js:1 Failed to fetch Admin Lead History for Lead ID 11: Error: HTTP error! status: 403
-//     at fetchAdminLeadHistoryById (api.ts:600:13)
-//     at async getLeadHistory (page.tsx:51:26)
-// overrideMethod	@	installHook.js:1
-// fetchAdminLeadHistoryById	@	api.ts:607
-// await in fetchAdminLeadHistoryById		
-// getLeadHistory	@	page.tsx:51
-// LeadHistoryPage.useEffect	@	page.tsx:64
-// "use client"		
-// Function.all	@	VM3189 <anonymous>:1
-// await in fetchServerResponse		
-// onClick	@	page.tsx:228
-// <button>		
-// _c	@	button.tsx:46
-// <Button>		
-// cell	@	page.tsx:228
-// <cell>		
-// (anonymous)	@	page.tsx:321
-// (anonymous)	@	page.tsx:319
-// TotalLeadsPage	@	page.tsx:316
-// "use client"		
-// Function.all	@	VM3189 <anonymous>:1
-// Function.all	@	VM3189 <anonymous>:1
-// Function.all	@	VM3189 <anonymous>:1
-// Function.all	@	VM3189 <anonymous>:1

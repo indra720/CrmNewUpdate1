@@ -19,11 +19,30 @@ import { Phone, MessageSquare, ArrowUpDown, Search, Plus, Minus, Tag, Calendar, 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { updateAdminLeadStatus } from '@/lib/api';
 
 import { BackButton } from '@/components/ui/back-button';
+import { useToast } from '@/hooks/use-toast';
 
 type Lead = any;
+
+const LEAD_STATUS_OPTIONS = [
+  'Leads',
+  'Interested',
+  'Not Interested',
+  'Visit',
+  'Not Picked',
+  'Other Location',
+  'Lost',
+];
 
 function VisitLeadsPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -32,6 +51,8 @@ function VisitLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     setLoading(false);
@@ -41,6 +62,35 @@ function VisitLeadsPage() {
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
+
+  const handleStatusChange = async (leadId: number, newStatus: string) => {
+    try {
+      // Optimistically update the UI
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+      await updateAdminLeadStatus(leadId, newStatus);
+      toast({
+        title: 'Success',
+        description: `Lead status updated to ${newStatus}.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to update lead status: ${err.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+      // Revert UI on error (optional, but good for UX)
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: lead.status } : lead
+        )
+      );
+    }
+  };
+
 
   const columns: ColumnDef<Lead>[] = [
     {
@@ -92,7 +142,7 @@ function VisitLeadsPage() {
       accessorKey: 'whatsapp',
       header: 'Whatsapp',
       cell: ({ row }) => (
-        <a 
+        <a
           href={`https://wa.me/${row.getValue('call')}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -115,35 +165,40 @@ function VisitLeadsPage() {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="capitalize">{row.getValue('status')}</div>,
+      cell: ({ row }) => (
+        <Select
+          value={row.original.status}
+          onValueChange={(newStatus) => handleStatusChange(row.original.id, newStatus)}
+        >
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {LEAD_STATUS_OPTIONS.map((statusOption) => (
+              <SelectItem key={statusOption} value={statusOption}>
+                {statusOption}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
       meta: {
         className: 'hidden sm:table-cell',
       },
     },
     {
-      accessorKey: 'created_date',
-      header: 'Time and Date',
-      cell: ({ row }) => {
-        const date = new Date(row.getValue('created_date'));
-        const dateString = date.toLocaleDateString('en-GB').replace(/\//g, '-');
-        const timeString = date.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        });
-        return (
-          <div className="flex flex-col">
-            <span>{dateString}</span>
-            <span className="text-muted-foreground text-xs">{timeString}</span>
-          </div>
-        );
-      },
+      id: 'history_action', // Use a unique ID for action columns
+      header: 'History',
+      cell: ({ row }) => (
+        <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/lead-history?leadId=${row.original.id}`)}>
+          <History className="h-5 w-5 text-gray-500" />
+        </Button>
+      ),
       meta: {
         className: 'hidden sm:table-cell',
       },
     },
   ];
-
   const table = useReactTable({
     data: leads,
     columns,

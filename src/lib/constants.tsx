@@ -53,7 +53,7 @@ export const SIDENAV_ITEMS = [
         { title: 'Leads', path: '/admin/leads-report/total-leads' },
         { title: 'Interested', path: '/admin/leads-report/interested' },
         { title: 'Not Interested', path: '/admin/leads-report/not-interested' },
-        { title: 'Visit', path: '/admin/leads-report/visit' },
+        { title: 'Lost', path: '/admin/leads-report/lost' },
         { title: 'Not Picked', path: '/admin/leads-report/not-picked' },
         { title: 'Other Location', path: '/admin/leads-report/other-location' },
     ],
