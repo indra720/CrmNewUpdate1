@@ -342,7 +342,7 @@ export default function StaffIncentivesPage() {
                             <TableCell>{property.size_in_gaj || 'N/A'}</TableCell>
                             <TableCell>₹{property.amount?.toLocaleString() || 'N/A'}</TableCell>
                             <TableCell className="font-semibold text-green-600">
-                              ₹{property.earn_amount.toLocaleString()}
+                              ₹{property.earn_amount?.toLocaleString() || 'N/A'}
                             </TableCell>
                           </TableRow>
                         ))
@@ -368,3 +368,20 @@ export default function StaffIncentivesPage() {
     </div>
   );
 }
+
+
+
+
+// page.tsx:310 Uncaught TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+//     at page.tsx:310:53
+//     at Array.map (<anonymous>)
+//     at StaffIncentivesPage (page.tsx:300:26)
+// (anonymous)	@	page.tsx:310
+// StaffIncentivesPage	@	page.tsx:300
+// "use client"		
+// Function.all	@	VM2171 <anonymous>:1
+// Function.all	@	VM2171 <anonymous>:1
+// Function.all	@	VM2171 <anonymous>:1
+// Function.all	@	VM2171 <anonymous>:1
+// Function.all	@	VM2171 <anonymous>:1
+
