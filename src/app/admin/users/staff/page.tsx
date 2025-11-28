@@ -80,7 +80,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-import { fetchAdminStaffs, fetchAdminTeamLeaders } from '@/lib/api';
+import { fetchAdminStaffReport, fetchAdminTeamLeaders } from '@/lib/api';
 import { DatePicker } from '@/components/ui/date-picker';
 
 import { useToast } from '@/hooks/use-toast';
@@ -170,13 +170,13 @@ export default function StaffManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [kpiCounts, setKpiCounts] = useState<any>({
     total_leads: 0,
-    total_visit: 0,
-    interested: 0,
-    not_interested: 0,
-    other_location: 0,
-    not_picked: 0,
+    total_visits_leads: 0,
+    total_interested_leads: 0,
+    total_not_interested_leads: 0,
+    total_other_location_leads: 0,
+    total_not_picked_leads: 0,
     total_earning: 0,
-    lost: 0,
+    total_lost_leads: 0,
   });
   const [search, setSearch] = useState('');
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -197,15 +197,16 @@ export default function StaffManagementPage() {
       const [isLoading, setIsLoading] = useState(true);
       const [error, setError] = useState<string | null>(null);
     
-      const { toast } = useToast();  const kpiData = [
-    { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/admin/reports/total-leads" },
-    { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/admin/reports/visit" },
-    { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/admin/reports/interested" },
-    { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested" },
-    { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location" },
-    { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked" },
-    { title: "Lost", valueKey: "total_lost_leads", icon: XCircle, color: "text-gray-500", link: "/admin/reports/lost" },
-    { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500", link: "/admin/reports/total-earning" },
+      const { toast } = useToast();
+  const kpiData = [
+    { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/admin/reports/total-leads?source=staff" },
+    { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/admin/reports/visit?source=staff" },
+    { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/admin/reports/interested?source=staff" },
+    { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested?source=staff" },
+    { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location?source=staff" },
+    { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked?source=staff" },
+
+    { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500", link: "/admin/reports/total-earning?source=staff" },
   ];
 
   const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -240,13 +241,13 @@ export default function StaffManagementPage() {
     setFormData(initialFormData);
   }
   
-  const loadStaffs = async (start?: string, end?: string) => {
+  const loadStaffReport = async (start?: string, end?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchAdminStaffs(start, end);
-      setUsers(data.staff_list || []);
-      setKpiCounts(data.lead_counts);
+      const reportData = await fetchAdminStaffReport(start, end);
+      setUsers(reportData.staff_list || []);
+      setKpiCounts(reportData.lead_counts || {});
     } catch (err: any) {
       setError(err.message || 'Failed to fetch staff data.');
       toast({ title: "Error", description: err.message || 'Failed to fetch staff data.', variant: "destructive" });
@@ -278,12 +279,12 @@ export default function StaffManagementPage() {
       setStartDate(undefined);
       setEndDate(undefined);
       setIsFilterActive(false);
-      loadStaffs();
+      loadStaffReport();
     } else {
       if (startDate && endDate) {
         const formattedStartDate = format(startDate, "yyyy-MM-dd");
         const formattedEndDate = format(endDate, "yyyy-MM-dd");
-        loadStaffs(formattedStartDate, formattedEndDate);
+        loadStaffReport(formattedStartDate, formattedEndDate);
         setIsFilterActive(true);
       } else {
         toast({
@@ -340,7 +341,7 @@ export default function StaffManagementPage() {
       });
 
       handleCloseAddForm();
-      loadStaffs();
+      loadStaffReport();
 
     } catch (error: any) {
       toast({
@@ -411,7 +412,7 @@ export default function StaffManagementPage() {
 
       setIsEditFormOpen(false);
       setEditingUser(null);
-      loadStaffs(); // Reload the list
+      loadStaffReport(); // Reload the list
 
     } catch (error: any) {
       toast({
@@ -427,7 +428,7 @@ export default function StaffManagementPage() {
   };
 
   useEffect(() => {
-    loadStaffs();
+    loadStaffReport();
     fetchAdminsAndTeamLeaders();
   }, []);
 
@@ -560,7 +561,7 @@ export default function StaffManagementPage() {
                           {user.created_date ? new Date(user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          <Link href={`/admin/leads/staff?id=${user.id}`}>
+                          <Link href={`/admin/leads/staff`}>
                             <Button variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-100 hover:text-green-700">
                                 <Eye className="h-4 w-4 mr-2" />
                                 <span className="hidden sm:inline">View</span>
@@ -935,3 +936,69 @@ export default function StaffManagementPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+// class AdminnStaffLeadsAPIView(APIView):
+//     """
+//     API endpoint for 'super_user_side_staff_leads' (Admin Side).
+//     GET: Fetches list of leads for an Admin based on status tags.
+//     ONLY ADMIN (is_admin=True) can access this.
+//     """
+    
+//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
+//     pagination_class = StandardResultsSetPagination
+
+//     def get(self, request, tag, format=None):
+//         paginator = self.pagination_class()
+        
+//         # 1. Get Admin Profile
+//         try:
+//             # 'self_user' field logged-in user se link hota hai
+//             admin_instance = Admin.objects.get(self_user=request.user)
+//         except Admin.DoesNotExist:
+//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 2. Get Team Leaders under this Admin
+//         team_leaders = Team_Leader.objects.filter(admin=admin_instance)
+
+//         # 3. Base Queryset: Filter leads belonging to these Team Leaders
+//         # (LeadUser model me 'team_leader' field hota hai)
+//         base_qs = LeadUser.objects.filter(team_leader__in=team_leaders).order_by('-updated_date')
+
+//         # 4. Apply Tag Filters (Based on your function)
+//         if tag == 'total_lead':
+//             leads = base_qs.filter(status="Leads")
+//         elif tag == 'visits':
+//             leads = base_qs.filter(status="Visit")
+//         elif tag == 'interested':
+//             leads = base_qs.filter(status="Intrested") # Note spelling 'Intrested' from models
+//         elif tag == 'not_interested':
+//             leads = base_qs.filter(status="Not Interested")
+//         elif tag == 'other_location':
+//             leads = base_qs.filter(status="Other Location")
+//         elif tag == 'not_picked':
+//             leads = base_qs.filter(status="Not Picked")
+//         elif tag == 'Total_earning': # Adding this just in case, though not in your 'if' block context list
+//             leads = base_qs.filter(status="Total_earning")
+//         else:
+//             return Response(
+//                 {"error": f"Invalid tag: {tag}. Valid tags are: total_lead, visits, interested, not_interested, other_location, not_picked, Total_earning"},
+//                 status=status.HTTP_400_BAD_REQUEST
+//             )
+
+//         # 5. Paginate and Serialize
+//         page = paginator.paginate_queryset(leads, request, view=self)
+        
+//         if page is not None:
+//             serializer = ApiLeadUserSerializer(page, many=True)
+//             return paginator.get_paginated_response(serializer.data)
+
+//         serializer = ApiLeadUserSerializer(leads, many=True)
+//         return Response(serializer.data)
+

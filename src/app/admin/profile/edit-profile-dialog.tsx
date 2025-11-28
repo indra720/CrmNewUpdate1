@@ -249,7 +249,7 @@ export function EditProfileDialog({ isOpen, onClose, profile, onProfileUpdate }:
                         Update your personal information below.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleEditSubmit} className="flex-1 px-6 pb-6 overflow-y-auto">
+                <form onSubmit={handleEditSubmit} className="flex-1 px-6 pb-6 overflow-y-auto scrollbar-hide">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                         <InputField
                             id="edit-admin-id"

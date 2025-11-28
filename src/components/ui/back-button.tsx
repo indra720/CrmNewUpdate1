@@ -12,11 +12,11 @@ import {
 } from '@/components/ui/tooltip';
 
 const sourceToPathMap: { [key: string]: string } = {
-  'admin': '/superadmin/users/admin',
-  'team-leader': '/superadmin/users/team-leader',
-  'staff': '/superadmin/users/staff',
-  'associate': '/superadmin/users/associates',
-  'freelancer': '/superadmin/users/freelancer',
+  'admin': '/admin/users/admin',
+  'team-leader': '/admin/users/team-leader',
+  'staff': '/admin/users/staff',
+  'associate': '/admin/users/associates',
+  'freelancer': '/admin/users/freelancer',
 };
 
 export function BackButton() {

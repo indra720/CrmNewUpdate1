@@ -18,6 +18,7 @@ import { SIDENAV_ITEMS } from '@/lib/constants';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Button } from '../ui/button';
+import { useEffect, useState } from 'react';
 
 
 const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) => {

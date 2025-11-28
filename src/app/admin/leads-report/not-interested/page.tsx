@@ -28,8 +28,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { updateAdminLeadStatus } from '@/lib/api';
+import { addAdminLead, updateAdminLeadStatus } from '@/lib/api'; // Added addAdminLead
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { BackButton } from '@/components/ui/back-button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,6 +63,15 @@ function NotInterestedLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddLeadFormOpen, setIsAddLeadFormOpen] = useState(false); // New state
+  const [newLead, setNewLead] = useState({ // New state
+    name: '',
+    status: '',
+    email: '',
+    mobile: '',
+    description: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state
   const router = useRouter();
   const { toast } = useToast();
 
@@ -119,6 +139,55 @@ function NotInterestedLeadsPage() {
     }
   };
 
+  const handleAddLeadClick = () => { // New handler
+    setNewLead({ name: '', status: '', email: '', mobile: '', description: '' });
+    setIsAddLeadFormOpen(true);
+  };
+
+  const handleNewLeadChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { // New handler
+    const { name, value } = e.target;
+    setNewLead(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNewLeadStatusChange = (value: string) => { // New handler
+    setNewLead(prev => ({ ...prev, status: value }));
+  };
+
+  const handleAddLeadSubmit = async (e: React.FormEvent) => { // New handler
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    if (!newLead.name || !newLead.mobile) {
+      toast({
+        title: "Validation Error",
+        description: "Name and Mobile are required.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await addAdminLead(newLead);
+      toast({
+        title: "Success",
+        description: "Lead added successfully!",
+        className: "bg-green-500 text-white",
+      });
+      setIsAddLeadFormOpen(false);
+      setNewLead({ name: '', status: '', email: '', mobile: '', description: '' }); // Reset form
+      fetchdata(); // Refresh lead list
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to add lead.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   const columns: ColumnDef<Lead>[] = [
     {
@@ -179,6 +248,9 @@ function NotInterestedLeadsPage() {
           <MessageSquare className="h-6 w-6 text-green-500" />
         </a>
       ),
+      meta: {
+        className: 'hidden md:table-cell',
+      },
     },
     {
       accessorKey: 'status',
@@ -194,24 +266,26 @@ function NotInterestedLeadsPage() {
         );
       },
       cell: ({ row }) => (
-        <Select
-          value={row.original.status}
-          onValueChange={(newStatus) => handleStatusChange(row.original.id, newStatus)}
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {LEAD_STATUS_OPTIONS.map((statusOption) => (
-              <SelectItem key={statusOption} value={statusOption}>
-                {statusOption}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center justify-center">
+          <Select
+            value={row.original.status}
+            onValueChange={(newStatus) => handleStatusChange(row.original.id, newStatus)}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {LEAD_STATUS_OPTIONS.map((statusOption) => (
+                <SelectItem key={statusOption} value={statusOption}>
+                  {statusOption}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       ),
       meta: {
-        className: 'hidden sm:table-cell',
+        className: 'hidden md:table-cell',
       },
     },
     {
@@ -223,7 +297,7 @@ function NotInterestedLeadsPage() {
         </Button>
       ),
       meta: {
-        className: 'hidden sm:table-cell',
+        className: 'hidden md:table-cell',
       },
     },
   ];
@@ -266,6 +340,10 @@ function NotInterestedLeadsPage() {
                   className="pl-10"
                 />
               </div>
+              <Button onClick={handleAddLeadClick} className="ml-4">
+                <Plus className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Add Lead</span>
+              </Button>
             </div>
 
             <div className="w-full rounded-md border overflow-x-hidden md:overflow-x-auto">
@@ -275,7 +353,7 @@ function NotInterestedLeadsPage() {
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {
                         return (
-                          <TableHead key={header.id} className={`text-center px-1 ${header.column.columnDef.meta?.className || ''}`}>
+                          <TableHead key={header.id} className={`text-center p-2 md:p-4 ${header.column.columnDef.meta?.className || ''}`}>
                             {header.isPlaceholder
                               ? null
                               : flexRender(
@@ -306,49 +384,46 @@ function NotInterestedLeadsPage() {
                       <React.Fragment key={row.id}>
                         <TableRow data-state={row.getIsSelected() && 'selected'}>
                           {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id} className={`text-center px-1 ${cell.column.columnDef.meta?.className || ''}`}>
+                            <TableCell key={cell.id} className={`text-center p-2 md:p-4 ${cell.column.columnDef.meta?.className || ''}`}>
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </TableCell>
                           ))}
                         </TableRow>
                         {expandedRowId === row.original.id && (
-                          <TableRow className="sm:hidden">
+                          <TableRow className="md:hidden">
                             <TableCell colSpan={table.getAllColumns().length} className="p-0">
-                              <div className="p-4">
-                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                  <div className="p-4 flex items-center gap-4 border-b border-gray-200">
-                                    <Avatar>
-                                      <AvatarImage src={`https://avatar.vercel.sh/${row.original.name}.png`} alt={row.original.name} />
-                                      <AvatarFallback>{row.original.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <div className="text-lg font-bold">{row.original.name}</div>
-                                      <div className="text-sm text-gray-500">{row.original.status}</div>
-                                    </div>
-                                  </div>
-                                  <div className="p-4 grid grid-cols-1 gap-4">
-                                    <div className="flex items-center">
-                                      <Phone className="h-4 w-4 mr-3 text-gray-500" />
-                                      <span className="text-sm">{row.original.call}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <MessageSquare className="h-4 w-4 mr-3 text-gray-500" />
-                                      <a 
-                                        href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`} 
-                                        target="_blank" 
-                                        rel="noreferrer" 
-                                        className="text-sm"
-                                      >
-                                        Whatsapp
+                              <div className="p-4 bg-gray-50 dark:bg-gray-800">
+                                <div className="p-5 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
+                                  <div className="text-lg font-bold mb-4">{row.original.name}</div>
+                                  <div className="grid grid-cols-1 gap-4 text-sm">
+                                    <div className="flex items-center gap-2 border p-2 rounded-md">
+                                      <a href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-green-600 dark:text-green-500">
+                                        <MessageSquare className="h-5 w-5" />
+                                        <span>Whatsapp</span>
                                       </a>
                                     </div>
-                                    <div className="flex items-center">
-                                      <Tag className="h-4 w-4 mr-3 text-gray-500" />
-                                      <span className="text-sm">Status: {row.original.status}</span>
+                                    <div className="flex items-center border p-2 rounded-md">
+                                      <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/lead-history?leadId=${row.original.id}`)} className="flex flex-row items-center justify-center gap-1 text-gray-600 dark:text-gray-400">
+                                        <History className="h-5 w-5" />
+                                        <span>History</span>
+                                      </Button>
                                     </div>
-                                    <div className="flex items-center">
-                                      <Calendar className="h-4 w-4 mr-3 text-gray-500" />
-                                      <span className="text-sm">{new Date(row.original.created_date).toLocaleDateString('en-GB').replace(/\//g, '-')} time {new Date(row.original.created_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                                    <div>
+                                      <Select
+                                        value={row.original.status}
+                                        onValueChange={(newStatus) => handleStatusChange(row.original.id, newStatus)}
+                                      >
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue placeholder="Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {LEAD_STATUS_OPTIONS.map((statusOption) => (
+                                            <SelectItem key={statusOption} value={statusOption}>
+                                              {statusOption}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
                                     </div>
                                   </div>
                                 </div>
@@ -400,6 +475,90 @@ function NotInterestedLeadsPage() {
           </CardContent>
         </Card>
       </div>
+      <Dialog open={isAddLeadFormOpen} onOpenChange={setIsAddLeadFormOpen}>
+        <DialogContent className="sm:max-w-[425px] w-[calc(100vw-2rem)] max-h-[80vh] overflow-y-auto hide-scrollbar">
+          <DialogHeader>
+            <DialogTitle>Add New Lead</DialogTitle>
+            <DialogDescription>
+              Fill in the details for the new lead.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddLeadSubmit} className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="name">
+                Name
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={newLead.name}
+                onChange={handleNewLeadChange}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email">
+                Email
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={newLead.email}
+                onChange={handleNewLeadChange}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="mobile">
+                Mobile
+              </Label>
+              <Input
+                id="mobile"
+                name="mobile"
+                type="tel"
+                value={newLead.mobile}
+                onChange={handleNewLeadChange}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="status">
+                Status
+              </Label>
+              <Select
+                name="status"
+                value={newLead.status}
+                onValueChange={handleNewLeadStatusChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_STATUS_OPTIONS.map((statusOption) => (
+                    <SelectItem key={statusOption} value={statusOption}>
+                      {statusOption}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="description">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={newLead.description}
+                onChange={handleNewLeadChange}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit">Add Lead</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

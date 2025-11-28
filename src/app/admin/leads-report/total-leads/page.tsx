@@ -20,7 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { addAdminLead, fetchAdminTotalLeads } from '@/lib/api';
+import { addAdminLead, fetchAdminTotalLeads, updateAdminLeadStatus } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -72,6 +72,7 @@ function TotalLeadsPage() {
     'Visit',
     'Not Picked',
     'Other Location',
+    'Lost',
   ];
 
   const fetchData = async () => { // Extracted fetchData to be callable
@@ -143,6 +144,31 @@ function TotalLeadsPage() {
     }
   };
 
+  const handleStatusChange = async (leadId: number, newStatus: string) => {
+    const originalLeads = [...leads]; // Store original leads for potential rollback
+    try {
+      // Optimistically update the UI
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+      await updateAdminLeadStatus(leadId, newStatus);
+      toast({
+        title: 'Success',
+        description: `Lead status updated to ${newStatus}.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to update lead status: ${err.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+      // Revert UI on error (optional, but good for UX)
+      setLeads(originalLeads);
+    }
+  };
+
   const columns: ColumnDef<Lead>[] = [
     {
       id: 'sn_expander',
@@ -202,6 +228,9 @@ function TotalLeadsPage() {
           <MessageSquare className="h-6 w-6 text-green-500" />
         </a>
       ),
+      meta: {
+        className: 'hidden md:table-cell',
+      },
     },
     {
       accessorKey: 'status',
@@ -216,9 +245,27 @@ function TotalLeadsPage() {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="capitalize">{row.getValue('status')}</div>,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Select
+            value={row.original.status}
+            onValueChange={(newStatus) => handleStatusChange(row.original.id, newStatus)}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {LEAD_STATUS_OPTIONS.map((statusOption) => (
+                <SelectItem key={statusOption} value={statusOption}>
+                  {statusOption}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ),
       meta: {
-        className: 'hidden sm:table-cell',
+        className: 'hidden md:table-cell',
       },
     },
     {
@@ -230,7 +277,7 @@ function TotalLeadsPage() {
         </Button>
       ),
       meta: {
-        className: 'hidden sm:table-cell',
+        className: 'hidden md:table-cell',
       },
     },
   ];
@@ -279,14 +326,14 @@ function TotalLeadsPage() {
               </Button>
             </div>
 
-            <div className="w-full rounded-md border overflow-y-auto scrollbar-hide md:max-h-[500px]">
+            <div className="w-full rounded-md border overflow-x-hidden md:overflow-x-auto">
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {
                         return (
-                          <TableHead key={header.id} className={`text-center px-1 ${header.column.columnDef.meta?.className || ''}`}>
+                          <TableHead key={header.id} className={`text-center p-2 md:p-4 ${header.column.columnDef.meta?.className || ''}`}>
                             {header.isPlaceholder
                               ? null
                               : flexRender(
@@ -317,53 +364,46 @@ function TotalLeadsPage() {
                       <React.Fragment key={row.id}>
                         <TableRow data-state={row.getIsSelected() && 'selected'}>
                           {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id} className={`text-center px-1 ${cell.column.columnDef.meta?.className || ''}`}>
+                            <TableCell key={cell.id} className={`text-center p-2 md:p-4 ${cell.column.columnDef.meta?.className || ''}`}>
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </TableCell>
                           ))}
                         </TableRow>
                         {expandedRowId === row.original.id && (
-                          <TableRow className="sm:hidden">
+                          <TableRow className="md:hidden">
                             <TableCell colSpan={table.getAllColumns().length} className="p-0">
-                              <div className="p-4">
-                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                  <div className="p-4 flex items-center gap-4 border-b border-gray-200">
-                                    <Avatar>
-                                      <AvatarImage src={`https://avatar.vercel.sh/${row.original.name}.png`} alt={row.original.name} />
-                                      <AvatarFallback>{row.original.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <div className="text-lg font-bold">{row.original.name}</div>
-                                      <div className="text-sm text-gray-500">{row.original.status}</div>
-                                    </div>
-                                  </div>
-                                  <div className="p-4 grid grid-cols-1 gap-4">
-                                    <div className="flex items-center">
-                                      <Phone className="h-4 w-4 mr-3 text-gray-500" />
-                                      <span className="text-sm">{row.original.call}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <MessageSquare className="h-4 w-4 mr-3 text-gray-500" />
-                                      <a
-                                        href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-sm"
-                                      >
-                                        Whatsapp
+                              <div className="p-4 bg-gray-50 dark:bg-gray-800">
+                                <div className="p-5 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
+                                  <div className="text-lg font-bold mb-4">{row.original.name}</div>
+                                  <div className="grid grid-cols-1 gap-4 text-sm">
+                                    <div className="flex items-center gap-2 border p-2 rounded-md">
+                                      <a href={`https://wa.me/${row.original.call}?text=${encodeURIComponent('Hello ' + row.original.name)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-green-600 dark:text-green-500">
+                                        <MessageSquare className="h-5 w-5" />
+                                        <span>Whatsapp</span>
                                       </a>
                                     </div>
-                                    <div className="flex items-center">
-                                      <Tag className="h-4 w-4 mr-3 text-gray-500" />
-                                      <span className="text-sm">Status: {row.original.status}</span>
+                                    <div className="flex items-center border p-2 rounded-md">
+                                      <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/lead-history?leadId=${row.original.id}`)} className="flex flex-row items-center justify-center gap-1 text-gray-600 dark:text-gray-400">
+                                        <History className="h-5 w-5" />
+                                        <span>History</span>
+                                      </Button>
                                     </div>
-                                    <div className="flex items-center">
-                                      <Calendar className="h-4 w-4 mr-3 text-gray-500" />
-                                      <span className="text-sm">
-                                        {new Date(row.original.updated_date || row.original.created_date).toLocaleDateString('en-GB').replace(/\//g, '-')} 
-                                        {' '}time{' '}
-                                        {new Date(row.original.updated_date || row.original.created_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                                      </span>
+                                    <div>
+                                      <Select
+                                        value={row.original.status}
+                                        onValueChange={(newStatus) => handleStatusChange(row.original.id, newStatus)}
+                                      >
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue placeholder="Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {LEAD_STATUS_OPTIONS.map((statusOption) => (
+                                            <SelectItem key={statusOption} value={statusOption}>
+                                              {statusOption}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
                                     </div>
                                   </div>
                                 </div>
@@ -509,32 +549,94 @@ export default TotalLeadsPage;
 
 
 
-// class AdminTotalLeadsAPIView(APIView):
+// class AdminLeadHistoryAPIView(APIView):
 //     """
-//     API endpoint for 'total_leads_admin' function.
-//     GET: Fetches leads with status='Leads' created directly by the Admin (user=request.user).
-//     ONLY ADMIN (is_admin=True) can access this.
+//     API endpoint for 'LeadHistory' function (Admin Dashboard).
+//     GET: Fetches history of a specific lead.
+//     ONLY ADMIN (is_admin=True) can access this for their teams.
 //     """
-    
 //     permission_classes = [IsAuthenticated, IsCustomAdminUser]
 //     pagination_class = StandardResultsSetPagination
 
-//     def get(self, request, format=None):
-//         paginator = self.pagination_class()
-        
-//         # Logic from your view: LeadUser.objects.filter(status="Leads", user=request.user)
-//         # Yeh wo leads hain jo Admin ne khud banaye hain ya uske naam par hain
-//         leads_qs = LeadUser.objects.filter(
-//             status="Leads", 
-//             user=request.user
-//         ).order_by('-updated_date') # Default ordering
+//     def get(self, request, id, format=None):
+//         # 1. Verify Admin
+//         try:
+//             admin_profile = Admin.objects.get(self_user=request.user)
+//         except Admin.DoesNotExist:
+//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
-//         # Paginate & Serialize
-//         page = paginator.paginate_queryset(leads_qs, request, view=self)
+//         # 2. Verify Lead Access
+//         # Check karo ki lead is Admin ke kisi Team Leader (aur uske Staff) ki hai ya nahi
+//         try:
+//             lead = LeadUser.objects.get(id=id)
+//             is_authorized = False
+            
+//             # Case A: Lead is assigned to a Staff -> Staff ke TL -> TL ka Admin
+//             if lead.assigned_to and lead.assigned_to.team_leader and lead.assigned_to.team_leader.admin == admin_profile:
+//                 is_authorized = True
+                
+//             # Case B: Lead is assigned directly to a Team Leader -> TL ka Admin
+//             elif lead.team_leader and lead.team_leader.admin == admin_profile:
+//                 is_authorized = True
+                
+//             if not is_authorized:
+//                 return Response({"error": "Permission denied. This lead does not belong to your network."}, status=status.HTTP_403_FORBIDDEN)
+
+//         except LeadUser.DoesNotExist:
+//             return Response({"error": "Lead not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 3. Get History
+//         history_qs = Leads_history.objects.filter(lead_id=id).order_by('-updated_date')
+
+//         # 4. Paginate & Serialize
+//         paginator = self.pagination_class()
+//         page = paginator.paginate_queryset(history_qs, request, view=self)
         
 //         if page is not None:
-//             serializer = ApiLeadUserSerializer(page, many=True)
+//             serializer = LeadsHistorySerializer(page, many=True)
 //             return paginator.get_paginated_response(serializer.data)
 
-//         serializer = ApiLeadUserSerializer(leads_qs, many=True)
-//         return Response(serializer.data, status=status.HTTP_200_OK)
+//         serializer = LeadsHistorySerializer(history_qs, many=True)
+//         return Response(serializer.data)
+    
+
+
+
+
+
+
+// api.ts:1686 
+//  GET http://127.0.0.1:8000/accounts/api/admin/lead-history/17/ 403 (Forbidden)
+// fetchAdminDashboardLeadHistoryById	@	api.ts:1686
+// getLeadHistory	@	page.tsx:53
+// LeadHistoryPage.useEffect	@	page.tsx:68
+// "use client"		
+// Function.all	@	VM2691 <anonymous>:1
+// Function.all	@	VM2691 <anonymous>:1
+// Function.all	@	VM2691 <anonymous>:1
+
+// installHook.js:1 Failed to fetch Admin Lead History for Lead ID 17: Error: HTTP error! status: 403
+//     at fetchAdminDashboardLeadHistoryById (api.ts:1696:13)
+//     at async getLeadHistory (page.tsx:53:26)
+// overrideMethod	@	installHook.js:1
+// fetchAdminDashboardLeadHistoryById	@	api.ts:1703
+// await in fetchAdminDashboardLeadHistoryById		
+// getLeadHistory	@	page.tsx:53
+// LeadHistoryPage.useEffect	@	page.tsx:68
+// "use client"		
+// Function.all	@	VM2691 <anonymous>:1
+// Function.all	@	VM2691 <anonymous>:1
+// Function.all	@	VM2691 <anonymous>:1
+// installHook.js:1 Failed to fetch lead history: Error: Failed to fetch Admin Lead History: HTTP error! status: 403
+//     at fetchAdminDashboardLeadHistoryById (api.ts:1707:11)
+//     at async getLeadHistory (page.tsx:53:26)
+// overrideMethod	@	installHook.js:1
+// getLeadHistory	@	page.tsx:56
+// await in getLeadHistory		
+// LeadHistoryPage.useEffect	@	page.tsx:68
+// "use client"		
+// Function.all	@	VM2691 <anonymous>:1
+// Function.all	@	VM2691 <anonymous>:1
+// Function.all	@	VM2691 <anonymous>:1
+﻿
+

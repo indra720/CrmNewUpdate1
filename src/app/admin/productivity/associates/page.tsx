@@ -207,7 +207,7 @@ const ProductivityAssociatesPage = () => {
             <div className="space-y-2">
               <Label>Filter</Label>
               <Button
-                className="w-full bg-orange-500 text-black flex items-center gap-2"
+                className="w-full bg-orange-400 text-white flex items-center gap-2"
                 onClick={handleFilterToggle}
               >
                 {isFiltered ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}

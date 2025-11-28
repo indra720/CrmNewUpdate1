@@ -324,3 +324,64 @@ export default function EarnCalendarPage() {
     </div>
   );
 }
+
+
+
+
+// class StaffProductivityCalendarAPIView(APIView):
+//     def get(self, request, staff_id, year=None, month=None):
+//         year = int(request.GET.get('year', datetime.now().year))
+//         month = int(request.GET.get('month', datetime.now().month))
+
+//         if request.user.is_superuser or request.user.is_team_leader or request.user.is_admin:
+//             staff = Staff.objects.get(id=staff_id)
+//         else:
+//             staff = Staff.objects.get(user__id=staff_id)
+
+//         days_in_month = monthrange(year, month)[1]
+//         salary_arg = staff.salary if staff.salary else 0
+//         daily_salary = round(float(salary_arg) / days_in_month)
+
+//         leads_data = LeadUser.objects.filter(
+//             assigned_to=staff,
+//             updated_date__year=year,
+//             updated_date__month=month,
+//             status='Intrested'
+//         ).values('updated_date__day').annotate(count=Count('id'))
+
+//         productivity_data = {}
+//         total_salary = 0
+
+//         for lead in leads_data:
+//             day = lead['updated_date__day']
+//             leads_count = lead['count']
+//             daily_earned_salary = daily_salary if leads_count >= 10 else round((daily_salary / 10) * leads_count, 2)
+//             productivity_data[day] = {'leads': leads_count, 'salary': daily_earned_salary}
+//             total_salary += daily_earned_salary
+
+//         calendar_data = monthcalendar(year, month)
+//         weekdays = list(day_name)
+//         structured_calendar_data = []
+
+//         for week in calendar_data:
+//             for i, day in enumerate(week):
+//                 if day != 0:
+//                     structured_calendar_data.append({'day': day, 'day_name': weekdays[i]})
+
+//         months_list = [(i, calendar.month_name[i]) for i in range(1, 13)]
+
+//         response_data = {
+//             'staff': StaffProfileSerializer(staff).data,
+//             'year': year,
+//             'month': month,
+//             'productivity_data': [{'day': day, 'day_name': weekdays[(day - 1) % 7], 'leads': data['leads'], 'salary': data['salary']}
+//                                   for day, data in productivity_data.items()],
+//             'structured_calendar_data': structured_calendar_data,
+//             'days_in_month': days_in_month,
+//             'total_salary': round(total_salary, 2),
+//             'monthly_salary': salary_arg,
+//             'months_list': months_list,
+//         }
+
+//         return Response(response_data)
+    

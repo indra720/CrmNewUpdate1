@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   ColumnDef,
   flexRender,
@@ -20,12 +21,15 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { fetchTeamLeaderAllLeadsByTag } from '@/lib/api';
+import { fetchAdminStaffLeadsKpiCountByTag, fetchAdminnStaffLeadsKpiCountByTag } from '@/lib/api';
 import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
 
 function NotPickedLeadsPage() {
+  const searchParams = useSearchParams();
+  const source = searchParams.get('source');
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -37,8 +41,16 @@ function NotPickedLeadsPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const data = await fetchTeamLeaderAllLeadsByTag('total_not_picked_tag');
-        setLeads(data.results || []);
+        setError(null);
+        let data;
+        const tag = 'not_picked';
+
+        if (source === 'staff') {
+          data = await fetchAdminnStaffLeadsKpiCountByTag(tag);
+        } else {
+          data = await fetchAdminStaffLeadsKpiCountByTag(tag);
+        }
+        setLeads(data.results || data || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -46,7 +58,7 @@ function NotPickedLeadsPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [source]);
 
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
@@ -328,5 +340,12 @@ function NotPickedLeadsPage() {
   );
 }
 
-export default NotPickedLeadsPage;
+const NotPickedLeadsPageWrapper = () => (
+    <Suspense fallback={<div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>}>
+        <NotPickedLeadsPage />
+    </Suspense>
+);
 
+export default NotPickedLeadsPageWrapper;

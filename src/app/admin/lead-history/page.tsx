@@ -39,6 +39,7 @@ export default function LeadHistoryPage() {
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
   const [data, setData] = useState<LeadHistory[]>([])
   const [loading, setLoading] = useState(true)
+  const [historyError, setHistoryError] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const leadId = searchParams.get('leadId')
   const router = useRouter()
@@ -47,18 +48,21 @@ export default function LeadHistoryPage() {
     async function getLeadHistory() {
       if (leadId) {
         setLoading(true);
+        setHistoryError(null); // Reset error on new fetch
         try {
           const result = await fetchAdminDashboardLeadHistoryById(leadId);
-          setData(result.results || []);
-        } catch (err) {
+          setData(result || []);
+        } catch (err: any) { // Type err as any for message property
           console.error("Failed to fetch lead history:", err);
           setData([]);
+          setHistoryError(err.message || 'Failed to fetch lead history.');
         } finally {
           setLoading(false);
         }
       } else {
         setLoading(false);
         setData([]);
+        setHistoryError('No lead ID provided.'); // Set error if no leadId
       }
     }
     getLeadHistory();
@@ -164,6 +168,14 @@ export default function LeadHistoryPage() {
     return (
       <div className="flex justify-center items-center h-32">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (historyError) {
+    return (
+      <div className="flex justify-center items-center h-32 text-red-500">
+        <p>Error: {historyError}</p>
       </div>
     )
   }

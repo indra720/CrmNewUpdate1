@@ -79,19 +79,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { fetchAdminTeamLeaders, fetchAdminStaffLeadsKpiCountByTag } from '@/lib/api';
+import { fetchAdminTeamLeaders } from '@/lib/api';
 import { DatePicker } from "@/components/ui/date-picker";
 
 
 const kpiData = [
-  { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/admin/reports/total-leads" },
-  { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/admin/reports/visit" },
-  { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/admin/reports/interested" },
-  { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested" },
-  { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location" },
-  { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked" },
-  // { title: "Lost", valueKey: "total_lost_leads", icon: XCircle, color: "text-gray-500", link: "/admin/reports/lost" }, // Removed as backend does not support 'lost' tag
-  { title: "Total Earning", valueKey: "total_earning", icon: DollarSign, color: "text-yellow-500", link: "/admin/reports/total-earning" },
+  { title: "Total Leads", valueKey: "total_leads", icon: Users, color: "text-rose-500", link: "/admin/reports/total-leads?source=team-leader" },
+  { title: "Total Visit", valueKey: "total_visits_leads", icon: Eye, color: "text-green-500", link: "/admin/reports/visit?source=team-leader" },
+  { title: "Interested", valueKey: "total_interested_leads", icon: Check, color: "text-teal-500", link: "/admin/reports/interested?source=team-leader" },
+  { title: "Not Interested", valueKey: "total_not_interested_leads", icon: XCircle, color: "text-red-500", link: "/admin/reports/not-interested?source=team-leader" },
+  { title: "Other Location", valueKey: "total_other_location_leads", icon: MapPin, color: "text-orange-500", link: "/admin/reports/other-location?source=team-leader" },
+  { title: "Not Picked", valueKey: "total_not_picked_leads", icon: Phone, color: "text-slate-500", link: "/admin/reports/not-picked?source=team-leader" },
+
 ];
 
 
@@ -163,7 +162,6 @@ export default function TeamLeaderManagementPage() {
     total_not_picked_leads: 0,
     total_lost_leads: 0,
     total_visits_leads: 0,
-    total_earning: 0
   });
   const [search, setSearch] = useState('');
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -217,34 +215,9 @@ export default function TeamLeaderManagementPage() {
   const loadTeamLeaders = async (start?: string, end?: string) => {
     setIsLoading(true);
     try {
-      const teamLeadersData = await fetchAdminTeamLeaders(start, end);
-      setUsers(teamLeadersData.team_leaders_list);
-
-      const newKpiCounts: { [key: string]: number } = {};
-      const kpiPromises = kpiData.map(async (card) => {
-        let tag = card.valueKey;
-        // Adjust tag for backend mapping if necessary
-        if (card.valueKey === 'total_leads') tag = 'total_lead';
-        else if (card.valueKey === 'total_visits_leads') tag = 'visits';
-        else if (card.valueKey === 'total_interested_leads') tag = 'interested'; // Corrected to 'interested'
-        else if (card.valueKey === 'total_not_interested_leads') tag = 'not_interested';
-        else if (card.valueKey === 'total_other_location_leads') tag = 'other_location';
-        else if (card.valueKey === 'total_not_picked_leads') tag = 'not_picked';
-        // Removed 'lost' tag mapping as the card is removed.
-        else if (card.valueKey === 'total_earning') tag = 'Total_earning'; // Match backend else block tag
-
-        try {
-          const count = await fetchAdminStaffLeadsKpiCountByTag(tag, start, end);
-          newKpiCounts[card.valueKey] = count;
-        } catch (kpiError) {
-          console.error(`Failed to fetch KPI for ${card.title}:`, kpiError);
-          newKpiCounts[card.valueKey] = 0; // Default to 0 on error
-        }
-      });
-
-      await Promise.all(kpiPromises);
-      setKpiCounts(newKpiCounts);
-
+      const reportData = await fetchAdminTeamLeaders(start, end);
+      setUsers(reportData.team_leaders_list || []);
+      setKpiCounts(reportData.counts || {});
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -817,66 +790,56 @@ export default function TeamLeaderManagementPage() {
 
 
 
-// class AdminnStaffLeadsAPIView(APIView):
+
+// class AdminStaffLeadsAPIView(APIView):
 //     """
-//     API endpoint for 'super_user_side_staff_leads' (Admin Side).
-//     GET: Fetches list of leads for an Admin based on status tags.
-//     ONLY ADMIN (is_admin=True) can access this.
+//     API endpoint SIRF ADMIN ke liye, jo 'tag' ke hisaab se leads filter karta hai.
 //     """
-    
-//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
+//     # Permission check: Sirf logged-in Admin (is_admin=True) hi access kar sakta hai
+//     permission_classes = [IsAuthenticated, IsCustomAdminUser] 
 //     pagination_class = StandardResultsSetPagination
 
 //     def get(self, request, tag, format=None):
 //         paginator = self.pagination_class()
+//         user = request.user
         
-//         # 1. Get Admin Profile
-//         try:
-//             # 'self_user' field logged-in user se link hota hai
-//             admin_instance = Admin.objects.get(self_user=request.user)
-//         except Admin.DoesNotExist:
-//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
+//         # Admin ko sirf apne team leaders ke leads milte hain
+//         # Admin profile ko 'user' (AbstractUser) se dhoondo
+//         admin_instance = Admin.objects.filter(user=user).last() 
+//         if not admin_instance:
+//             # Aapke purane code me self_user tha, lekin naye me 'user' hona chahiye
+//             # Hum dono check kar lete hain
+//             admin_instance = Admin.objects.filter(self_user=user).last()
+//             if not admin_instance:
+//                  return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+//         teamleader_instance = Team_Leader.objects.filter(admin=admin_instance)
+//         base_queryset = LeadUser.objects.filter(team_leader__in=teamleader_instance)
 
-//         # 2. Get Team Leaders under this Admin
-//         team_leaders = Team_Leader.objects.filter(admin=admin_instance)
+//         status_map = {
+//             'total_lead': 'Leads',
+//             'visits': 'Visit',
+//             'interested': 'Intrested',
+//             'not_interested': 'Not Interested',
+//             'other_location': 'Other Location',
+//             'not_picked': 'Not Picked'
+            
+//         }
 
-//         # 3. Base Queryset: Filter leads belonging to these Team Leaders
-//         # (LeadUser model me 'team_leader' field hota hai)
-//         base_qs = LeadUser.objects.filter(team_leader__in=team_leaders).order_by('-updated_date')
-
-//         # 4. Apply Tag Filters (Based on your function)
-//         if tag == 'total_lead':
-//             leads = base_qs.filter(status="Leads")
-//         elif tag == 'visits':
-//             leads = base_qs.filter(status="Visit")
-//         elif tag == 'interested':
-//             leads = base_qs.filter(status="Intrested") # Note spelling 'Intrested' from models
-//         elif tag == 'not_interested':
-//             leads = base_qs.filter(status="Not Interested")
-//         elif tag == 'other_location':
-//             leads = base_qs.filter(status="Other Location")
-//         elif tag == 'not_picked':
-//             leads = base_qs.filter(status="Not Picked")
-//         elif tag == 'Total_earning': # Adding this just in case, though not in your 'if' block context list
-//             leads = base_qs.filter(status="Total_earning")
+//         if tag in status_map:
+//             queryset = base_queryset.filter(status=status_map[tag])
 //         else:
 //             return Response(
-//                 {"error": f"Invalid tag: {tag}. Valid tags are: total_lead, visits, interested, not_interested, other_location, not_picked, Total_earning"},
+//                 {"error": f"Invalid tag: {tag}. Valid tags are: {list(status_map.keys())}"},
 //                 status=status.HTTP_400_BAD_REQUEST
 //             )
 
-//         # 5. Paginate and Serialize
-//         page = paginator.paginate_queryset(leads, request, view=self)
+//         queryset = queryset.order_by('-updated_date')
         
+//         page = paginator.paginate_queryset(queryset, request, view=self)
 //         if page is not None:
 //             serializer = ApiLeadUserSerializer(page, many=True)
 //             return paginator.get_paginated_response(serializer.data)
 
-//         serializer = ApiLeadUserSerializer(leads, many=True)
+//         serializer = ApiLeadUserSerializer(queryset, many=True)
 //         return Response(serializer.data)
-
-
-
-
-
-    

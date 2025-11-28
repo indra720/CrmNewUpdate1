@@ -11,6 +11,7 @@ import { EditProfileDialog } from "./edit-profile-dialog";
 
 // Define the structure of the profile data
 interface ProfileData {
+  admin_id: string;
   name: string;
   email: string;
   mobile: string;
@@ -47,7 +48,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/accounts/api/admin/profile/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/profile/`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -167,3 +168,83 @@ const InfoField = ({ icon, label, value }: { icon: React.ReactNode, label: strin
         </div>
     </div>
 );
+
+
+
+// {
+//     "id": 2,
+//     "user": {
+//         "id": 13,
+//         "email": "gaurav720@gmail.com",
+//         "name": "Gaurav Verma",
+//         "mobile": "5676554334",
+//         "profile_image": null,
+//         "is_admin": true,
+//         "is_team_leader": false,
+//         "is_staff_new": false,
+//         "created_date": "2025-11-26T11:53:52.249590Z",
+//         "user_active": true
+//     },
+//     "admin_id": "fc73087d-00db-42a3-aed4-89f8456934fb",
+//     "name": "Gaurav Verma",
+//     "email": "gaurav720@gmail.com",
+//     "mobile": "5676554334",
+//     "address": "Jaipur,rajasthan",
+//     "city": "Jaipur",
+//     "pincode": "345677",
+//     "state": "Rajasthan",
+//     "dob": "2000-07-26",
+//     "pancard": "ABCDE7978FHG",
+//     "aadharCard": "789098762343",
+//     "account_number": "34567890897",
+//     "upi_id": "gaurav@123",
+//     "bank_name": "sbi",
+//     "ifsc_code": "SBIN005467",
+//     "created_date": "2025-11-26T11:53:53.638533Z"
+// }
+
+
+// class AdminProfileViewAPIView(APIView):
+//     """
+//     API endpoint for 'admin_view_profile' (Admin Dashboard).
+//     GET: Fetches logged-in Admin's profile.
+//     PATCH: Updates logged-in Admin's profile.
+//     ONLY ADMIN (is_admin=True) can access this.
+//     """
+//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
+//     parser_classes = [MultiPartParser, FormParser]
+
+//     def get_admin_object(self, request):
+//         try:
+//             # Using email as per your view logic, but self_user is safer if linked correctly
+//             return Admin.objects.get(email=request.user.email)
+//         except Admin.DoesNotExist:
+//             return None
+
+//     def get(self, request, format=None):
+//         admin_instance = self.get_admin_object(request)
+//         if not admin_instance:
+//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+//         serializer = AdminProfileSerializer(admin_instance)
+//         return Response(serializer.data, status=status.HTTP_200_OK)
+
+//     def patch(self, request, format=None):
+//         admin_instance = self.get_admin_object(request)
+//         if not admin_instance:
+//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # Use existing update serializer which handles User + Admin model update
+//         serializer = AdminUpdateSerializer(instance=admin_instance, data=request.data, partial=True)
+        
+//         if serializer.is_valid():
+//             updated_instance = serializer.save()
+//             return Response({
+//                 "message": "Profile updated successfully",
+//                 "data": AdminProfileSerializer(updated_instance).data
+//             }, status=status.HTTP_200_OK)
+        
+//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+//     def post(self, request, format=None):
+//         return self.patch(request, format)

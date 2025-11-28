@@ -45,54 +45,99 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Phone, MessageSquare, PlusCircle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { updateAdminLeadStatus } from '@/lib/api'; // Added import
 
 const LeadsPage = () => {
   const [leads, setLeads] = useState<any[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<any>(null);
-  const [status, setStatus] = useState('');
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const { toast } = useToast();
 
+  const fetchLeads = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("Authentication token not found.");
+      }
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/leads/admin/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setLeads(data.leads || []); // Assuming the API returns leads in a 'leads' array
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch leads.');
+      toast({
+        title: 'Error',
+        description: `Failed to fetch leads: ${err.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Mock data, replace with actual API call
-    setLeads([
-      { id: 1, name: 'Ravi Sharma', call: '9876543210', status: 'Interested', message: 'Follow up next week.' },
-      { id: 2, name: 'Priya Verma', call: '9876543222', status: 'Not Interested', message: 'Budget issues.' },
-      { id: 3, name: 'Amit Gupta', call: '9876543233', status: 'New', message: '' },
-      { id: 4, name: 'Sunita Singh', call: '9876543244', status: 'Visit', message: 'Scheduled a visit for Friday.' },
-      { id: 5, name: 'Rajesh Kumar', call: '9876543255', status: 'Lost', message: 'Went with a competitor.' },
-    ]);
+    fetchLeads();
   }, []);
 
   useEffect(() => {
-    setFilteredLeads(
-      leads.filter((lead) =>
-        lead.name.toLowerCase().includes(search.toLowerCase())
-      )
-    );
+    if (leads.length > 0) {
+      setFilteredLeads(
+        leads.filter((lead) =>
+          lead.name.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredLeads([]);
+    }
   }, [search, leads]);
 
-  const handleSaveStatus = () => {
-    if (!selectedLead) return;
-    const updatedLeads = leads.map((l) =>
-      l.id === selectedLead.id ? { ...l, status, message } : l
-    );
-    setLeads(updatedLeads);
-    setModalOpen(false);
-    toast({
-      title: 'Status Updated',
-      description: `Lead status for ${selectedLead.name} has been updated to ${status}.`,
-    });
-  };
+  const handleStatusChange = async (leadId: number, newStatus: string) => {
+    const originalLeads = [...leads]; // Store original leads for potential rollback
+    try {
+      // Optimistically update the UI
+      setLeads(prevLeads =>
+        prevLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+      setFilteredLeads(prevFilteredLeads =>
+        prevFilteredLeads.map(lead =>
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
 
-  const openModal = (lead: any, newStatus?: string) => {
-    setSelectedLead(lead);
-    setStatus(newStatus || lead.status);
-    setMessage(lead.message);
-    setModalOpen(true);
+      await updateAdminLeadStatus(leadId, newStatus);
+      toast({
+        title: 'Success',
+        description: `Lead status updated to ${newStatus}.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to update lead status: ${err.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+      // Revert UI on error
+      setLeads(originalLeads);
+      setFilteredLeads(originalLeads.filter((lead) =>
+        lead.name.toLowerCase().includes(search.toLowerCase())
+      ));
+    }
   };
   
   const statusOptions = ["New", "Interested", "Not Interested", "Other Location", "Not Picked", "Lost", "Visit"];
@@ -150,91 +195,74 @@ const LeadsPage = () => {
             <Table className="min-w-[700px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-1">S.N.</TableHead>
-                  <TableHead className="px-1">Name</TableHead>
-                  <TableHead className="text-center px-1">Call</TableHead>
-                  <TableHead className="text-center px-1">WhatsApp</TableHead>
-                  <TableHead className="text-center px-1">Change Status</TableHead>
+                  <TableHead className="p-2 md:p-4">S.N.</TableHead>
+                  <TableHead className="p-2 md:p-4">Name</TableHead>
+                  <TableHead className="text-center p-2 md:p-4">Call</TableHead>
+                  <TableHead className="text-center p-2 md:p-4">WhatsApp</TableHead>
+                  <TableHead className="text-center p-2 md:p-4">Change Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLeads.map((lead, index) => (
-                  <TableRow key={lead.id}>
-                    <TableCell className="px-1">{index + 1}</TableCell>
-                    <TableCell className="font-medium px-1">{lead.name}</TableCell>
-                    <TableCell className="text-center px-1">
-                      <Button variant="ghost" size="icon" asChild>
-                        <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
-                      </Button>
-                    </TableCell>
-                    <TableCell className="text-center px-1">
-                       <Button variant="ghost" size="icon" asChild>
-                        <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
-                          <MessageSquare className="h-5 w-5 text-green-500" />
-                        </a>
-                      </Button>
-                    </TableCell>
-                    <TableCell className="text-center px-1">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">{lead.status} ▼</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                           {statusOptions.map(option => (
-                            <DropdownMenuItem key={option} onSelect={() => openModal(lead, option)}>
-                              {option}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center text-red-500">
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredLeads.length > 0 ? (
+                  filteredLeads.map((lead, index) => (
+                    <TableRow key={lead.id}>
+                      <TableCell className="p-2 md:p-4">{index + 1}</TableCell>
+                      <TableCell className="font-medium p-2 md:p-4">{lead.name}</TableCell>
+                      <TableCell className="text-center p-2 md:p-4">
+                        <Button variant="ghost" size="icon" asChild>
+                          <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-center p-2 md:p-4">
+                         <Button variant="ghost" size="icon" asChild>
+                          <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
+                            <MessageSquare className="h-5 w-5 text-green-500" />
+                          </a>
+                        </Button>
+                      </TableCell>
+                      <TableCell className="flex items-center justify-center p-2 md:p-4">
+                        <Select
+                          value={lead.status}
+                          onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Select Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map(option => (
+                              <SelectItem key={option} value={option}>{option}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No leads found.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update Lead Status</DialogTitle>
-            <DialogDescription>
-              Update status and add notes for {selectedLead?.name}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select a status" />
-                </SelectTrigger>
-                <SelectContent>
-                   {statusOptions.map(option => (
-                      <SelectItem key={option} value={option}>{option}</SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Message / Notes</Label>
-              <Textarea
-                id="message"
-                placeholder="Add a message or notes for this lead..."
-                rows={4}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveStatus}>Update Status</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 };

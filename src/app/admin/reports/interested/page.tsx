@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   ColumnDef,
   flexRender,
@@ -20,12 +21,15 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { fetchTeamLeaderAllLeadsByTag } from '@/lib/api';
+import { fetchAdminStaffLeadsKpiCountByTag, fetchAdminnStaffLeadsKpiCountByTag } from '@/lib/api';
 import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
 
 function InterestedLeadsPage() {
+  const searchParams = useSearchParams();
+  const source = searchParams.get('source');
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -38,8 +42,18 @@ function InterestedLeadsPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchTeamLeaderAllLeadsByTag('interested');
-        setLeads(data.results || []);
+        let data;
+        const tag = 'interested';
+
+        if (source === 'staff') {
+          // API with double 'n' in adminn
+          data = await fetchAdminnStaffLeadsKpiCountByTag(tag);
+        } else {
+          // Default to the team-leader source or if no source is specified
+          // API with single 'n' in admin
+          data = await fetchAdminStaffLeadsKpiCountByTag(tag);
+        }
+        setLeads(data.results || data || []);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -47,7 +61,7 @@ function InterestedLeadsPage() {
       }
     }
     fetchLeads();
-  }, []);
+  }, [source]);
 
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
@@ -331,4 +345,12 @@ function InterestedLeadsPage() {
   );
 }
 
-export default InterestedLeadsPage;
+const InterestedLeadsPageWrapper = () => (
+  <Suspense fallback={<div className="flex justify-center items-center h-screen">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>}>
+    <InterestedLeadsPage />
+  </Suspense>
+);
+
+export default InterestedLeadsPageWrapper;

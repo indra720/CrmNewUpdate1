@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar, Plus, Minus } from 'lucide-react';
+import { Calendar, Plus, Minus, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchAdminTeamLeaders } from '../../../../lib/api';
 
@@ -30,7 +30,7 @@ const ProductivityStaffPage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
-
+  const [isFiltered, setIsFiltered] = useState(false);
   const [teamLeaderData, setTeamLeaderData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -210,7 +210,10 @@ const ProductivityStaffPage = () => {
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
             </div>
-            <Button onClick={handleFilter} className="mt-8 w-full sm:w-auto">Filter</Button>
+            <Button onClick={handleFilter} className="mt-8 w-full sm:w-auto">
+              {isFiltered ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+                {isFiltered ? 'Clear Filter' : 'Apply Filter'}
+            </Button>
           </div>
         </CardContent>
       </Card>

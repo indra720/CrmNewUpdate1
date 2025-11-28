@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Card,
@@ -36,12 +36,12 @@ import { Label } from '@/components/ui/label';
 import { Search, Phone, MessageSquare, Calendar, FileDown, Plus, Minus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { fetchTeamLeaderStaffLeadsReportByTag } from '@/lib/api';
+import { fetchAdminStaffLeadsByTag } from '@/lib/api';
 
-export default function StaffLeadsPage() {
+export default function StaffLeadsPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const staffId = searchParams.get('id');
+    const staffId = params.id;
+    console.log('Staff ID from params:', staffId);
 
     const [leads, setLeads] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -62,7 +62,7 @@ export default function StaffLeadsPage() {
         try {
           setLoading(true);
           setError(null);
-          const data = await fetchTeamLeaderStaffLeadsReportByTag(Number(staffId), selectedTag);
+          const data = await fetchAdminStaffLeadsByTag(Number(staffId), selectedTag);
           setLeads(data.results || data || []);
         } catch (err: any) {
           setError(err.message || 'Failed to fetch leads.');
@@ -161,6 +161,7 @@ export default function StaffLeadsPage() {
                   <TableHead className="hidden md:table-cell">Status</TableHead>
                   <TableHead className="text-center">Call</TableHead>
                   <TableHead className="text-center hidden lg:table-cell">Whatsapp</TableHead>
+                  <TableHead className="hidden lg:table-cell">Date & Time</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -194,11 +195,11 @@ export default function StaffLeadsPage() {
                             onClick={() => toggleRow(lead.id)}
                             className="lg:hidden"
                             >
-                            {expandedRowId === lead.id ? <Minus className="h-4 w-4text-green-400 " /> : <Plus className="h-4 w-4 text-green-400" />}
+                            {expandedRowId === lead.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                             </Button>
                         </TableCell>
                         <TableCell className="font-medium">{lead.name}</TableCell>
-                        <TableCell className="hidden md:table-cell">{lead.assigned_to?.name || 'N/A'}</TableCell>
+                        <TableCell className="hidden md:table-cell">{lead.staff}</TableCell>
                         <TableCell className="hidden md:table-cell">
                             <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
                         </TableCell>
@@ -233,7 +234,7 @@ export default function StaffLeadsPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
                                     <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
                                         <span className="text-sm font-medium">Staff:</span>
-                                        <span className="text-sm">{lead.assigned_to?.name || 'N/A'}</span>
+                                        <span className="text-sm">{lead.staff || 'N/A'}</span>
                                     </div>
                                     <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
                                         <span className="text-sm font-medium">Status:</span>
@@ -307,55 +308,3 @@ export default function StaffLeadsPage() {
 }
 
 
-
-
-
-
-
-
-// class TeamLeaderStaffLeadsListAPIView(APIView):
-//     """
-//     API endpoint for 'teamleader_perticular_leads'.
-//     GET: Fetches list of leads for a specific staff, filtered by status (tag).
-//     ONLY TEAM LEADER can access this.
-//     """
-//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
-//     pagination_class = StandardResultsSetPagination
-
-//     def get(self, request, staff_id, tag, format=None):
-//         # 1. Verify Team Leader & Staff Relationship
-//         try:
-//             tl_instance = Team_Leader.objects.get(user=request.user)
-//             staff = Staff.objects.get(id=staff_id)
-//             if staff.team_leader != tl_instance:
-//                  return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-//         except (Team_Leader.DoesNotExist, Staff.DoesNotExist):
-//             return Response({"error": "Invalid Team Leader or Staff."}, status=status.HTTP_404_NOT_FOUND)
-
-//         # 2. Filter Leads based on Tag
-//         base_qs = LeadUser.objects.filter(assigned_to=staff)
-        
-//         if tag == "Intrested":
-//             leads = base_qs.filter(status='Intrested')
-//         elif tag == "Not Interested":
-//             leads = base_qs.filter(status='Not Interested')
-//         elif tag == "Other Location":
-//             leads = base_qs.filter(status='Other Location')
-//         elif tag == "Lost":
-//             leads = base_qs.filter(status='Lost')
-//         elif tag == "Visit":
-//             leads = base_qs.filter(status='Visit')
-//         else:
-//             leads = base_qs # All leads if tag doesn't match
-
-//         leads = leads.order_by('-updated_date')
-
-//         # 3. Paginate & Serialize
-//         paginator = self.pagination_class()
-//         page = paginator.paginate_queryset(leads, request, view=self)
-//         if page is not None:
-//             serializer = ApiLeadUserSerializer(page, many=True)
-//             return paginator.get_paginated_response(serializer.data)
-
-//         serializer = ApiLeadUserSerializer(leads, many=True)
-//         return Response(serializer.data)

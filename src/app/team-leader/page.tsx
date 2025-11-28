@@ -535,48 +535,51 @@ export default function TeamLeaderDashboardPage() {
 
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-wrap sm:flex-row gap-4 items-center">
-            <div className="relative md:w-48 lg:w-64">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center"> {/* Use flex-col for small, flex-row for sm+ */}
+            <div className="flex flex-col sm:flex-row gap-4"> {/* Grouping for date inputs */}
+              <div className="relative">
+                <Label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">Start Date</Label>
+                <Calendar className="absolute left-3 top-[55%] -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="relative">
+                <Label htmlFor="endDate" className="text-sm font-medium text-muted-foreground">End Date</Label>
+                <Calendar className="absolute left-3 top-[55%] -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
-            <div className="relative  md:w-48 lg:w-64">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="pl-10"
-              />
+
+            <div className="flex gap-2"> {/* Grouping for filter and refresh buttons */}
+              <Button
+                onClick={handleFilter}
+                className="flex items-center" /* Always show icon and text */
+                disabled={loading}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                <span>{loading ? "Filtering..." : "Filter"}</span>
+              </Button>
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                className="flex items-center" /* Always show icon and text */
+                disabled={loading}
+              >
+                <RotateCw className="h-4 w-4 mr-2" />
+                <span>{loading ? "Refreshing..." : "Refresh"}</span>
+              </Button>
             </div>
-            <Button
-              onClick={handleFilter}
-              className=" md:w-auto flex-shrink-0"
-              disabled={loading}
-            >
-              <Filter className="h-4 w-4 mr-2 hidden md:inline" />
-              <span className="hidden md:inline">
-                {loading ? "Filtering..." : "Filter"}
-              </span>
-              <Filter className="h-4 w-4 md:hidden" />
-            </Button>
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              className=" md:w-auto flex-shrink-0"
-              disabled={loading}
-            >
-              <RotateCw className="h-4 w-4 mr-2 hidden md:inline" />
-              <span className="hidden md:inline">
-                {loading ? "Refreshing..." : "Refresh"}
-              </span>
-              <RotateCw className="h-4 w-4 md:hidden" />
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -613,15 +616,14 @@ export default function TeamLeaderDashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead></TableHead>
-                  <TableHead>S.N.</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email id</TableHead>
-                  <TableHead>Mobile No</TableHead>
-                  <TableHead>Created Date</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Leads</TableHead>
-                  <TableHead className="text-right">Edit</TableHead>
+                  <TableHead className="w-12">S.N.</TableHead> {/* Always visible as "S.N." */}
+                  <TableHead>Name</TableHead> {/* Always visible */}
+                  <TableHead className="hidden md:table-cell">Email id</TableHead> {/* Visible md and up */}
+                  <TableHead className="hidden md:table-cell">Mobile No</TableHead> {/* Visible md and up */}
+                  <TableHead className="hidden lg:table-cell">Created Date</TableHead> {/* Visible lg and up */}
+                  <TableHead className="hidden lg:table-cell">Duration</TableHead> {/* Visible lg and up */}
+                  <TableHead className="hidden lg:table-cell">Leads</TableHead> {/* Visible lg and up */}
+                  <TableHead className="text-right">Edit</TableHead> {/* Always visible */}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -658,28 +660,44 @@ export default function TeamLeaderDashboardPage() {
                           expandedRowId === staff.id ? "selected" : undefined
                         }
                       >
-                        <TableCell>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => toggleRow(staff.id)}
-                          >
-                            {expandedRowId === staff.id ? (
-                              <Minus className="h-4 w-4" />
-                            ) : (
-                              <Plus className="h-4 w-4" />
-                            )}
-                          </Button>
+                        {/* First Cell: S.N. (md/mobile = icon, lg = index) */}
+                        <TableCell className="w-12">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => toggleRow(staff.id)}
+                              className="lg:hidden" 
+                            >
+                              {expandedRowId === staff.id ? (
+                                <Minus className="h-4 w-4" />
+                              ) : (
+                                <Plus className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <span className="hidden lg:block">{index + 1}.</span> {/* Show S.N. number only on lg */}
+                          </div>
                         </TableCell>
-                        <TableCell>{index + 1}.</TableCell>
+
+                        {/* Name Cell: Always visible */}
                         <TableCell className="font-medium">
                           {staff.name}
                         </TableCell>
-                        <TableCell>{staff.email}</TableCell>
-                        <TableCell>{staff.mobile}</TableCell>
-                        <TableCell>{staff.createdDate}</TableCell>
-                        <TableCell>{staff.duration}</TableCell>
-                        <TableCell>
+
+                        {/* Email Cell: Visible md and up */}
+                        <TableCell className="hidden md:table-cell">{staff.email}</TableCell>
+
+                        {/* Mobile No Cell: Visible md and up */}
+                        <TableCell className="hidden md:table-cell">{staff.mobile}</TableCell>
+
+                        {/* Created Date Cell: Visible lg and up */}
+                        <TableCell className="hidden lg:table-cell">{staff.createdDate}</TableCell>
+
+                        {/* Duration Cell: Visible lg and up */}
+                        <TableCell className="hidden lg:table-cell">{staff.duration}</TableCell>
+
+                        {/* Leads Cell: Visible lg and up */}
+                        <TableCell className="hidden lg:table-cell">
                           <Link href={`/team-leader/leads/staff?id=${staff.id}`}>
                             <Button
                               variant="link"
@@ -691,6 +709,7 @@ export default function TeamLeaderDashboardPage() {
                           </Link>
                         </TableCell>
 
+                        {/* Edit Cell: Always visible */}
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
@@ -705,7 +724,7 @@ export default function TeamLeaderDashboardPage() {
                       </TableRow>
                       {expandedRowId === staff.id && (
                         <TableRow>
-                          <TableCell colSpan={10} className="p-0">
+                          <TableCell colSpan={9} className="p-0"> {/* Adjusted colSpan to 9 */}
                             <div className="p-4">
                               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                                 <div className="p-4 flex items-center gap-4 border-b border-gray-200">
@@ -716,6 +735,11 @@ export default function TeamLeaderDashboardPage() {
                                 </div>
                                 <div className="overflow-hidden">
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
+                                    {/* Add S.N. to expanded row here */}
+                                    <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                      <span className="text-sm font-medium">S.N.:</span>
+                                      <span className="text-sm">{index + 1}.</span>
+                                    </div>
                                     <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
                                       <span className="text-sm font-medium">Email:</span>
                                       <span className="text-sm">{staff.email || 'N/A'}</span>

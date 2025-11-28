@@ -414,6 +414,56 @@ export async function fetchTeamLeaders(): Promise<any[]> {
   }
 }
 
+// New function for Admin to fetch staff report data
+export async function fetchAdminStaffReport(
+  startDate?: string,
+  endDate?: string
+): Promise<any> {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  try {
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-report/`;
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    console.log(`Fetching Admin Staff Report:`, url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message ||
+          errorData.detail ||
+          "Failed to fetch admin staff report data."
+      );
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error(`Failed to fetch Admin Staff Report Data:`, error);
+    throw new Error(
+      `Failed to fetch Admin Staff Report Data: ${
+        error.message || "Unknown error"
+      }`
+    );
+  }
+}
+
 // New function for Team Leader to fetch their own staff list
 export async function fetchTeamLeaderStaffList(): Promise<any[]> {
   const token = localStorage.getItem("authToken");
@@ -1446,11 +1496,7 @@ export async function fetchAdminStaffLeadsKpiCountByTag(
     }
 
     const data = await response.json();
-    // Assuming the API returns a paginated response with a 'count' field for leads
-    // For 'Total_earning', we need to check if the backend actually provides a total sum.
-    // Based on the commented backend code, it returns a list of leads, not a sum for 'Total_earning' tag.
-    // So, for 'Total_earning', we might need a different approach or clarification from the backend.
-    // For now, we'll try to get the count of items.
+    
 
     // Special handling for 'total_earning' until backend clarifies
     if (tag === "total_earning") {
@@ -1477,6 +1523,68 @@ export async function fetchAdminStaffLeadsKpiCountByTag(
     );
   }
 }
+
+// New function for Admin to fetch staff leads Kpi counts by tag for /accounts/api/adminn/staff-leads/<str:tag>/
+export async function fetchAdminnStaffLeadsKpiCountByTag(
+  tag: string,
+  startDate?: string,
+  endDate?: string
+): Promise<number> {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  try {
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/adminn/staff-leads/${tag}/`;
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    console.log(`Fetching Admin (new) staff leads KPI count for tag ${tag}:`, url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+    
+    // Assuming the API returns a paginated response with a 'count' field for leads
+    // The backend code in comment returns a list of leads, not a sum.
+    // So, we'll try to get the count of items.
+    return data.count !== undefined
+      ? data.count
+      : data.results
+      ? data.results.length
+      : 0;
+  } catch (error: any) {
+    console.error(
+      `Failed to fetch Admin (new) staff leads KPI count for tag ${tag}:`,
+      error
+    );
+    throw new Error(
+      `Failed to fetch Admin (new) staff leads KPI count: ${
+        error.message || "Unknown error"
+      }`
+    );
+  }
+}
+
 
 // New function for Admin to fetch total leads
 export async function fetchAdminTotalLeads(): Promise<any> {
@@ -1636,12 +1744,12 @@ export async function updateAdminLeadStatus(
   if (followUpTime) requestBody.followTime = followUpTime;
 
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/update-lead/${leadId}/`;
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/change-lead-status/${leadId}/`;
     console.log(`Updating Admin Lead Status for Lead ID ${leadId}:`, url);
     console.log(`Request Body:`, requestBody);
 
     const response = await fetch(url, {
-      method: "PATCH", // Use PATCH for partial updates
+      method: "POST", // Changed to POST as per user's instruction
       headers: {
         "Content-Type": "application/json",
         Authorization: `Token ${token}`,
@@ -1679,7 +1787,7 @@ export async function fetchCurrentUserProfile(): Promise<{ name: string; email: 
   }
 
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/profile/`; // Assuming this endpoint exists
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/profile/`; // Assuming this endpoint exists
     console.log(`Fetching current user profile from:`, url);
 
     const response = await fetch(url, {
@@ -1703,104 +1811,3 @@ export async function fetchCurrentUserProfile(): Promise<{ name: string; email: 
 }
 
 
-// class AdminUpdateLeadAPIView(APIView):
-//     """
-//     API for Admin to update a lead's status (e.g., Leads -> Interested).
-//     PATCH: Updates status, message, follow-up info.
-//     ONLY ADMIN (is_admin=True) can access this.
-//     """
-    
-//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
-
-//     def patch(self, request, id, format=None):
-//         # 1. Verify Admin
-//         try:
-//             admin_profile = Admin.objects.get(self_user=request.user)
-//         except Admin.DoesNotExist:
-//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
-
-//         # 2. Verify Lead Access
-//         # Check karo ki lead is Admin ke network ki hai
-//         try:
-//             lead_user = LeadUser.objects.get(id=id)
-//             is_authorized = False
-            
-//             # Check via Staff -> TL -> Admin
-//             if lead_user.assigned_to and lead_user.assigned_to.team_leader and lead_user.assigned_to.team_leader.admin == admin_profile:
-//                 is_authorized = True
-//             # Check via Direct TL -> Admin
-//             elif lead_user.team_leader and lead_user.team_leader.admin == admin_profile:
-//                 is_authorized = True
-                
-//             if not is_authorized:
-//                  return Response({"error": "Permission denied. This lead is not under your administration."}, status=status.HTTP_403_FORBIDDEN)
-
-//         except LeadUser.DoesNotExist:
-//             return Response({"error": "Lead not found."}, status=status.HTTP_404_NOT_FOUND)
-
-//         current_status = lead_user.status
-
-//         # 3. Update Logic
-//         serializer = LeadUpdateSerializer(instance=lead_user, data=request.data, partial=True)
-        
-//         if serializer.is_valid():
-//             status_val = serializer.validated_data.get('status')
-//             message = serializer.validated_data.get('message', lead_user.message)
-            
-//             # --- Special Logic: Not Picked (Recycle Lead) ---
-//             if status_val == "Not Picked":
-//                 try:
-//                     Team_LeadData.objects.create(
-//                         user=lead_user.user,
-//                         name=lead_user.name,
-//                         call=lead_user.call,
-//                         status="Leads",
-//                         email=lead_user.email,
-//                         team_leader=lead_user.assigned_to.team_leader if lead_user.assigned_to else lead_user.team_leader
-//                     )
-//                     lead_user.delete() # Delete from current assignment
-//                     return Response({'message': 'Lead status changed to Not Picked (Recycled).'}, status=status.HTTP_200_OK)
-//                 except Exception as e:
-//                     return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-//             # --- Normal Update ---
-//             # Follow-up dates agar aayi hain to update karo
-//             if 'followDate' in request.data:
-//                 lead_user.follow_up_date = request.data['followDate']
-//             if 'followTime' in request.data:
-//                 lead_user.follow_up_time = request.data['followTime']
-                
-//             serializer.save() # Status aur Message save karo
-
-//             # 4. Create Logs (History & Activity)
-//             try:
-//                 Leads_history.objects.create(
-//                     leads=lead_user,
-//                     lead_id=id,
-//                     status=status_val,
-//                     name=lead_user.name,
-//                     message=message
-//                 )
-                
-//                 ip = get_client_ip(request)
-//                 user_type = get_user_type(request.user)
-//                 tagline = f"Lead status changed from {current_status} to {status_val} by Admin {admin_profile.name}"
-                
-//                 ActivityLog.objects.create(
-//                     admin=admin_profile,
-//                     description=tagline,
-//                     ip_address=ip,
-//                     email=request.user.email,
-//                     user_type=user_type,
-//                     activity_type=status_val,
-//                     name=request.user.name,
-//                 )
-//             except Exception:
-//                 pass 
-
-//             return Response({'message': 'Lead updated successfully', 'data': ApiLeadUserSerializer(lead_user).data}, status=status.HTTP_200_OK)
-        
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-//     def post(self, request, id, format=None):
-//         return self.patch(request, id, format)
