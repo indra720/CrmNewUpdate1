@@ -426,7 +426,7 @@ export async function fetchAdminStaffReport(
   }
 
   try {
-    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-report/`;
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-dashboard/`;
     const params = new URLSearchParams();
     if (startDate) params.append("start_date", startDate);
     if (endDate) params.append("end_date", endDate);
@@ -513,7 +513,7 @@ export async function fetchInterestedLeads(): Promise<Lead[]> {
 
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-leads/interested/`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/superuser/staff-leads/interested/`, // CORRECTED URL
       {
         method: "GET",
         headers: {
@@ -531,7 +531,7 @@ export async function fetchInterestedLeads(): Promise<Lead[]> {
     }
 
     const data = await response.json();
-    return data || []; // Assuming the API returns an array of leads directly
+    return data.results || []; // Adjusted for paginated response from backend snippet
   } catch (error: any) {
     console.error("Failed to fetch interested leads:", error);
     throw new Error(
@@ -621,6 +621,7 @@ export async function fetchLeadHistory(
     throw new Error(
       `Failed to fetch lead history: ${error.message || "Unknown error"}`
     );
+    
   }
 }
 
@@ -668,7 +669,9 @@ export async function fetchAdminLeadHistoryById(leadId: string): Promise<any> {
 
 export async function fetchLeadsForSuperuser(
   tag: string,
-  source: string | null
+  source: string | null,
+  startDate?: string,
+  endDate?: string
 ): Promise<any> {
   const token = localStorage.getItem("authToken");
 
@@ -706,7 +709,13 @@ export async function fetchLeadsForSuperuser(
   }
 
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`;
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`;
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
 
     console.log(`Fetching URL for source ${source}:`, url);
 
@@ -802,7 +811,7 @@ export async function fetchStaffLeadsReport(tag: string): Promise<any> {
     throw new Error("Authentication token not found.");
   }
 
-  try {
+  try {     
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/interested-leads/${tag}/`;
 
     console.log(`Fetching staff leads report for tag ${tag}:`, url);
@@ -1025,7 +1034,7 @@ export async function fetchAdminStaffLeadsByTag(
 }
 
 // New function for Team Leader to fetch their own customer data by tag
-export async function getTeamCustomersByTag(tag: string): Promise<any> {
+export async function getTeamCustomersByTag(tag: string, formattedStartDate: string | undefined, formattedEndDate: string | undefined): Promise<any> {
   const token = localStorage.getItem("authToken");
 
   if (!token) {
@@ -1033,7 +1042,15 @@ export async function getTeamCustomersByTag(tag: string): Promise<any> {
   }
 
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/teamcustomer/${tag}/`;
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/teamcustomer/${tag}/`;
+    
+    // NO DATE PARAMETERS HERE
+    // const params = new URLSearchParams();
+    // if (startDate) params.append("start_date", startDate);
+    // if (endDate) params.append("end_date", endDate);
+    // if (params.toString()) {
+    //   url += `?${params.toString()}`;
+    // }
 
     console.log(`Fetching Team Leader customers for tag ${tag}:`, url);
 
@@ -1065,6 +1082,67 @@ export async function getTeamCustomersByTag(tag: string): Promise<any> {
     );
   }
 }
+
+// New function for Superuser to fetch team customer leads by tag
+export async function getTeamCustomerLeads(
+  tag: string,
+  search?: string,
+  startDate?: string,
+  endDate?: string
+): Promise<any> {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  try {
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-customer/${tag}/`;
+    const params = new URLSearchParams();
+    if (search) {
+      params.append("search", search);
+    }
+    if (startDate) {
+      params.append("start_date", startDate);
+    }
+    if (endDate) {
+      params.append("end_date", endDate);
+    }
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    console.log(`Fetching Team Customer leads for tag ${tag}:`, url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error(
+      `Failed to fetch Team Customer leads for tag ${tag}:`,
+      error
+    );
+    throw new Error(
+      `Failed to fetch Team Customer leads: ${
+        error.message || "Unknown error"
+      }`
+    );
+  }
+}
+
 
 // New function for Team Leader to fetch their own visit leads data
 export async function fetchTeamLeaderVisitLeads(): Promise<any> {
@@ -1188,9 +1266,13 @@ export async function fetchTeamLeaderAllLeadsByTag(tag: string): Promise<any> {
 
 // New function to export Team Leader leads
 export async function exportTeamLeaderLeads(
-  tag: string,
-  startDate?: string,
-  endDate?: string
+  payload: {
+    status: string;
+    start_date?: string;
+    end_date?: string;
+    staff_id?: string; // Optional staff_id
+    all_interested?: string; // '1' or '0'
+  }
 ): Promise<void> {
   const token = localStorage.getItem("authToken");
 
@@ -1198,12 +1280,10 @@ export async function exportTeamLeaderLeads(
     throw new Error("Authentication token not found.");
   }
 
-  const body: { tag: string; start_date?: string; end_date?: string } = { tag };
-  if (startDate) body.start_date = startDate;
-  if (endDate) body.end_date = endDate;
-
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/export-dashboard-leads/`;
+    const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/export-leads/`; // Corrected URL
+    console.log("Attempting to export from URL:", url); 
+    console.log("Request body:", JSON.stringify(payload)); // Log the payload
 
     const response = await fetch(url, {
       method: "POST",
@@ -1211,7 +1291,7 @@ export async function exportTeamLeaderLeads(
         "Content-Type": "application/json",
         Authorization: `Token ${token}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -1233,7 +1313,7 @@ export async function exportTeamLeaderLeads(
     a.href = downloadUrl;
     // Extract filename from content-disposition header
     const contentDisposition = response.headers.get("content-disposition");
-    let filename = `${tag}_leads.xlsx`; // fallback filename
+    let filename = `${payload.status}_leads.xlsx`; // Use payload.status for filename
     if (contentDisposition) {
       const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
       if (filenameMatch && filenameMatch.length > 1) {
@@ -1246,12 +1326,13 @@ export async function exportTeamLeaderLeads(
     a.remove();
     window.URL.revokeObjectURL(downloadUrl);
   } catch (error: any) {
-    console.error(`Failed to export leads for tag ${tag}:`, error);
+    console.error(`Failed to export leads for status ${payload.status}:`, error);
     throw new Error(
       `Failed to export leads: ${error.message || "Unknown error"}`
     );
   }
 }
+
 
 // New function to fetch Admin Team Leader Report Data
 export async function fetchAdminTeamLeaderReportData(
@@ -1273,6 +1354,8 @@ export async function fetchAdminTeamLeaderReportData(
       url += `?${params.toString()}`;
     }
 
+    console.log(`Fetching Admin Team Leaders:`, url);
+
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -1284,19 +1367,15 @@ export async function fetchAdminTeamLeaderReportData(
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        errorData.message ||
-          errorData.detail ||
-          "Failed to fetch admin team leader report data."
+        errorData.message || `HTTP error! status: ${response.status}`
       );
     }
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Admin Team Leader Report Data:`, error);
+    console.error(`Failed to fetch Admin Team Leaders:`, error);
     throw new Error(
-      `Failed to fetch Admin Team Leader Report Data: ${
-        error.message || "Unknown error"
-      }`
+      `Failed to fetch Admin Team Leaders: ${error.message || "Unknown error"}`
     );
   }
 }
@@ -1810,4 +1889,7 @@ export async function fetchCurrentUserProfile(): Promise<{ name: string; email: 
   }
 }
 
+
+
+// New function to export Team Leader leads
 

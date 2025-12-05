@@ -20,14 +20,16 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar, Plus, Minus, Filter, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Minus, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 const ProductivityAssociatesPage = () => {
   const [teamLeaders, setTeamLeaders] = useState<any[]>([]);
   const [selectedTeamLeader, setSelectedTeamLeader] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isFiltered, setIsFiltered] = useState(false);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
@@ -58,11 +60,14 @@ const ProductivityAssociatesPage = () => {
       console.log('Team Leaders fetched successfully', teamLeadersList);
     } catch (error: any) {
       console.error('Error fetching team leaders:', error.message);
-      setError(error.message);
+      // Do not set main error state for admin fetching failure
     }
   };
 
-  const fetchAssociatesData = async () => {
+  const fetchAssociatesData = async (
+    filterStartDate?: Date | undefined,
+    filterEndDate?: Date | undefined
+  ) => {
     const token = localStorage.getItem('authToken');
     setLoading(true);
     setError(null);
@@ -72,10 +77,12 @@ const ProductivityAssociatesPage = () => {
       if (selectedTeamLeader && selectedTeamLeader !== 'all-team-leaders') {
         params.append('team_leader', selectedTeamLeader);
       }
-      if (isFiltered) {
-        if (startDate) params.append('start_date', startDate);
-        if (endDate) params.append('end_date', endDate);
-      }
+      const formattedStartDate = filterStartDate ? format(filterStartDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = filterEndDate ? format(filterEndDate, 'yyyy-MM-dd') : undefined;
+
+      if (formattedStartDate) params.append('start_date', formattedStartDate);
+      if (formattedEndDate) params.append('end_date', formattedEndDate);
+      
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
@@ -101,18 +108,9 @@ const ProductivityAssociatesPage = () => {
 
   useEffect(() => {
     fetchTeamLeaders();
-    fetchAssociatesData();
-  }, []);
+    fetchAssociatesData(startDate, endDate);
+  }, [selectedTeamLeader, startDate, endDate]);
 
-  useEffect(() => {
-    fetchAssociatesData();
-  }, [selectedTeamLeader, isFiltered]);
-
-  useEffect(() => {
-    if (isFiltered) {
-      fetchAssociatesData();
-    }
-  }, [startDate, endDate]);
 
   const handleTeamLeaderChange = (value: string) => {
     setSelectedTeamLeader(value);
@@ -120,8 +118,8 @@ const ProductivityAssociatesPage = () => {
 
   const handleFilterToggle = () => {
     if (isFiltered) {
-      setStartDate('');
-      setEndDate('');
+      setStartDate(undefined);
+      setEndDate(undefined);
     }
     setIsFiltered(!isFiltered);
   };
@@ -178,30 +176,12 @@ const ProductivityAssociatesPage = () => {
 
             <div className="space-y-2 lg:w-48">
               <Label htmlFor="start-date">Start Date</Label>
-              <div className="relative">
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
+              <DatePicker date={startDate} setDate={setStartDate} />
             </div>
 
             <div className="space-y-2 lg:w-48">
               <Label htmlFor="end-date">End Date</Label>
-              <div className="relative">
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
+              <DatePicker date={endDate} setDate={setEndDate} />
             </div>
 
             <div className="space-y-2">
@@ -278,53 +258,37 @@ const ProductivityAssociatesPage = () => {
                               </div>
                               <div className="overflow-hidden">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Total Calls:</span>
-                                    </div>
-                                    <span className="text-sm capitalize ml-auto md:ml-0">{row.total_calls}</span>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Total Calls:</span>
+                                    <span className="text-sm capitalize ml-auto">{row.total_calls}</span>
                                   </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Interested:</span>
-                                    </div>
-                                    <span className="text-sm ml-auto md:ml-0">{row.interested}</span>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Interested:</span>
+                                    <span className="text-sm ml-auto">{row.interested}</span>
                                   </div>
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Not Interested:</span>
-                                    </div>
-                                    <span className="text-sm ml-auto md:ml-0">{row.not_interested}</span>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Not Interested:</span>
+                                    <span className="text-sm ml-auto">{row.not_interested}</span>
                                   </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Other Location:</span>
-                                    </div>
-                                    <span className="text-sm ml-auto md:ml-0">{row.other_location}</span>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Other Location:</span>
+                                    <span className="text-sm ml-auto">{row.other_location}</span>
                                   </div>
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Lost:</span>
-                                    </div>
-                                    <span className="text-sm ml-auto md:ml-0">{row.lost}</span>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Lost:</span>
+                                    <span className="text-sm ml-auto">{row.lost}</span>
                                   </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Visit:</span>
-                                    </div>
-                                    <span className="text-sm ml-auto md:ml-0">{row.visit}</span>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Visit:</span>
+                                    <span className="text-sm ml-auto">{row.visit}</span>
                                   </div>
-                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Interested %:</span>
-                                    </div>
-                                    <span className="text-sm ml-auto md:ml-0">{row.interested_percentage}%</span>
+                                  <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Interested %:</span>
+                                    <span className="text-sm ml-auto">{row.interested_percentage}%</span>
                                   </div>
-                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
-                                    <div className="flex items-center">
-                                      <span className="text-sm font-medium">Visit %:</span>
-                                    </div>
-                                    <span className="text-sm ml-auto md:ml-0">{row.visit_percentage}%</span>
+                                  <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <span className="text-sm font-medium">Visit %:</span>
+                                    <span className="text-sm ml-auto">{row.visit_percentage}%</span>
                                   </div>
                                 </div>
                               </div>

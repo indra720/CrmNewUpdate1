@@ -20,15 +20,17 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar, Plus, Minus, X, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Minus, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchAdminTeamLeaders } from '../../../../lib/api';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 const ProductivityStaffPage = () => {
   const [teamLeaders, setTeamLeaders] = useState<any[]>([]);
   const [selectedTeamLeader, setSelectedTeamLeader] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [isFiltered, setIsFiltered] = useState(false);
   const [teamLeaderData, setTeamLeaderData] = useState<any>(null);
@@ -47,7 +49,7 @@ const ProductivityStaffPage = () => {
     }
   };
 
-  const fetchTeamLeaderData = async (filterTeamLeader?: string, filterStartDate?: string, filterEndDate?: string) => {
+  const fetchTeamLeaderData = async (filterTeamLeader?: string, filterStartDate?: Date | undefined, filterEndDate?: Date | undefined) => {
     const token = localStorage.getItem('authToken');
     setLoading(true);
     setError(null);
@@ -55,17 +57,17 @@ const ProductivityStaffPage = () => {
       const params = new URLSearchParams();
       // Use filter values if provided, otherwise use state values
       const currentSelectedTeamLeader = filterTeamLeader !== undefined ? filterTeamLeader : selectedTeamLeader;
-      const currentStartDate = filterStartDate !== undefined ? filterStartDate : startDate;
-      const currentEndDate = filterEndDate !== undefined ? filterEndDate : endDate;
+      const formattedStartDate = filterStartDate ? format(filterStartDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = filterEndDate ? format(filterEndDate, 'yyyy-MM-dd') : undefined;
 
       if (currentSelectedTeamLeader && currentSelectedTeamLeader !== 'all-team-leaders') {
         params.append('team_leader_id', currentSelectedTeamLeader);
       }
-      if (currentStartDate) {
-        params.append('start_date', currentStartDate);
+      if (formattedStartDate) {
+        params.append('start_date', formattedStartDate);
       }
-      if (currentEndDate) {
-        params.append('end_date', currentEndDate);
+      if (formattedEndDate) {
+        params.append('end_date', formattedEndDate);
       }
       const queryString = params.toString();
       const url = queryString
@@ -119,19 +121,26 @@ const ProductivityStaffPage = () => {
 
   useEffect(() => {
     // Initial fetch on component mount
-    fetchTeamLeaderData();
     fetchTeamLeadersList();
-  }, []); // Empty dependency array means this runs once on mount
+    fetchTeamLeaderData(selectedTeamLeader, startDate, endDate);
+  }, [selectedTeamLeader, startDate, endDate]); // Empty dependency array means this runs once on mount
 
   const handleFilter = () => {
     fetchTeamLeaderData(selectedTeamLeader, startDate, endDate);
+    setIsFiltered(true);
   };
 
   const handleTeamLeaderChange = (value: string) => {
     setSelectedTeamLeader(value);
   };
 
-
+  const handleClearFilter = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setSelectedTeamLeader(''); // Clear selected team leader
+    fetchTeamLeaderData('', undefined, undefined); // Fetch data without filters
+    setIsFiltered(false);
+  };
 
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
@@ -140,7 +149,7 @@ const ProductivityStaffPage = () => {
   if (loading) {
     return (
       <div className="text-center py-8 text-lg">
-        Loading team leader productivity data...
+        Loading staff productivity data...
       </div>
     );
   }
@@ -154,7 +163,7 @@ const ProductivityStaffPage = () => {
   if (!teamLeaderData) {
     return (
       <div className="text-center py-8 text-lg">
-        No team leader productivity data available.
+        No staff productivity data available.
       </div>
     );
   }
@@ -165,7 +174,7 @@ const ProductivityStaffPage = () => {
 
       <Card className="shadow-lg rounded-2xl">
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
             <div className="space-y-2">
               <Label htmlFor="team-leader-select">Team Leader</Label>
               <Select value={selectedTeamLeader} onValueChange={handleTeamLeaderChange}>
@@ -185,35 +194,30 @@ const ProductivityStaffPage = () => {
 
             <div className="space-y-2">
               <Label htmlFor="start-date">Start Date</Label>
-              <div className="relative">
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
+              <DatePicker date={startDate} setDate={setStartDate} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="end-date">End Date</Label>
-              <div className="relative">
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
+              <DatePicker date={endDate} setDate={setEndDate} />
             </div>
-            <Button onClick={handleFilter} className="mt-8 w-full sm:w-auto">
-              {isFiltered ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
-                {isFiltered ? 'Clear Filter' : 'Apply Filter'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                className="w-full flex items-center gap-2"
+                onClick={handleFilter}
+              >
+                <Filter className="h-4 w-4" />
+                Apply Filter
+              </Button>
+               <Button
+                variant="outline"
+                className="w-full flex items-center gap-2"
+                onClick={handleClearFilter}
+              >
+                <X className="h-4 w-4" />
+                Clear
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -241,21 +245,24 @@ const ProductivityStaffPage = () => {
                   <React.Fragment key={row.id}>
                     <TableRow data-state={expandedRowId === row.id && 'selected'}>
                       <TableCell>
-                        <div className="lg:hidden">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-green-600"
-                            onClick={() => toggleRow(row.id)}
-                          >
-                            {expandedRowId === row.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                        <div className="hidden lg:block">
-                          {i + 1}.
-                        </div>
+                        
+                          <div className="lg:hidden">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-green-600"
+                              onClick={() => toggleRow(row.id)}
+                            >
+                              {expandedRowId === row.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                          
+                          <div className="hidden lg:block">
+                            {i + 1}.
+                          </div>
+                        
                       </TableCell>
-                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="text-[13px] font-semibold md:font-medium">{row.name}</TableCell>
                       <TableCell className="hidden md:table-cell">{row.total_calls}</TableCell>
                       <TableCell className="hidden md:table-cell">{row.interested}</TableCell>
                       <TableCell className="hidden md:table-cell">{row.visit}</TableCell>
@@ -271,7 +278,9 @@ const ProductivityStaffPage = () => {
                           <div className="p-4">
                             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                               <div className="p-4 flex items-center gap-4 border-b border-gray-200">
-                                <div className="text-lg font-bold">{row.name}</div>
+                                <div className="flex items-center gap-4">
+                                  <div className="text-lg font-bold">{row.name}</div>
+                                </div>
                               </div>
                               <div className="overflow-hidden">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
@@ -327,17 +336,23 @@ const ProductivityStaffPage = () => {
               <TableFooter>
                 <TableRow className="bg-muted/50 font-semibold">
                   <TableCell colSpan={2}>Total</TableCell>
-                  <TableCell className="hidden md:table-cell">{teamLeaderData.total_all_calls}</TableCell>
-                  <TableCell className="hidden md:table-cell">{teamLeaderData.total_all_interested}</TableCell>
-                  <TableCell className="hidden md:table-cell">{teamLeaderData.total_all_visit}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{teamLeaderData.total_all_not_interested}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{teamLeaderData.total_all_other_location}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{teamLeaderData.total_all_lost}</TableCell>
+                  <TableCell className="hidden md:table-cell">{teamLeaderData.total_all_calls || 0}</TableCell>
+                  <TableCell className="hidden md:table-cell">{teamLeaderData.total_all_interested || 0}</TableCell>
+                  <TableCell className="hidden md:table-cell">{teamLeaderData.total_all_visit || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{teamLeaderData.total_all_not_interested || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{teamLeaderData.total_all_other_location || 0}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{teamLeaderData.total_all_lost || 0}</TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    {teamLeaderData.total_all_calls > 0 ? Math.round((teamLeaderData.total_all_interested / teamLeaderData.total_all_calls) * 100) : 0}%
+                    {teamLeaderData.total_all_calls > 0
+                      ? Math.round((teamLeaderData.total_all_interested / teamLeaderData.total_all_calls) * 100)
+                      : 0}
+                    %
                   </TableCell>
                   <TableCell className="text-right">
-                    {teamLeaderData.total_all_calls > 0 ? Math.round((teamLeaderData.total_all_visit / teamLeaderData.total_all_calls) * 100) : 0}%
+                    {teamLeaderData.total_all_calls > 0
+                      ? Math.round((teamLeaderData.total_all_visit / teamLeaderData.total_all_calls) * 100)
+                      : 0}
+                    %
                   </TableCell>
                 </TableRow>
               </TableFooter>
@@ -350,151 +365,3 @@ const ProductivityStaffPage = () => {
 };
 
 export default ProductivityStaffPage;
-
-
-
-
-// {
-//     "counts": {
-//         "total_leads": 0,
-//         "total_interested_leads": 0,
-//         "total_not_interested_leads": 0,
-//         "total_other_location_leads": 0,
-//         "total_not_picked_leads": 0,
-//         "total_lost_leads": 0,
-//         "total_visits_leads": 0
-//     },
-//     "team_leaders_list": [
-//         {
-//             "id": 2,
-//             "user": {
-//                 "id": 5,
-//                 "email": "indra720@gmail.com",
-//                 "name": "Indrajeet",
-//                 "mobile": "6789567899",
-//                 "profile_image": null,
-//                 "is_admin": false,
-//                 "is_team_leader": true,
-//                 "is_staff_new": false,
-//                 "created_date": "2025-11-18T13:00:05.394903Z",
-//                 "user_active": true
-//             },
-//             "admin": {
-//                 "id": 1,
-//                 "user": {
-//                     "id": 2,
-//                     "email": "badal720@gmail.com",
-//                     "name": "Badal Kumawat",
-//                     "mobile": "7878908765",
-//                     "profile_image": null,
-//                     "is_admin": true,
-//                     "is_team_leader": false,
-//                     "is_staff_new": false,
-//                     "created_date": "2025-11-18T10:47:09.811328Z",
-//                     "user_active": true
-//                 },
-//                 "admin_id": "09b3bd65-5003-4c6c-9e7b-91ce942573da",
-//                 "name": "Badal Kumawat",
-//                 "email": "badal720@gmail.com",
-//                 "mobile": "7878908765",
-//                 "address": "JAIUR",
-//                 "city": "jaipur",
-//                 "pincode": "678940",
-//                 "state": "Rajasthan",
-//                 "dob": "2004-07-18",
-//                 "pancard": "ABCDE1234F",
-//                 "aadharCard": "678956784567",
-//                 "account_number": "123345432167",
-//                 "upi_id": "badal@123",
-//                 "bank_name": "sbi",
-//                 "ifsc_code": "SBIN0035",
-//                 "salary": "45000",
-//                 "achived_slab": "1500",
-//                 "created_date": "2025-11-18T10:47:10.591722Z"
-//             },
-//             "team_leader_id": "0c03d164-9ca3-44ba-a3c7-d1cb550d85a1",
-//             "name": "Indrajeet",
-//             "email": "indra720@gmail.com",
-//             "mobile": "6789567899",
-//             "address": "JAIPUR",
-//             "city": "jaipur",
-//             "pincode": "302019",
-//             "state": "Rajasthan",
-//             "dob": null,
-//             "pancard": "ABCED7890F",
-//             "aadharCard": "456378308976",
-//             "account_number": "789067890",
-//             "upi_id": "indra@123",
-//             "bank_name": "SBI",
-//             "ifsc_code": "SBIN034560",
-//             "salary": "50000",
-//             "achived_slab": "1500"
-//         },
-//         {
-//             "id": 3,
-//             "user": {
-//                 "id": 8,
-//                 "email": "rohit720@gmail.com",
-//                 "name": "Rohit Mehra",
-//                 "mobile": "8907655432",
-//                 "profile_image": null,
-//                 "is_admin": false,
-//                 "is_team_leader": true,
-//                 "is_staff_new": false,
-//                 "created_date": "2025-11-23T09:09:48.977922Z",
-//                 "user_active": false
-//             },
-//             "admin": {
-//                 "id": 1,
-//                 "user": {
-//                     "id": 2,
-//                     "email": "badal720@gmail.com",
-//                     "name": "Badal Kumawat",
-//                     "mobile": "7878908765",
-//                     "profile_image": null,
-//                     "is_admin": true,
-//                     "is_team_leader": false,
-//                     "is_staff_new": false,
-//                     "created_date": "2025-11-18T10:47:09.811328Z",
-//                     "user_active": true
-//                 },
-//                 "admin_id": "09b3bd65-5003-4c6c-9e7b-91ce942573da",
-//                 "name": "Badal Kumawat",
-//                 "email": "badal720@gmail.com",
-//                 "mobile": "7878908765",
-//                 "address": "JAIUR",
-//                 "city": "jaipur",
-//                 "pincode": "678940",
-//                 "state": "Rajasthan",
-//                 "dob": "2004-07-18",
-//                 "pancard": "ABCDE1234F",
-//                 "aadharCard": "678956784567",
-//                 "account_number": "123345432167",
-//                 "upi_id": "badal@123",
-//                 "bank_name": "sbi",
-//                 "ifsc_code": "SBIN0035",
-//                 "salary": "45000",
-//                 "achived_slab": "1500",
-//                 "created_date": "2025-11-18T10:47:10.591722Z"
-//             },
-//             "team_leader_id": "f1084ca3-2023-4cd9-a075-d251477e9646",
-//             "name": "Rohit Mehra",
-//             "email": "rohit720@gmail.com",
-//             "mobile": "8907655432",
-//             "address": "ghgfhfdhg",
-//             "city": "Jaipur",
-//             "pincode": "456789",
-//             "state": "Rajasthan",
-//             "dob": "2000-10-23",
-//             "pancard": "ADBCE786F",
-//             "aadharCard": "234509874536",
-//             "account_number": "7896795644",
-//             "upi_id": "rohit@123",
-//             "bank_name": "sbi",
-//             "ifsc_code": "sbin0004rt45",
-//             "salary": "89907",
-//             "achived_slab": "0"
-//         }
-//     ],
-//     "setting": null
-// }

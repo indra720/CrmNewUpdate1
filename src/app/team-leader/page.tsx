@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -56,6 +57,7 @@ import {
   Plus,
   RotateCw,
 } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -201,8 +203,8 @@ const InputField = ({
 };
 
 export default function TeamLeaderDashboardPage() {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
@@ -266,12 +268,14 @@ export default function TeamLeaderDashboardPage() {
   }, []);
 
   const handleFilter = () => {
-    fetchData(startDate, endDate);
+    const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+    const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+    fetchData(formattedStartDate, formattedEndDate);
   };
 
   const handleRefresh = () => {
-    setStartDate("");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     fetchData();
   };
 
@@ -373,48 +377,48 @@ export default function TeamLeaderDashboardPage() {
       setIsSubmitting(false);
     }
   };
-  
-    const handleEditSubmit = async (e: React.FormEvent) => {
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser?.id) return;
 
     setIsSubmitting(true);
     try {
-        const data = new FormData();
-        // Append all form fields to FormData
-        for (const key in editingUser) {
-            if (editingUser[key] !== null && editingUser[key] !== undefined) {
-                data.append(key, editingUser[key]);
-            }
+      const data = new FormData();
+      // Append all form fields to FormData
+      for (const key in editingUser) {
+        if (editingUser[key] !== null && editingUser[key] !== undefined) {
+          data.append(key, editingUser[key]);
         }
+      }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff/edit/${editingUser.id}/`, {
-            method: 'PATCH',
-            credentials: 'include',
-            body: data,
-        });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff/edit/${editingUser.id}/`, {
+        method: 'PATCH',
+        credentials: 'include',
+        body: data,
+      });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'Failed to update staff.');
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update staff.');
+      }
 
-        toast({
-            title: "Staff Updated!",
-            description: `${editingUser.name} has been updated successfully.`,
-            className: 'bg-green-500 text-white'
-        });
-        setIsEditFormOpen(false);
-        setEditingUser(null);
-        fetchData(); // Refresh the list
+      toast({
+        title: "Staff Updated!",
+        description: `${editingUser.name} has been updated successfully.`,
+        className: 'bg-green-500 text-white'
+      });
+      setIsEditFormOpen(false);
+      setEditingUser(null);
+      fetchData(); // Refresh the list
     } catch (err: any) {
-        toast({
-            title: "Error",
-            description: err.message,
-            variant: "destructive",
-        });
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -422,7 +426,7 @@ export default function TeamLeaderDashboardPage() {
     const { name, value } = e.target;
     setEditingUser({ ...editingUser, [name]: value });
   };
-  
+
   const handleEditSelectChange = (name: string, value: string) => {
     setEditingUser({ ...editingUser, [name]: value });
   };
@@ -435,88 +439,88 @@ export default function TeamLeaderDashboardPage() {
 
   const kpiData = dashboardData?.counts
     ? [
-        {
-          title: "Total Staff",
-          value: dashboardData.counts.total_staff,
-          icon: Users,
-          color: "text-blue-500",
-          link: "/team-leader/productivity/staff",
-        },
-        {
-          title: "Login Staff",
-          value: dashboardData.counts.logged_in_count,
-          icon: LogIn,
-          color: "text-green-500",
-        },
-        {
-          title: "Log-out",
-          value: dashboardData.counts.logged_out_count,
-          icon: LogOut,
-          color: "text-red-500",
-        },
-        {
-          title: "Associate staff",
-          value: dashboardData.counts.associate_staff,
-          icon: UserCheck,
-          color: "text-purple-500",
-        },
-        {
-          title: "Total Upload Lead",
-          value: dashboardData.counts.total_upload_leads,
-          icon: FileUp,
-          color: "text-sky-500",
-          link: "/team-leader/upload-leads",
-        },
-        {
-          title: "Lost Leads",
-          value: dashboardData.counts.lost_leads,
-          icon: Percent,
-          color: "text-gray-500",
-          link: "/team-leader/reports/total-leads",
-        },
-        {
-          title: "Total Lead",
-          value: dashboardData.counts.total_leads,
-          icon: Users,
-          color: "text-rose-500",
-          link: "/team-leader/reports/total-leads",
-        },
-        {
-          title: "Total Visits",
-          value: dashboardData.counts.visits_leads,
-          icon: Eye,
-          color: "text-green-500",
-          link: "/team-leader/reports/visit",
-        },
-        {
-          title: "Interested",
-          value: dashboardData.counts.total_interested_leads,
-          icon: CheckCircle,
-          color: "text-teal-500",
-          link: "/team-leader/reports/interested",
-        },
-        {
-          title: "Not Interested",
-          value: dashboardData.counts.total_not_interested_leads,
-          icon: XCircle,
-          color: "text-red-500",
-          link: "/team-leader/reports/not-interested",
-        },
-        {
-          title: "Other Location",
-          value: dashboardData.counts.other_location_leads,
-          icon: MapPin,
-          color: "text-orange-500",
-          link: "/team-leader/reports/other-location",
-        },
-        {
-          title: "Not Picked",
-          value: dashboardData.counts.not_picked_leads,
-          icon: PhoneOff,
-          color: "text-slate-500",
-          link: "/team-leader/reports/not-picked",
-        },
-      ]
+      {
+        title: "Total Staff",
+        value: dashboardData.counts.total_staff,
+        icon: Users,
+        color: "text-blue-500",
+        link: "/team-leader/productivity/staff",
+      },
+      {
+        title: "Login Staff",
+        value: dashboardData.counts.logged_in_count,
+        icon: LogIn,
+        color: "text-green-500",
+      },
+      {
+        title: "Log-out",
+        value: dashboardData.counts.logged_out_count,
+        icon: LogOut,
+        color: "text-red-500",
+      },
+      {
+        title: "Associate staff",
+        value: dashboardData.counts.associate_staff,
+        icon: UserCheck,
+        color: "text-purple-500",
+      },
+      {
+        title: "Total Upload Lead",
+        value: dashboardData.counts.total_upload_leads,
+        icon: FileUp,
+        color: "text-sky-500",
+        link: "/team-leader/upload-leads",
+      },
+      {
+        title: "Lost Leads",
+        value: dashboardData.counts.lost_leads,
+        icon: Percent,
+        color: "text-gray-500",
+        link: "/team-leader/reports/total-leads",
+      },
+      {
+        title: "Total Lead",
+        value: dashboardData.counts.total_leads,
+        icon: Users,
+        color: "text-rose-500",
+        link: "/team-leader/reports/total-leads",
+      },
+      {
+        title: "Total Visits",
+        value: dashboardData.counts.visits_leads,
+        icon: Eye,
+        color: "text-green-500",
+        link: "/team-leader/reports/visit",
+      },
+      {
+        title: "Interested",
+        value: dashboardData.counts.total_interested_leads,
+        icon: CheckCircle,
+        color: "text-teal-500",
+        link: "/team-leader/reports/interested",
+      },
+      {
+        title: "Not Interested",
+        value: dashboardData.counts.total_not_interested_leads,
+        icon: XCircle,
+        color: "text-red-500",
+        link: "/team-leader/reports/not-interested",
+      },
+      {
+        title: "Other Location",
+        value: dashboardData.counts.other_location_leads,
+        icon: MapPin,
+        color: "text-orange-500",
+        link: "/team-leader/reports/other-location",
+      },
+      {
+        title: "Not Picked",
+        value: dashboardData.counts.not_picked_leads,
+        icon: PhoneOff,
+        color: "text-slate-500",
+        link: "/team-leader/reports/not-picked",
+      },
+    ]
     : Array(12).fill({});
 
   return (
@@ -526,54 +530,39 @@ export default function TeamLeaderDashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {loading || !dashboardData
           ? Array(12)
-              .fill(0)
-              .map((_, index) => (
-                <Skeleton key={index} className="h-24 w-full rounded-2xl" />
-              ))
+            .fill(0)
+            .map((_, index) => (
+              <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+            ))
           : kpiData.map((item) => <KpiCard key={item.title} {...item} />)}
       </div>
 
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center"> {/* Use flex-col for small, flex-row for sm+ */}
-            <div className="flex flex-col sm:flex-row gap-4"> {/* Grouping for date inputs */}
-              <div className="relative">
-                <Label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">Start Date</Label>
-                <Calendar className="absolute left-3 top-[55%] -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="relative">
-                <Label htmlFor="endDate" className="text-sm font-medium text-muted-foreground">End Date</Label>
-                <Calendar className="absolute left-3 top-[55%] -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:flex-row md:items-end gap-4 w-full"> {/* Main filter div, simplified */}
+            <div className="space-y-2 w-full flex-1"> {/* Start Date Picker Container */}
+              <Label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">Start Date</Label>
+              <DatePicker date={startDate} setDate={setStartDate} />
             </div>
-
-            <div className="flex gap-2"> {/* Grouping for filter and refresh buttons */}
+            <div className="space-y-2 w-full flex-1"> {/* End Date Picker Container */}
+              <Label htmlFor="endDate" className="text-sm font-medium text-muted-foreground">End Date</Label>
+              <DatePicker date={endDate} setDate={setEndDate} />
+            </div>
+            <div className="w-full flex-1 md:flex-none md:w-auto"> {/* Filter Button Container */}
               <Button
                 onClick={handleFilter}
-                className="flex items-center" /* Always show icon and text */
+                className="flex items-center w-full" /* Always show icon and text */
                 disabled={loading}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 <span>{loading ? "Filtering..." : "Filter"}</span>
               </Button>
+            </div>
+            <div className="w-full flex-1 md:flex-none md:w-auto"> {/* Refresh Button Container */}
               <Button
                 onClick={handleRefresh}
                 variant="outline"
-                className="flex items-center" /* Always show icon and text */
+                className="flex items-center w-full" /* Always show icon and text */
                 disabled={loading}
               >
                 <RotateCw className="h-4 w-4 mr-2" />
@@ -583,7 +572,6 @@ export default function TeamLeaderDashboardPage() {
           </div>
         </CardContent>
       </Card>
-
       <Card className="shadow-lg rounded-2xl">
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -667,7 +655,7 @@ export default function TeamLeaderDashboardPage() {
                               size="icon"
                               variant="ghost"
                               onClick={() => toggleRow(staff.id)}
-                              className="lg:hidden" 
+                              className="lg:hidden"
                             >
                               {expandedRowId === staff.id ? (
                                 <Minus className="h-4 w-4" />
@@ -756,7 +744,7 @@ export default function TeamLeaderDashboardPage() {
                                       <span className="text-sm font-medium">Duration:</span>
                                       <span className="text-sm">{staff.duration || 'N/A'}</span>
                                     </div>
-                                     <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
+                                    <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between">
                                       <span className="text-sm font-medium">Status:</span>
                                       <span className="text-sm">{staff.status || 'N/A'}</span>
                                     </div>
@@ -779,8 +767,8 @@ export default function TeamLeaderDashboardPage() {
                                       </Link>
                                     </div>
                                   </div>
-                                  </div>
                                 </div>
+                              </div>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1352,49 +1340,83 @@ export default function TeamLeaderDashboardPage() {
 
 
 
-// // class TeamLeaderStaffLeadsListAPIView(APIView):
+// class TeamLeaderExportDashboardLeadsAPIView(APIView):
 //     """
-//     API endpoint for 'teamleader_perticular_leads'.
-//     GET: Fetches list of leads for a specific staff, filtered by status (tag).
-//     ONLY TEAM LEADER can access this.
+//     API to export leads for 4 specific pages: Interested, Pending, Today, Tomorrow.
+//     POST: Generates Excel file based on 'tag' and optional date range.
 //     """
 //     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
-//     pagination_class = StandardResultsSetPagination
 
-//     def get(self, request, staff_id, tag, format=None):
-//         # 1. Verify Team Leader & Staff Relationship
+//     def post(self, request, format=None):
+//         # 1. Get Params
+//         tag = request.data.get('tag') # E.g., 'today_followups', 'Intrested'
+//         staff_id = request.data.get('staff_id')
+//         start_date_str = request.data.get('start_date')
+//         end_date_str = request.data.get('end_date')
+        
+//         # 2. Verify Team Leader
 //         try:
 //             tl_instance = Team_Leader.objects.get(user=request.user)
-//             staff = Staff.objects.get(id=staff_id)
-//             if staff.team_leader != tl_instance:
-//                  return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-//         except (Team_Leader.DoesNotExist, Staff.DoesNotExist):
-//             return Response({"error": "Invalid Team Leader or Staff."}, status=status.HTTP_404_NOT_FOUND)
+//         except Team_Leader.DoesNotExist:
+//             return Response({"error": "Team Leader profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
-//         # 2. Filter Leads based on Tag
-//         base_qs = LeadUser.objects.filter(assigned_to=staff)
-        
-//         if tag == "Intrested":
-//             leads = base_qs.filter(status='Intrested')
-//         elif tag == "Not Interested":
-//             leads = base_qs.filter(status='Not Interested')
-//         elif tag == "Other Location":
-//             leads = base_qs.filter(status='Other Location')
-//         elif tag == "Lost":
-//             leads = base_qs.filter(status='Lost')
-//         elif tag == "Visit":
-//             leads = base_qs.filter(status='Visit')
+//         # 3. Determine Base Queryset (All TL leads or Specific Staff)
+//         if staff_id:
+//             try:
+//                 staff = Staff.objects.get(id=staff_id)
+//                 if staff.team_leader != tl_instance:
+//                     return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+//                 # Staff Leads
+//                 base_qs = LeadUser.objects.filter(assigned_to=staff)
+//             except Staff.DoesNotExist:
+//                  return Response({"error": "Staff not found."}, status=status.HTTP_404_NOT_FOUND)
 //         else:
-//             leads = base_qs # All leads if tag doesn't match
+//             # All Leads under TL (Assigned to any staff OR unassigned)
+//             staff_members = Staff.objects.filter(team_leader=tl_instance)
+//             base_qs = LeadUser.objects.filter(
+//                 Q(assigned_to__in=staff_members) | Q(team_leader=tl_instance, assigned_to=None)
+//             )
 
-//         leads = leads.order_by('-updated_date')
+//         # 4. Date Setup
+//         today = timezone.now().date()
+//         tomorrow = today + timedelta(days=1)
 
-//         # 3. Paginate & Serialize
-//         paginator = self.pagination_class()
-//         page = paginator.paginate_queryset(leads, request, view=self)
-//         if page is not None:
-//             serializer = ApiLeadUserSerializer(page, many=True)
-//             return paginator.get_paginated_response(serializer.data)
+//         # --- 5. FILTER LOGIC BASED ON TAG ---
+        
+//         if tag == 'today_followups':
+//             # Logic: Status Interested + FollowUp Date is TODAY
+//             leads = base_qs.filter(status='Intrested', follow_up_date=today)
+//             filename_tag = "Today_FollowUps"
+            
+//         elif tag == 'tomorrow_followups':
+//             # Logic: Status Interested + FollowUp Date is TOMORROW
+//             leads = base_qs.filter(status='Intrested', follow_up_date=tomorrow)
+//             filename_tag = "Tomorrow_FollowUps"
 
-//         serializer = ApiLeadUserSerializer(leads, many=True)
-//         return Response(serializer.data)
+//         elif tag == 'pending_followups':
+//             # Logic: Status Interested + FollowUp Date exists (Pending)
+//             leads = base_qs.filter(status='Intrested', follow_up_date__isnull=False)
+//             filename_tag = "Pending_FollowUps"
+
+//         elif tag == 'Intrested':
+//             # Logic: Status Interested + User selected Date Range (Created/Updated)
+//             try:
+//                 if start_date_str and end_date_str:
+//                     s_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+//                     e_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+                    
+//                     start = timezone.make_aware(datetime.combine(s_date, datetime.min.time()))
+//                     end = timezone.make_aware(datetime.combine(e_date, datetime.max.time()))
+                    
+//                     # Filter by updated_date
+//                     leads = base_qs.filter(status='Intrested', updated_date__range=[start, end])
+//                 else:
+//                     # Default: All Interested
+//                     leads = base_qs.filter(status='Intrested')
+//             except ValueError:
+//                  return Response({"error": "Invalid date format."}, status=status.HTTP_400_BAD_REQUEST)
+            
+//             filename_tag = "Interested_Leads"
+
+//         else:
+//             return Response({"error": "Invalid tag provided."}, status=status.HTTP_400_BAD_REQUEST)

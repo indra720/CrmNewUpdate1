@@ -1,126 +1,399 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
 import { useSearchParams } from 'next/navigation';
+
+import { format } from "date-fns";
+
 import {
+
   Card,
+
   CardContent,
+
   CardHeader,
+
 } from '@/components/ui/card';
+
 import {
+
   Table,
+
   TableBody,
+
   TableCell,
+
   TableHead,
+
   TableHeader,
+
   TableRow,
+
 } from '@/components/ui/table';
+
 import {
+
   Pagination,
+
   PaginationContent,
+
   PaginationItem,
+
   PaginationLink,
+
   PaginationNext,
+
   PaginationPrevious,
+
 } from '@/components/ui/pagination';
+
 import {
+
     Select,
+
     SelectContent,
+
     SelectItem,
+
     SelectTrigger,
+
     SelectValue,
+
 } from "@/components/ui/select"
+
 import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
+
 import { Label } from '@/components/ui/label';
-import { Search, Phone, MessageSquare, Calendar, FileDown, Plus, Minus, Loader2 } from 'lucide-react';
+
+import { Search, Phone, MessageSquare, Calendar as CalendarIcon, FileDown, Plus, Minus, Loader2 } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
+
 import { Badge } from '@/components/ui/badge';
-import { fetchTeamLeaderStaffLeadsReportByTag } from '@/lib/api';
+
+import { fetchTeamLeaderStaffLeadsReportByTag, exportTeamLeaderLeads } from '@/lib/api';
+
+import { DatePicker } from '@/components/ui/date-picker';
+import { toast } from '@/hooks/use-toast';
+
+
+
+
 
 export default function StaffLeadsPage() {
+
     const router = useRouter();
+
     const searchParams = useSearchParams();
+
     const staffId = searchParams.get('id');
 
+
+
     const [leads, setLeads] = useState<any[]>([]);
+
     const [loading, setLoading] = useState(true);
+
     const [error, setError] = useState<string | null>(null);
+
     const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
-    const [selectedTag, setSelectedTag] = useState('Intrested');
+
+        const [selectedTag, setSelectedTag] = useState('Intrested');
+
     
-    const tags = ['Intrested', 'Not Interested', 'Other Location', 'Lost', 'Visit'];
 
-    useEffect(() => {
-      async function fetchLeads() {
-        if (!staffId) {
-          setError("Staff ID is missing.");
-          setLoading(false);
-          return;
-        }
-  
-        try {
-          setLoading(true);
-          setError(null);
-          const data = await fetchTeamLeaderStaffLeadsReportByTag(Number(staffId), selectedTag);
-          setLeads(data.results || data || []);
-        } catch (err: any) {
-          setError(err.message || 'Failed to fetch leads.');
-        } finally {
-          setLoading(false);
-        }
-      }
-      fetchLeads();
-    }, [staffId, selectedTag]);
+        const [exportSelectedTag, setExportSelectedTag] = useState('Intrested'); // For export API
 
-    const toggleRow = (rowId: number) => {
-        setExpandedRowId(expandedRowId === rowId ? null : rowId);
-    };
+        const [startDate, setStartDate] = useState<Date | undefined>(undefined);
 
-    const handleTypeNavChange = (value: string) => {
-        if (!value) return;
-        router.push(value);
-    }
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Staff Leads</h1>
+    
 
-       <Card className="shadow-lg  rounded-2xl">
-        <CardContent className="p-6">
-             <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-                <div className="space-y-2">
-                    <Label htmlFor="start_date">Start Date</Label>
-                    <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="start_date" name="start_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
+        const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
+        
+
+    
+
+        const tags = ['Intrested', 'Not Interested', 'Other Location', 'Lost', 'Visit'];
+
+    
+
+    
+
+    
+
+        useEffect(() => {
+
+    
+
+          async function fetchLeads() {
+
+    
+
+            if (!staffId) {
+
+    
+
+              setError("Staff ID is missing.");
+
+    
+
+              setLoading(false);
+
+    
+
+              return;
+
+    
+
+            }
+
+    
+
+      
+
+    
+
+            try {
+
+    
+
+              setLoading(true);
+
+    
+
+              setError(null);
+
+    
+
+              const data = await fetchTeamLeaderStaffLeadsReportByTag(Number(staffId), selectedTag);
+
+    
+
+              setLeads(data.results || data || []);
+
+    
+
+            } catch (err: any) {
+
+    
+
+              setError(err.message || 'Failed to fetch leads.');
+
+    
+
+            } finally {
+
+    
+
+              setLoading(false);
+
+    
+
+            }
+
+    
+
+          }
+
+    
+
+          fetchLeads();
+
+    
+
+        }, [staffId, selectedTag]);
+           const toggleRow = (rowId: number) => {
+               setExpandedRowId(expandedRowId === rowId ? null : rowId);
+            };
+
+    
+
+    
+
+    
+
+        
+
+    
+
+    
+
+            const handleExport = async () => {
+
+    
+
+    
+
+    
+
+              if (!staffId) {
+
+                toast({title: "Error",description: "Staff ID is missing for export.",variant: "destructive"});
+
+                 return;
+
+                }
+
+             try {
+
+                const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+
+                const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+
+                const payload = {
+
+                    staff_id: staffId,
+
+                    status: exportSelectedTag, // Uses exportSelectedTag
+
+                    start_date: formattedStartDate,
+
+                    end_date: formattedEndDate,
+
+                };
+
+               await exportTeamLeaderLeads(payload);
+
+               toast({title: "Export Successful",description: "Staff leads have been exported.",className: 'bg-green-500 text-white'});
+
+                   } catch (error: any) {
+
+                     console.error("Export failed", error);
+
+                     toast({title: "Export Failed",description: error.message || "Could not export staff leads. Please try again.",variant: "destructive"});
+
+                    }
+
+                };
+
+    return (
+
+    
+
+    
+
+    
+
+            <div className="space-y-6">
+
+    
+
+          <h1 className="text-2xl font-bold tracking-tight">Staff Leads</h1>
+
+    
+
+    
+
+    
+
+           <Card className="shadow-lg  rounded-2xl">
+
+    
+
+            <CardContent className="p-6">
+
+    
+
+                 <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+
+    
+
+                    <div className="space-y-2">
+
+    
+
+                        <Label htmlFor="start_date">Start Date</Label>
+
+    
+
+                        <DatePicker date={startDate} setDate={setStartDate} />
+
+    
+
                     </div>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="end_date">End Date</Label>
-                    <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="end_date" name="end_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
+
+    
+
+                    <div className="space-y-2">
+
+    
+
+                        <Label htmlFor="end_date">End Date</Label>
+
+    
+
+                        <DatePicker date={endDate} setDate={setEndDate} />
+
+    
+
                     </div>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select name="status" value={selectedTag} onValueChange={setSelectedTag}>
-                        <SelectTrigger id="status">
-                            <SelectValue placeholder="Open this select menu" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {tags.map(tag => (
-                                <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <Button type="submit" className="w-full md:w-auto self-end">
-                    <FileDown className="mr-2 h-4 w-4" />
-                    Export
-                </Button>
+
+    
+
+                     <div className="space-y-2">
+
+    
+
+                        <Label htmlFor="status">Status</Label>
+
+    
+
+                        <Select name="status" value={exportSelectedTag} onValueChange={setExportSelectedTag}>
+
+                            <SelectTrigger id="status">
+
+    
+
+                                <SelectValue placeholder="Open this select menu" />
+
+    
+
+                            </SelectTrigger>
+
+    
+
+                            <SelectContent>
+
+    
+
+                                {tags.map(tag => (
+
+    
+
+                                    <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+
+    
+
+                                ))}
+
+    
+
+                            </SelectContent>
+
+    
+
+                        </Select>
+
+    
+
+                    </div>
+
+                                <Button type="button" onClick={handleExport} className="w-full md:w-auto self-end">
+
+                                    <FileDown className="mr-2 h-4 w-4" />
+
+                                    Export
+
+                                </Button>
+
             </form>
+
         </CardContent>
+
       </Card>
 
 
@@ -135,16 +408,16 @@ export default function StaffLeadsPage() {
                     />
                 </div>
                  <div className="w-full sm:w-auto">
-                     <Select onValueChange={handleTypeNavChange}>
+                     <Select value={selectedTag} onValueChange={setSelectedTag}>
                         <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Select Type" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="/team-leader/reports/interested">Interested</SelectItem>
-                            <SelectItem value="/team-leader/reports/not-interested">Not Interested</SelectItem>
-                            <SelectItem value="/team-leader/reports/other-location">Other Location</SelectItem>
-                            <SelectItem value="/team-leader/reports/total-leads">Lost</SelectItem>
-                            <SelectItem value="/team-leader/reports/visit">Visit</SelectItem>
+                            <SelectItem value="Intrested">Interested</SelectItem>
+                            <SelectItem value="Not Interested">Not Interested</SelectItem>
+                            <SelectItem value="Other Location">Other Location</SelectItem>
+                            <SelectItem value="Lost">Lost</SelectItem>
+                            <SelectItem value="Visit">Visit</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

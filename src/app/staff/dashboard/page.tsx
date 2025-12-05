@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker"; // Added DatePicker import
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -131,8 +132,8 @@ export default function StaffDashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined); // Changed to Date | undefined
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);     // Changed to Date | undefined
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [addLeadModalOpen, setAddLeadModalOpen] = useState(false);
@@ -175,6 +176,7 @@ export default function StaffDashboardPage() {
   }, []);
 
   const fetchStaffDashboardData = async (startDate?: string, endDate?: string) => {
+    console.log("Fetching staff dashboard data...");
     const token = localStorage.getItem('authToken');
     if (!token) {
       toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
@@ -192,6 +194,7 @@ export default function StaffDashboardPage() {
     }
 
     try {
+      console.log("API URL for staff dashboard:", url);
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -202,6 +205,8 @@ export default function StaffDashboardPage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("API Response status:", response.status);
+        console.log("API Response data:", data);
 
         if (data.results) {
           const formattedLeads = data.results.map((lead: any) => ({
@@ -212,10 +217,12 @@ export default function StaffDashboardPage() {
             project: lead.project,
           }));
           setLeads(formattedLeads);
+          console.log("Leads after setLeads:", formattedLeads);
         }
 
         if (data.projects) {
           setProjects(data.projects);
+          console.log("Projects after setProjects:", data.projects);
         }
         
         if (data.counts) {
@@ -250,9 +257,11 @@ export default function StaffDashboardPage() {
       });
       return;
     }
-    fetchStaffDashboardData(startDate, endDate);
-    setStartDate(""); // Clear start date
-    setEndDate("");   // Clear end date
+    const formattedStartDate = format(startDate, 'yyyy-MM-dd');
+    const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+    fetchStaffDashboardData(formattedStartDate, formattedEndDate);
+    setStartDate(undefined); // Clear start date
+    setEndDate(undefined);   // Clear end date
   };
 
   const filteredLeads = leads.filter((lead) =>
@@ -455,6 +464,9 @@ export default function StaffDashboardPage() {
   };
 
 
+  console.log("Current leads state:", leads);
+  console.log("Current search query:", search);
+  console.log("Filtered leads for table:", filteredLeads);
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Staff Dashboard</h1>
@@ -478,23 +490,11 @@ export default function StaffDashboardPage() {
             <div className="flex sm:flex-row gap-4 lg:flex-row lg:items-end">
               <div className="space-y-2">
                 <Label htmlFor="start_date">Start Date</Label>
-                <Input
-                  type="date"
-                  id="start_date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full lg:w-auto"
-                />
+                <DatePicker date={startDate} setDate={setStartDate} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="end_date">End Date</Label>
-                <Input
-                  type="date"
-                  id="end_date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full lg:w-auto"
-                />
+                <DatePicker date={endDate} setDate={setEndDate} />
               </div>
             </div>
             <Button onClick={handleFilterClick}>

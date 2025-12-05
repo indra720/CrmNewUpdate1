@@ -367,7 +367,7 @@ function VisitLeadsPage() {
                                           <Calendar className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
                                           <span className="text-sm font-medium">Date:</span>
                                         </div>
-                                        <span className="text-sm ml-auto md:ml-0">{row.original.dateTime}</span>
+                                        <span className="text-sm ml-auto md:ml-0">{row.original.created_date}</span>
                                       </div>
                                       {/* Row 4: History | Empty (for balance) */}
                                       <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-center md:justify-start">

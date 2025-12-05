@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { format } from 'date-fns';
 import {
   Card,
   CardContent,
@@ -33,10 +34,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Phone, MessageSquare, Calendar, FileDown, Plus, Minus, Loader2 } from 'lucide-react';
+import { Search, Phone, MessageSquare, Calendar as CalendarIcon, FileDown, Plus, Minus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { fetchAdminStaffLeadsByTag } from '@/lib/api';
+import { DatePicker } from '@/components/ui/date-picker';
+
 
 export default function StaffLeadsPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -48,6 +51,8 @@ export default function StaffLeadsPage({ params }: { params: { id: string } }) {
     const [error, setError] = useState<string | null>(null);
     const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
     const [selectedTag, setSelectedTag] = useState('Intrested');
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     
     const tags = ['Intrested', 'Not Interested', 'Other Location', 'Lost', 'Visit'];
 
@@ -62,7 +67,11 @@ export default function StaffLeadsPage({ params }: { params: { id: string } }) {
         try {
           setLoading(true);
           setError(null);
-          const data = await fetchAdminStaffLeadsByTag(Number(staffId), selectedTag);
+          const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+          const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+
+          // Assuming fetchAdminStaffLeadsByTag accepts startDate and endDate as parameters
+          const data = await fetchAdminStaffLeadsByTag(Number(staffId), selectedTag, formattedStartDate, formattedEndDate);
           setLeads(data.results || data || []);
         } catch (err: any) {
           setError(err.message || 'Failed to fetch leads.');
@@ -71,7 +80,7 @@ export default function StaffLeadsPage({ params }: { params: { id: string } }) {
         }
       }
       fetchLeads();
-    }, [staffId, selectedTag]);
+    }, [staffId, selectedTag, startDate, endDate]);
 
     const toggleRow = (rowId: number) => {
         setExpandedRowId(expandedRowId === rowId ? null : rowId);
@@ -90,17 +99,11 @@ export default function StaffLeadsPage({ params }: { params: { id: string } }) {
              <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
                 <div className="space-y-2">
                     <Label htmlFor="start_date">Start Date</Label>
-                    <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="start_date" name="start_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
-                    </div>
+                    <DatePicker date={startDate} setDate={setStartDate} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="end_date">End Date</Label>
-                    <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="end_date" name="end_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
-                    </div>
+                    <DatePicker date={endDate} setDate={setEndDate} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
@@ -306,5 +309,3 @@ export default function StaffLeadsPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
-
-

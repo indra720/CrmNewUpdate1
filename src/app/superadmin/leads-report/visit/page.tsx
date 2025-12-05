@@ -34,13 +34,25 @@ function VisitLeadsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
+
+   const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
+  };
+
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
         const token = localStorage.getItem("authToken");
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-leads/visits/`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/leads/visit/`, // CORRECTED URL
           {
             headers: {
               Authorization: `Token ${token}`,
@@ -52,7 +64,7 @@ function VisitLeadsPage() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setLeads(data || []);
+        setLeads(data.results || []); // Assuming paginated response with 'results' key
       } catch (err: any) {
         setError(err.message || 'Failed to fetch leads.');
       } finally {
@@ -184,9 +196,9 @@ function VisitLeadsPage() {
         },
       },
       {
-        accessorKey: 'dateTime',
-        header: 'Time and Date',
-        cell: ({ row }) => <div className="capitalize">{row.getValue('dateTime')}</div>,
+        accessorKey: 'created_date',
+        header: 'Date',
+        cell: ({ row }) => <div className="capitalize">{formatDate(row.getValue('created_date'))}</div>,
         meta: {
           className: 'hidden lg:table-cell', // Hide below lg (mobile + md), show lg+
         },
@@ -353,7 +365,7 @@ function VisitLeadsPage() {
                                           <Calendar className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
                                           <span className="text-sm font-medium">Date:</span>
                                         </div>
-                                        <span className="text-sm ml-auto md:ml-0">{row.original.dateTime}</span>
+                                        <span className="text-sm ml-auto md:ml-0">{row.original.created_date}</span>
                                       </div>
                                       {/* Row 4: History | Empty (for balance) */}
                                       <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-center md:justify-start">
@@ -433,7 +445,7 @@ function VisitLeadsPage() {
             { label: 'Status', value: selectedLead.status, icon: Tag },
             { label: 'Staff', value: selectedLead.assigned_to?.name, icon: Users },
             { label: 'Team Leader', value: selectedLead.team_leader?.name, icon: Users },
-            { label: 'Date & Time', value: selectedLead.dateTime, icon: Calendar },
+            { label: 'Date & Time', value: selectedLead.created_date, icon: Calendar },
           ]}
         />
       )}
@@ -442,3 +454,88 @@ function VisitLeadsPage() {
 }
 
 export default VisitLeadsPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// class VisitLeadsAPIView(APIView):
+//     """
+//     GET /accounts/api/leads/visit/?tag=<tag>&search=<q>
+//     - If tag is provided it MUST be one of allowed_tags, otherwise returns 400.
+//     - If no tag provided, returns full list (or filtered by search).
+//     """
+//     permission_classes = [IsAuthenticated]   # change if you want stricter access
+//     pagination_class = StandardResultsSetPagination
+
+//     # allowed tags (lowercase). include common typo if you want
+//     ALLOWED_TAGS = {"pending_follow", "today_follow", "tomorrow_follow"}
+
+//     def get(self, request, format=None):
+//         # get and normalize tag/search
+//         tag = (request.query_params.get("tag") or "").strip().lower()
+//         search_query = (request.query_params.get("search") or "").strip()
+
+//         # If tag provided, validate it
+//         if tag:
+//             if tag not in self.ALLOWED_TAGS:
+//                 return Response({
+//                     "error": "Invalid tag provided.",
+//                     "provided_tag": tag,
+//                     "allowed_tags": sorted(list(self.ALLOWED_TAGS))
+//                 }, status=status.HTTP_400_BAD_REQUEST)
+
+//             # normalize synonyms (map tommorrow typo to canonical)
+//             if tag in ("tommorrow_follow", "tomorrow_follow"):
+//                 tag = "tomorrow_follow"
+
+//         today = timezone.now().date()
+//         tomorrow = today + timedelta(days=1)
+
+//         # status constant (adjust if DB uses different spelling)
+//         STATUS_INTERESTED = "Intrested"
+
+//         # Base queryset
+//         queryset = LeadUser.objects.filter(status=STATUS_INTERESTED)
+
+//         # Search handling (search should be allowed even without tag)
+//         if search_query:
+//             queryset = queryset.filter(
+//                 Q(name__icontains=search_query) |
+//                 Q(call__icontains=search_query) |
+//                 Q(team_leader__name__icontains=search_query)
+//             ).order_by("-updated_date")
+//         else:
+//             # tag-based filtering only when tag provided
+//             if tag == "pending_follow":
+//                 queryset = queryset.filter(follow_up_date__isnull=False).order_by("-updated_date")
+//             elif tag == "today_follow":
+//                 queryset = queryset.filter(follow_up_date=today).order_by("-updated_date")
+//             elif tag == "tomorrow_follow":
+//                 queryset = queryset.filter(follow_up_date=tomorrow).order_by("-updated_date")
+//             else:
+//                 # no tag -> return all (ordered)
+//                 queryset = queryset.order_by("-updated_date")
+
+//         # Pagination + serialize
+//         paginator = self.pagination_class()
+//         page = paginator.paginate_queryset(queryset, request, view=self)
+//         serializer = ApiLeadUserSerializer(page, many=True)
+
+//         return paginator.get_paginated_response(serializer.data)

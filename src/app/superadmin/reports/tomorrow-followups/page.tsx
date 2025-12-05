@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 // Force re-save for DialogClose error
 import {
   Card,
@@ -35,7 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, Phone, MessageSquare, Calendar, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus } from 'lucide-react';
+import { Search, Loader2, Phone, MessageSquare, Calendar as CalendarIcon, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
@@ -43,6 +44,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useSearchParams } from 'next/navigation';
 import { fetchLeadsForSuperuser } from '@/lib/api';
+import { DatePicker } from '@/components/ui/date-picker';
 
 export default function TomorrowFollowupsPage() {
   const searchParams = useSearchParams();
@@ -60,6 +62,8 @@ export default function TomorrowFollowupsPage() {
   const [messageValue, setMessageValue] = useState('');
   const [followDate, setFollowDate] = useState('');
   const [followTime, setFollowTime] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
 
   const toggleRow = (rowId: number) => {
@@ -70,7 +74,9 @@ export default function TomorrowFollowupsPage() {
     try {
       setLoading(true);
       const source = searchParams.get('source');
-      const data = await fetchLeadsForSuperuser('tomorrow_followups', source);
+      const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+      const data = await fetchLeadsForSuperuser('tomorrow_followups', source, formattedStartDate, formattedEndDate); // Assuming API accepts startDate and endDate
       setLeads(data.results);
       setTotalPages(Math.ceil(data.count / 10)); // Assuming 10 items per page
     } catch (err: any) {
@@ -82,7 +88,7 @@ export default function TomorrowFollowupsPage() {
 
   useEffect(() => {
     fetchLeads();
-  }, [page, search, searchParams]);
+  }, [page, search, searchParams, startDate, endDate]);
 
   async function openEditModal(lead: any) {
     setEditingLead(lead);
@@ -123,11 +129,11 @@ export default function TomorrowFollowupsPage() {
         <form className="grid grid-cols-2 md:grid-cols-3 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="start_date">Start Date</Label>
-            <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} />
+            <DatePicker date={startDate} setDate={setStartDate} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="end_date">End Date</Label>
-            <Input id="end_date" name="end_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} />
+            <DatePicker date={endDate} setDate={setEndDate} />
           </div>
           <Button type="submit" className="self-end">
             <FileDown className="mr-2 h-4 w-4" />

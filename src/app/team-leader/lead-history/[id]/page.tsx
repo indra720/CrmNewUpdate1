@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import {
   ColumnDef,
   flexRender,
@@ -31,14 +31,13 @@ interface LeadHistory {
   created_date: string
 }
 
-export default function LeadHistoryPage() {
+export default function LeadHistoryPage({ params }: { params: { id: string } }) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFiltersState] = useState<ColumnFiltersState>([])
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
   const [data, setData] = useState<LeadHistory[]>([])
   const [loading, setLoading] = useState(true)
-  const searchParams = useSearchParams()
-  const leadId = searchParams.get('id')
+  const leadId = params.id
   const router = useRouter()
 
   useEffect(() => {
@@ -52,7 +51,7 @@ export default function LeadHistoryPage() {
       })
         .then(res => res.json())
         .then(result => {
-          setData(result.data || [])
+          setData(result.results || [])
           setLoading(false)
         })
         .catch(() => {
@@ -82,13 +81,13 @@ export default function LeadHistoryPage() {
               {expandedRowId === row.original.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             </Button>
           </div>
-          <div className="hidden md:block"> {/* Desktop: S.N. number */}
+          <div className="hidden md:block text-left"> {/* Desktop: S.N. number, left-aligned */}
             {row.index + 1}
           </div>
         </>
       ),
       meta: {
-        className: 'w-12', // Narrow column for S.N.
+        className: 'w-16 text-left', // Fixed width and left alignment for consistent gap
       },
     },
     {
@@ -97,7 +96,7 @@ export default function LeadHistoryPage() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="text-left justify-start" // Left-align header button on mobile
+          className="text-left justify-start" // Left-align header button
         >
           Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -105,7 +104,7 @@ export default function LeadHistoryPage() {
       ),
       cell: ({ row }) => <div className="font-medium text-left">{row.getValue('name')}</div>, // Left-align cell
       meta: {
-        className: '', // Show on mobile and desktop
+        className: 'w-52 text-left', // Fixed width and left alignment for consistent gap
       },
     },
     {
@@ -114,31 +113,31 @@ export default function LeadHistoryPage() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="text-left justify-start md:text-center md:justify-center" // Left-align on mobile, center on desktop
+          className="text-left justify-start" // Left-align on all screens
         >
           Status
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div className="capitalize text-left md:text-center">{row.getValue('status')}</div>,
+      cell: ({ row }) => <div className="capitalize text-left">{row.getValue('status')}</div>,
       meta: {
-        className: '', // Show on mobile and desktop
+        className: 'w-32 text-left', // Fixed width and left alignment for consistent gap
       },
     },
     {
       accessorKey: 'message',
       header: 'Message',
-      cell: ({ row }) => <div className="max-w-xs truncate">{row.getValue('message')}</div>,
+      cell: ({ row }) => <div className="max-w-xs truncate text-left">{row.getValue('message')}</div>,
       meta: {
-        className: 'hidden md:table-cell', // Hide on mobile
+        className: 'hidden md:table-cell w-72 text-left', // Fixed width and left alignment for consistent gap
       },
     },
     {
       accessorKey: 'created_date',
       header: 'Date',
-      cell: ({ row }) => <div>{new Date(row.getValue('created_date')).toLocaleDateString()}</div>,
+      cell: ({ row }) => <div className="text-left">{new Date(row.getValue('created_date')).toLocaleDateString()}</div>,
       meta: {
-        className: 'hidden md:table-cell', // Hide on mobile
+        className: 'hidden md:table-cell w-32 text-left', // Fixed width and left alignment for consistent gap
       },
     },
   ]
@@ -211,9 +210,8 @@ export default function LeadHistoryPage() {
                         <TableHead 
                           key={header.id}
                           className={cn(
-                            'px-2 py-3', // Adjusted padding
-                            header.column.columnDef.meta?.className,
-                            'text-left md:text-center' // Left on mobile, center on desktop
+                            'px-4 py-3', // Adjusted padding
+                            header.column.columnDef.meta?.className
                           )}
                         >
                           {header.isPlaceholder
@@ -237,9 +235,8 @@ export default function LeadHistoryPage() {
                               <TableCell 
                                 key={cell.id}
                                 className={cn(
-                                  'px-2 py-4', // Adjusted padding
-                                  cell.column.columnDef.meta?.className,
-                                  'text-left md:text-center' // Left on mobile, center on desktop
+                                  'px-4 py-4', // Adjusted padding
+                                  cell.column.columnDef.meta?.className
                                 )}
                               >
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -375,6 +372,38 @@ export default function LeadHistoryPage() {
 
 //         serializer = LeadsHistorySerializer(history_qs, many=True)
 //         return Response(serializer.data)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// {
+//     "count": 1,
+//     "next": null,
+//     "previous": null,
+//     "results": [
+//         {
+//             "id": 7,
+//             "lead_id": 7,
+//             "status": "Intrested",
+//             "name": "Nikhil saini",
+//             "message": null,
+//             "created_date": "2025-11-19T12:38:59.147456Z",
+//             "updated_date": "2025-11-19T12:38:59.147456Z",
+//             "leads": 7
+//         }
+//     ]
+// }
     
 
 

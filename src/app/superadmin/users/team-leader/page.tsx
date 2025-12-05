@@ -115,7 +115,6 @@ const initialFormData = {
     referralCode: "",
     marksheets: null,
     admin: "",
-    manager_type: "",
 };
 
 const InputField = ({ id, label, name, type = 'text', placeholder, icon: Icon, value, onChange, required, children, disabled }: {
@@ -942,19 +941,7 @@ export default function TeamLeaderManagementPage() {
                                    <Textarea className="pl-10 pr-4 min-h-[80px]" placeholder="Enter full address" />
                                 </InputField>
                               </div>
-                              <InputField id="manager_type" label="Manager Type" name="manager_type" value={formData.manager_type} onChange={(e) => handleAddFormSelectChange("manager_type", e.target.value)} required>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("manager_type", value)} name="manager_type" defaultValue={formData.manager_type} required>
-                                    <SelectTrigger className="pl-10 pr-4 h-11">
-                                    <SelectValue placeholder="Select Manager Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="delivery_manager">Delivery Manager</SelectItem>
-                                      <SelectItem value="executive_manager">Executive Manager</SelectItem>
-                                      <SelectItem value="onboarding_manager">Onboarding Manager</SelectItem>
-                                      <SelectItem value="dsr_manager">DSR Manager</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                              </InputField>
+
                            </div>
                         )}
                       </motion.div>

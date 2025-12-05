@@ -285,3 +285,47 @@ export const TEAM_LEADER_DASHBOARD_KPI_DATA = [
     { title: "Other Location", valueKey: "other_location", icon: MapPin, color: "text-orange-500", link: "/team-leader/reports/other-location" },
     { title: "Not Picked", valueKey: "not_picked", icon: Phone, color: "text-slate-500", link: "/team-leader/reports/not-picked" },
 ];
+
+
+
+
+
+
+
+
+
+
+
+
+// import { NextResponse } from 'next/server';
+// import type { NextRequest } from 'next/server';
+// import { decrypt } from '@/lib/session'; // अपना session decrypt function import करें
+
+// const protectedRoutes = ['/dashboard'];
+// const publicRoutes = ['/login', '/signup'];
+
+// export async function middleware(request: NextRequest) {
+//   const pathname = request.nextUrl.pathname;
+//   const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
+//   const isPublic = publicRoutes.some(route => pathname.startsWith(route));
+
+//   // Cookie से session decrypt करें
+//   const sessionCookie = request.cookies.get('session')?.value;
+//   const session = await decrypt(sessionCookie);
+
+//   // Protected route पर unauthorized user को login पर redirect
+//   if (isProtected && !session?.userId) {
+//     return NextResponse.redirect(new URL('/login', request.url));
+//   }
+
+//   // Public route पर authenticated user को dashboard पर redirect
+//   if (isPublic && session?.userId) {
+//     return NextResponse.redirect(new URL('/dashboard', request.url));
+//   }
+
+//   return NextResponse.next();
+// }
+
+// export const config = {
+//   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'], // सभी routes पर run, internals को skip
+// };

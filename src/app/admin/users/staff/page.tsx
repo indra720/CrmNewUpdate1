@@ -432,20 +432,50 @@ export default function StaffManagementPage() {
     fetchAdminsAndTeamLeaders();
   }, []);
 
-  const handleToggle = async (id: number, isActive: boolean) => {
+  const handleToggle = async (userId: number, newIsActive: boolean) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast({ title: "Authentication Error", description: "Please log in again.", variant: "destructive" });
+      return;
+    }
+
+    // Optimistic UI update first
+    setUsers(prevUsers => prevUsers.map(u => u.id === userId ? { ...u, is_active: newIsActive } : u));
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setUsers(users.map(u => u.id === id ? {...u, self_user: {...u.self_user, user_active: isActive}} : u));
-       toast({
-        title: 'Status Updated',
-        description: `User status changed to ${isActive ? 'Active' : 'Inactive'}.`,
-        className: 'bg-blue-500 text-white'
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/toggle-status/${userId}/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
       });
-    } catch (error) {
-      console.error(error);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update status.');
+      }
+      
+      // Sync with server state
+      setUsers(prevUsers => prevUsers.map(u => u.id === userId ? { ...u, is_active: result.user_active } : u));
+
+      toast({
+        title: 'Status Updated',
+        description: `User is now ${result.user_active ? 'Active' : 'Inactive'}.`,
+        className: 'bg-green-500 text-white'
+      });
+
+    } catch (error: any) {
+      // If API call fails, revert the optimistic update
+      setUsers(prevUsers => prevUsers.map(u => {
+        if (u.id === userId) {
+          return { ...u, is_active: !newIsActive };
+        }
+        return u;
+      }));
       toast({
         title: 'Error',
-        description: 'Failed to update user status.',
+        description: error.message || 'Failed to update user status.',
         variant: 'destructive',
       });
     }
@@ -555,7 +585,7 @@ export default function StaffManagementPage() {
                           </>
                         </TableCell>
                         <TableCell className="font-medium">{user.name}</TableCell>
-                        <TableCell className="hidden sm:table-cell">{user.teamLeader || 'N/A'}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{user.team_leader_name || 'N/A'}</TableCell>
                         <TableCell className="hidden md:table-cell">{user.mobile}</TableCell>
                         <TableCell className="hidden lg:table-cell">
                           {user.created_date ? new Date(user.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-') : 'N/A'}
@@ -570,9 +600,9 @@ export default function StaffManagementPage() {
                         </TableCell>
                         <TableCell className="text-center hidden md:table-cell">
                           <Switch
-                            checked={user.self_user?.user_active}
+                            checked={user.is_active}
                             onCheckedChange={(checked) =>
-                              handleToggle(user.id, checked)
+                              handleToggle(user.user_id, checked)
                             }
                           />
                         </TableCell>
@@ -628,7 +658,7 @@ export default function StaffManagementPage() {
                                         <Users className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
                                         <span className="text-sm font-medium">Team Lead:</span>
                                       </div>
-                                      <span className="text-sm capitalize ml-auto md:ml-0">{user.teamLeader || 'N/A'}</span>
+                                      <span className="text-sm capitalize ml-auto md:ml-0">{user.team_leader_name || 'N/A'}</span>
                                     </div>
                                     <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                       <div className="flex items-center">
@@ -661,9 +691,9 @@ export default function StaffManagementPage() {
                                         <span className="text-sm font-medium">Active Status:</span>
                                       </div>
                                       <Switch
-                                        checked={user.self_user?.user_active}
+                                        checked={user.is_active}
                                         onCheckedChange={(checked) =>
-                                          handleToggle(user.id, checked)
+                                          handleToggle(user.user_id, checked) // Changed to user.user_id
                                         }
                                         className="ml-auto md:ml-0"
                                       />
@@ -944,61 +974,101 @@ export default function StaffManagementPage() {
 
 
 
-// class AdminnStaffLeadsAPIView(APIView):
-//     """
-//     API endpoint for 'super_user_side_staff_leads' (Admin Side).
-//     GET: Fetches list of leads for an Admin based on status tags.
-//     ONLY ADMIN (is_admin=True) can access this.
-//     """
-    
-//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
-//     pagination_class = StandardResultsSetPagination
+// {
+//     "counts": {
+//         "total_leads": 0,
+//         "total_visit": 0,
+//         "interested": 0,
+//         "not_interested": 1,
+//         "other_location": 0,
+//         "not_picked": 1,
+//         "total_earning": 0.0
+//     },
+//     "staff_list": [
+//         {
+//             "id": 5,
+//             "user_id": 18,
+//             "name": "Piyush Rathor",
+//             "team_leader_name": "Rohit Panchvani",
+//             "mobile": "6789009878",
+//             "created_date": "2025-11-27T08:50:24.945268Z",
+//             "is_active": true,
+//             "total_earned": 0.0,
+//             "leads_count": 0
+//         },
+//         {
+//             "id": 6,
+//             "user_id": 18,
+//             "name": "Manish Sidhh",
+//             "team_leader_name": "Rohit Panchvani",
+//             "mobile": "7865432235",
+//             "created_date": "2025-12-03T09:21:18.204476Z",
+//             "is_active": true,
+//             "total_earned": 0.0,
+//             "leads_count": 0
+//         }
+//     ],
+//     "setting": null
+// }
 
-//     def get(self, request, tag, format=None):
-//         paginator = self.pagination_class()
-        
-//         # 1. Get Admin Profile
+
+
+
+// class AdminToggleStatusAPIView(APIView):
+//     """
+//     API for Admin to toggle Active/Inactive status of their Staff or Team Leaders.
+//     POST: Toggles the 'user_active' field.
+//     ONLY ADMIN can access this for their own team.
+//     """
+//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
+
+//     def post(self, request, user_id, format=None):
+//         # 1. Get Target User
 //         try:
-//             # 'self_user' field logged-in user se link hota hai
-//             admin_instance = Admin.objects.get(self_user=request.user)
+//             target_user = User.objects.get(id=user_id)
+//         except User.DoesNotExist:
+//             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 2. Get Logged-in Admin Profile
+//         try:
+//             current_admin = Admin.objects.get(self_user=request.user)
 //         except Admin.DoesNotExist:
 //             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
-//         # 2. Get Team Leaders under this Admin
-//         team_leaders = Team_Leader.objects.filter(admin=admin_instance)
+//         # 3. Security Check: Is the user under this Admin?
+//         is_authorized = False
 
-//         # 3. Base Queryset: Filter leads belonging to these Team Leaders
-//         # (LeadUser model me 'team_leader' field hota hai)
-//         base_qs = LeadUser.objects.filter(team_leader__in=team_leaders).order_by('-updated_date')
+//         # A. Team Leader check
+//         try:
+//             team_leader = Team_Leader.objects.get(user=target_user)
+//             if team_leader.admin == current_admin:
+//                 is_authorized = True
+//         except Team_Leader.DoesNotExist:
+//             pass
 
-//         # 4. Apply Tag Filters (Based on your function)
-//         if tag == 'total_lead':
-//             leads = base_qs.filter(status="Leads")
-//         elif tag == 'visits':
-//             leads = base_qs.filter(status="Visit")
-//         elif tag == 'interested':
-//             leads = base_qs.filter(status="Intrested") # Note spelling 'Intrested' from models
-//         elif tag == 'not_interested':
-//             leads = base_qs.filter(status="Not Interested")
-//         elif tag == 'other_location':
-//             leads = base_qs.filter(status="Other Location")
-//         elif tag == 'not_picked':
-//             leads = base_qs.filter(status="Not Picked")
-//         elif tag == 'Total_earning': # Adding this just in case, though not in your 'if' block context list
-//             leads = base_qs.filter(status="Total_earning")
-//         else:
-//             return Response(
-//                 {"error": f"Invalid tag: {tag}. Valid tags are: total_lead, visits, interested, not_interested, other_location, not_picked, Total_earning"},
-//                 status=status.HTTP_400_BAD_REQUEST
-//             )
+//         # B. Staff check (agar TL nahi mila)
+//         if not is_authorized:
+//             try:
+//                 staff = Staff.objects.get(user=target_user)
+//                 if staff.team_leader and staff.team_leader.admin == current_admin:
+//                     is_authorized = True
+//             except Staff.DoesNotExist:
+//                 pass
 
-//         # 5. Paginate and Serialize
-//         page = paginator.paginate_queryset(leads, request, view=self)
+//         if not is_authorized:
+//             return Response({
+//                 "error": "Permission denied. This user is not under your administration."
+//             }, status=status.HTTP_403_FORBIDDEN)
+
+//         # 4. Perform Toggle
+//         target_user.user_active = not target_user.user_active
+//         target_user.save()
+
+//         status_msg = "Active" if target_user.user_active else "Inactive"
         
-//         if page is not None:
-//             serializer = ApiLeadUserSerializer(page, many=True)
-//             return paginator.get_paginated_response(serializer.data)
-
-//         serializer = ApiLeadUserSerializer(leads, many=True)
-//         return Response(serializer.data)
+//         return Response({
+//             "message": f"User is now {status_msg}",
+//             "user_id": target_user.id,
+//             "user_active": target_user.user_active
+//         }, status=status.HTTP_200_OK)
 

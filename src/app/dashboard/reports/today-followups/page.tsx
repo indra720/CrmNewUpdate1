@@ -41,8 +41,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, Phone, MessageSquare, History, Calendar, FileDown, ArrowLeft } from 'lucide-react';
+import { Search, Loader2, Phone, MessageSquare, History, Calendar as CalendarIcon, FileDown, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { DatePicker } from '@/components/ui/date-picker';
 
 // Mock data to replicate the API response structure from the provided code.
 const mockLeadsData = {
@@ -81,6 +82,8 @@ export default function TodayFollowupsPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   const [showModal, setShowModal] = useState(false);
   const [editingLead, setEditingLead] = useState<any | null>(null);
@@ -147,17 +150,11 @@ export default function TodayFollowupsPage() {
         <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="start_date">Start Date</Label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="start_date" name="start_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
-            </div>
+            <DatePicker date={startDate} setDate={setStartDate} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="end_date">End Date</Label>
-            <div className="relative">
-               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="end_date" name="end_date" type="date" placeholder="mm/dd/yyyy" className="pl-10" />
-            </div>
+            <DatePicker date={endDate} setDate={setEndDate} />
           </div>
           <Button type="submit" className="w-full md:w-auto self-end">
             <FileDown className="mr-2 h-4 w-4" />

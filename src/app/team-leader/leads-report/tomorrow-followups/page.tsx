@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getTeamCustomersByTag, exportTeamLeaderLeads } from '@/lib/api';
+import { format } from 'date-fns';
 // Force re-save for DialogClose error
 import {
   ColumnDef,
@@ -47,12 +48,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus , HistoryIcon } from 'lucide-react';
+import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar as CalendarIcon, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus , HistoryIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Calendar } from '@/components/ui/calendar';
+
 
 export default function TomorrowFollowupsPage() {
   const [search, setSearch] = useState('');
@@ -71,8 +75,8 @@ export default function TomorrowFollowupsPage() {
   const [messageValue, setMessageValue] = useState('');
   const [followDate, setFollowDate] = useState('');
   const [followTime, setFollowTime] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
 
   const toggleRow = (rowId: number) => {
@@ -82,33 +86,47 @@ export default function TomorrowFollowupsPage() {
   async function fetchLeads() {
     try {
       setLoading(true);
-      const data = await getTeamCustomersByTag('tommorrow_follow');
+      const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+      // Assuming getTeamCustomersByTag accepts startDate and endDate as optional parameters
+      const data = await getTeamCustomersByTag('tommorrow_follow', formattedStartDate, formattedEndDate);
       setLeads(data.leads || []);
       setTotalPages(data.total_pages || 1);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch leads.');
-    } finally {
+    }
+    finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
     fetchLeads();
-  }, [page, search]);
+  }, [page, search, startDate, endDate]);
 
   const handleExport = async () => {
     try {
-      await exportTeamLeaderLeads('tomorrow_followups', startDate, endDate);
+      const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+
+      const payload = {
+        status: 'tommorrow_follow', // Correct status for this page
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        // all_interested is omitted or implicitly '0' for this status
+      };
+
+      await exportTeamLeaderLeads(payload); // Pass the payload object
       toast({
         title: "Export Successful",
         description: "Your leads have been exported.",
         className: 'bg-green-500 text-white'
     });
-    } catch (error) {
+    } catch (error: any) { // Type the error for console.error
         console.error("Export failed", error);
         toast({
             title: "Export Failed",
-            description: "Could not export leads. Please try again.",
+            description: error.message || "Could not export leads. Please try again.", // Display error message from API
             variant: "destructive"
         });
     }
@@ -275,54 +293,34 @@ export default function TomorrowFollowupsPage() {
   return (
     <TooltipProvider>
     <div className="space-y-6 flex flex-col h-full pt-6">
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-start gap-4">
-        <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search leads..."
-              value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-              onChange={(event) =>
-                table.getColumn('name')?.setFilterValue(event.target.value)
-              }
-              className="pl-10"
-            />
-        </div>
-        <form className="hidden lg:flex lg:items-end lg:gap-4">
-          <div className="space-y-2 w-48">
-            <Label htmlFor="start_date">Start Date</Label>
-            <Input id="start_date" name="start_date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9" />
-          </div>
-          <div className="space-y-2 w-48">
-            <Label htmlFor="end_date">End Date</Label>
-            <Input id="end_date" name="end_date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9" />
-          </div>
-          <Button type="button" onClick={handleExport} className="h-9 w-24">
-            <FileDown className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        </form>
-      </div>
-
-      <div className="space-y-4">
-        <form className="lg:hidden grid grid-cols-3 gap-14 md:gap-0 items-end">
-          <div className="space-y-2 w-28 md:w-48">
-            <Label htmlFor="start_date_mobile">Start Date</Label>
-            <Input id="start_date_mobile" name="start_date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9" />
-          </div>
-          <div className="space-y-2 w-28 md:w-48">
-            <Label htmlFor="end_date_mobile">End Date</Label>
-            <Input id="end_date_mobile" name="end_date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9" />
-          </div>
-          <div className="md:w-auto w-12">
-            <Button type="button" onClick={handleExport} className="h-9 bg-orange-500 hover:bg-orange-600 text-white md:w-auto w-12 px-2 md:px-3">
-              <FileDown className="mr-0 md:mr-2 h-4 w-4" />
-              <span className="hidden md:inline">Export</span>
-            </Button>
-          </div>
-        </form>
-      </div>
-
-
+            <div className="flex flex-col md:flex-row md:items-end gap-4 w-full">
+              <div className="relative w-full flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search leads..."
+                  value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+                  onChange={(event) =>
+                    table.getColumn('name')?.setFilterValue(event.target.value)
+                  }
+                  className="pl-10 w-full"
+                />
+              </div>
+      
+              <div className="space-y-2 w-full flex-1">
+                <Label htmlFor="start_date">Start Date</Label>
+                <DatePicker date={startDate} setDate={setStartDate} />
+              </div>
+              <div className="space-y-2 w-full flex-1">
+                <Label htmlFor="end_date">End Date</Label>
+                <DatePicker date={endDate} setDate={setEndDate} />
+              </div>
+              <div className="w-full flex-1">
+                <Button type="button" onClick={handleExport} className="h-9 w-full bg-orange-500 hover:bg-orange-600 text-white">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+              </div>
+            </div>
       <div className="grid gap-4">
         <Card className="overflow-hidden">
           <CardContent className="p-2 md:p-6 md:pt-4">
@@ -557,3 +555,115 @@ export default function TomorrowFollowupsPage() {
     </TooltipProvider>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+// class TeamCustomerAPIView(APIView):
+//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
+
+//     def get(self, request, tag=None, format=None):
+//         """
+//         Now requires a tag. Valid tags: pending_follow, today_follow, tommorrow_follow
+//         Supports both query-param (?tag=...) and path-param (/api/teamcustomer/<tag>/)
+//         """
+//         VALID_TAGS = ['pending_follow', 'today_follow', 'tommorrow_follow','interested']
+
+//         # prefer query param, fallback to path param
+//         tag_q = request.query_params.get('tag')
+//         if tag_q:
+//             tag = tag_q.strip()
+
+//         # if tag missing -> error
+//         if not tag:
+//             return Response({
+//                 "detail": "Tag is required. Valid tags: " + ", ".join(VALID_TAGS),
+//                 "valid_tags": VALID_TAGS
+//             }, status=400)
+
+//         # if tag invalid -> error
+//         if tag not in VALID_TAGS:
+//             return Response({
+//                 "detail": f"Invalid tag '{tag}'. Valid tags: " + ", ".join(VALID_TAGS),
+//                 "valid_tags": VALID_TAGS
+//             }, status=400)
+        
+        
+
+//         # tag is present and valid — continue normal processing
+//         user = request.user
+//         today = timezone.now().date()
+//         tomorrow = today + timedelta(days=1)
+
+//         search_query = request.query_params.get('search', '').strip()
+
+//         # find team_leader instance
+//         try:
+//             team_leader = Team_Leader.objects.filter(user=user).last() or Team_Leader.objects.filter(email=user.email).last()
+//         except Exception:
+//             team_leader = None
+
+//         qs = LeadUser.objects.none()
+
+//         # If search was provided, still restrict to team_leader scope (matching your original)
+//         if search_query:
+//             qs = LeadUser.objects.filter(
+//                 Q(name__icontains=search_query) | Q(call__icontains=search_query) | Q(team_leader__name__icontains=search_query),
+//                 status='Intrested'
+//             ).order_by('-updated_date')
+//         else:
+//             # handle allowed tag values
+//             if tag == 'pending_follow':
+//                 qs = LeadUser.objects.filter(status='Intrested', follow_up_date__isnull=False).order_by('-updated_date')
+//             elif tag == 'today_follow':
+//                 qs = LeadUser.objects.filter(status='Intrested', follow_up_date=today).order_by('-updated_date')
+//             elif tag == 'tommorrow_follow':
+//                 qs = LeadUser.objects.filter(status='Intrested', follow_up_date=tomorrow).order_by('-updated_date')
+//             elif tag == 'interested':
+//                 qs = LeadUser.objects.filter(status='Intrested').order_by('-updated_date')
+
+
+//         # Always restrict to this team_leader's leads to match original behavior
+//         if team_leader:
+//             qs = qs.filter(team_leader=team_leader)
+
+//         # Pagination (50 per page)
+//         page_size = 50
+//         paginator = Paginator(qs, page_size)
+//         page_number = request.query_params.get('page', 1)
+//         page_obj = paginator.get_page(page_number)
+
+//         serializer = ApiLeadUserSerializer(page_obj.object_list, many=True, context={'request': request})
+//         leads_data = serializer.data
+
+//         total_pages = paginator.num_pages
+//         current_page = page_obj.number
+
+//         if total_pages <= 7:
+//             page_range = list(range(1, total_pages + 1))
+//         else:
+//             pr = list(range(1, 4))
+//             start = max(3, current_page - 2)
+//             end = min(current_page + 1, total_pages - 2)
+//             pr.extend(list(range(start, end + 1)))
+//             pr.extend(list(range(total_pages - 2, total_pages + 1)))
+//             page_range = sorted(set(pr))
+
+//         response = {
+//             'leads': leads_data,
+//             'total_items': paginator.count,
+//             'page': current_page,
+//             'total_pages': total_pages,
+//             'page_range': page_range,
+//             'interested_leads_count': qs.count(),
+//             'reference_image': '/mnt/data/c2dc665d-9d54-40ab-a57d-08f450e93be3.png',
+//             'valid_tags': VALID_TAGS
+//         }
+//         return Response(response, status=200)

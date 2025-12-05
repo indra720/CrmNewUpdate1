@@ -416,3 +416,52 @@ function InterestedLeadsPage() {
 }
 
 export default InterestedLeadsPage;
+
+
+
+
+
+
+
+
+
+
+
+// class SuperUserStaffLeadsAPIView(APIView):
+
+//     permission_classes = [IsAuthenticated, CustomIsSuperuser]
+//     pagination_class = StandardResultsSetPagination 
+
+//     def get(self, request, tag, format=None):
+//         paginator = self.pagination_class()
+        
+//         # Superuser ko saare leads milte hain
+//         base_queryset = LeadUser.objects.all()
+
+//         status_map = {
+//             'total_lead': 'Leads',
+//             'visits': 'Visit',
+//             'interested': 'Intrested',
+//             'not_interested': 'Not Interested',
+//             'other_location': 'Other Location',
+//             'not_picked': 'Not Picked',
+//             'lost': 'Lost'
+//         }
+
+//         if tag in status_map:
+//             queryset = base_queryset.filter(status=status_map[tag])
+//         else:
+//             return Response(
+//                 {"error": f"Invalid tag: {tag}. Valid tags are: {list(status_map.keys())}"},
+//                 status=status.HTTP_400_BAD_REQUEST
+//             )
+
+//         queryset = queryset.order_by('-updated_date')
+        
+//         page = paginator.paginate_queryset(queryset, request, view=self)
+//         if page is not None:
+//             serializer = ApiLeadUserSerializer(page, many=True)
+//             return paginator.get_paginated_response(serializer.data)
+
+//         serializer = ApiLeadUserSerializer(queryset, many=True)
+//         return Response(serializer.data)

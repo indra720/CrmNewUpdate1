@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { getTeamCustomersByTag, exportTeamLeaderLeads } from '@/lib/api';
+import { format } from 'date-fns';
+import { DatePicker } from '@/components/ui/date-picker';
 // Force re-save for DialogClose error
 import {
   ColumnDef,
@@ -53,6 +54,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import Link from 'next/link';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useEffect, useState } from 'react';
+import React from 'react';
 
 export default function TodayFollowupsPage() {
   const [search, setSearch] = useState('');
@@ -71,8 +74,8 @@ export default function TodayFollowupsPage() {
   const [messageValue, setMessageValue] = useState('');
   const [followDate, setFollowDate] = useState('');
   const [followTime, setFollowTime] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
 
   const toggleRow = (rowId: number) => {
@@ -82,7 +85,9 @@ export default function TodayFollowupsPage() {
   async function fetchLeads() {
     try {
       setLoading(true);
-      const data = await getTeamCustomersByTag('today_follow');
+      const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+      const data = await getTeamCustomersByTag('today_follow', formattedStartDate, formattedEndDate);
       setLeads(data.leads || []);
       setTotalPages(data.total_pages || 1);
     } catch (err: any) {
@@ -94,21 +99,31 @@ export default function TodayFollowupsPage() {
 
   useEffect(() => {
     fetchLeads();
-  }, [page, search]);
+  }, [page, search, startDate, endDate]);
 
   const handleExport = async () => {
     try {
-      await exportTeamLeaderLeads('today_followups', startDate, endDate);
+      const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
+
+      const payload = {
+        status: 'today_followups', // Correct status for this page
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        // all_interested is omitted or implicitly '0' for this status
+      };
+
+      await exportTeamLeaderLeads(payload); // Pass the payload object
       toast({
         title: "Export Successful",
         description: "Your leads have been exported.",
         className: 'bg-green-500 text-white'
     });
-    } catch (error) {
+    } catch (error: any) { // Type the error for console.error
         console.error("Export failed", error);
         toast({
             title: "Export Failed",
-            description: "Could not export leads. Please try again.",
+            description: error.message || "Could not export leads. Please try again.", // Display error message from API
             variant: "destructive"
         });
     }
@@ -275,54 +290,34 @@ export default function TodayFollowupsPage() {
   return (
     <TooltipProvider>
     <div className="space-y-6 flex flex-col h-full pt-6">
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-start gap-4">
-        <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search leads..."
-              value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-              onChange={(event) =>
-                table.getColumn('name')?.setFilterValue(event.target.value)
-              }
-              className="pl-10"
-            />
-        </div>
-        <form className="hidden lg:flex lg:items-end lg:gap-4">
-          <div className="space-y-2 w-48">
-            <Label htmlFor="start_date">Start Date</Label>
-            <Input id="start_date" name="start_date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9" />
-          </div>
-          <div className="space-y-2 w-48">
-            <Label htmlFor="end_date">End Date</Label>
-            <Input id="end_date" name="end_date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9" />
-          </div>
-          <Button type="button" onClick={handleExport} className="h-9 w-24">
-            <FileDown className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        </form>
-      </div>
-
-      <div className="space-y-4">
-        <form className="lg:hidden grid grid-cols-3 gap-14 md:gap-0 items-end">
-          <div className="space-y-2 w-28 md:w-48">
-            <Label htmlFor="start_date_mobile">Start Date</Label>
-            <Input id="start_date_mobile" name="start_date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9" />
-          </div>
-          <div className="space-y-2 w-28 md:w-48">
-            <Label htmlFor="end_date_mobile">End Date</Label>
-            <Input id="end_date_mobile" name="end_date" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9" />
-          </div>
-          <div className="md:w-auto w-12">
-            <Button type="button" onClick={handleExport} className="h-9 bg-orange-500 hover:bg-orange-600 text-white md:w-auto w-12 px-2 md:px-3">
-              <FileDown className="mr-0 md:mr-2 h-4 w-4" />
-              <span className="hidden md:inline">Export</span>
-            </Button>
-          </div>
-        </form>
-      </div>
-
-
+            <div className="flex flex-col md:flex-row md:items-end gap-4 w-full">
+              <div className="relative w-full flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search leads..."
+                  value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+                  onChange={(event) =>
+                    table.getColumn('name')?.setFilterValue(event.target.value)
+                  }
+                  className="pl-10 w-full"
+                />
+              </div>
+      
+              <div className="space-y-2 w-full flex-1">
+                <Label htmlFor="start_date">Start Date</Label>
+                <DatePicker date={startDate} setDate={setStartDate} />
+              </div>
+              <div className="space-y-2 w-full flex-1">
+                <Label htmlFor="end_date">End Date</Label>
+                <DatePicker date={endDate} setDate={setEndDate} />
+              </div>
+              <div className="w-full flex-1">
+                <Button type="button" onClick={handleExport} className="h-9 w-full bg-orange-500 hover:bg-orange-600 text-white">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+              </div>
+            </div>
       <div className="grid gap-4">
         <Card className="overflow-hidden">
           <CardContent className="p-2 md:p-6 md:pt-4">
@@ -557,3 +552,326 @@ export default function TodayFollowupsPage() {
     </TooltipProvider>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+// class TeamLeaderExportDashboardLeadsAPIView(APIView):
+//     """
+//     API to export leads for 4 specific pages: Interested, Pending, Today, Tomorrow.
+//     POST: Generates Excel file based on 'tag' and optional date range.
+//     """
+//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
+
+//     def post(self, request, format=None):
+//         # 1. Get Params
+//         tag = request.data.get('tag') # E.g., 'today_followups', 'Intrested'
+//         staff_id = request.data.get('staff_id')
+//         start_date_str = request.data.get('start_date')
+//         end_date_str = request.data.get('end_date')
+        
+//         # 2. Verify Team Leader
+//         try:
+//             tl_instance = Team_Leader.objects.get(user=request.user)
+//         except Team_Leader.DoesNotExist:
+//             return Response({"error": "Team Leader profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+//         # 3. Determine Base Queryset (All TL leads or Specific Staff)
+//         if staff_id:
+//             try:
+//                 staff = Staff.objects.get(id=staff_id)
+//                 if staff.team_leader != tl_instance:
+//                     return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+//                 # Staff Leads
+//                 base_qs = LeadUser.objects.filter(assigned_to=staff)
+//             except Staff.DoesNotExist:
+//                  return Response({"error": "Staff not found."}, status=status.HTTP_404_NOT_FOUND)
+//         else:
+//             # All Leads under TL (Assigned to any staff OR unassigned)
+//             staff_members = Staff.objects.filter(team_leader=tl_instance)
+//             base_qs = LeadUser.objects.filter(
+//                 Q(assigned_to__in=staff_members) | Q(team_leader=tl_instance, assigned_to=None)
+//             )
+
+//         # 4. Date Setup
+//         today = timezone.now().date()
+//         tomorrow = today + timedelta(days=1)
+
+//         # --- 5. FILTER LOGIC BASED ON TAG ---
+        
+//         if tag == 'today_followups':
+//             # Logic: Status Interested + FollowUp Date is TODAY
+//             leads = base_qs.filter(status='Intrested', follow_up_date=today)
+//             filename_tag = "Today_FollowUps"
+            
+//         elif tag == 'tomorrow_followups':
+//             # Logic: Status Interested + FollowUp Date is TOMORROW
+//             leads = base_qs.filter(status='Intrested', follow_up_date=tomorrow)
+//             filename_tag = "Tomorrow_FollowUps"
+
+//         elif tag == 'pending_followups':
+//             # Logic: Status Interested + FollowUp Date exists (Pending)
+//             leads = base_qs.filter(status='Intrested', follow_up_date__isnull=False)
+//             filename_tag = "Pending_FollowUps"
+
+//         elif tag == 'Intrested':
+//             # Logic: Status Interested + User selected Date Range (Created/Updated)
+//             try:
+//                 if start_date_str and end_date_str:
+//                     s_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+//                     e_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+                    
+//                     start = timezone.make_aware(datetime.combine(s_date, datetime.min.time()))
+//                     end = timezone.make_aware(datetime.combine(e_date, datetime.max.time()))
+                    
+//                     # Filter by updated_date
+//                     leads = base_qs.filter(status='Intrested', updated_date__range=[start, end])
+//                 else:
+//                     # Default: All Interested
+//                     leads = base_qs.filter(status='Intrested')
+//             except ValueError:
+//                  return Response({"error": "Invalid date format."}, status=status.HTTP_400_BAD_REQUEST)
+            
+//             filename_tag = "Interested_Leads"
+
+//         else:
+//              return Response({"error": "Invalid tag provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+//         # --- 6. GENERATE EXCEL ---
+//         data = []
+//         for lead in leads:
+//             assigned_name = lead.assigned_to.name if lead.assigned_to else "Unassigned"
+            
+//             data.append({
+//                 'Name': lead.name,
+//                 'Call': lead.call,
+//                 'Status': lead.status,
+//                 'Staff Name': assigned_name,
+//                 'Follow Up Date': lead.follow_up_date,
+//                 'Follow Up Time': lead.follow_up_time,
+//                 'Message': lead.message,
+//                 'Date Added': localtime(lead.created_date).strftime('%Y-%m-%d'),
+//             })
+
+//         if not data:
+//              return Response({"message": "No data found for export."}, status=status.HTTP_404_NOT_FOUND)
+
+//         df = pd.DataFrame(data)
+//         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+//         response['Content-Disposition'] = f'attachment; filename={filename_tag}_{today}.xlsx'
+
+//         with pd.ExcelWriter(response, engine='xlsxwriter') as writer:
+//             df.to_excel(writer, index=False, sheet_name='Leads')
+
+//         return response
+
+
+
+
+
+
+
+//  path('api/team-leader/staff-dashboard/', api.TeamLeaderStaffDashboardAPIView.as_view(), name='api_team_leader_staff_dashboard'),
+
+//     # --- TEAM LEADER ADD STAFF ---
+//     path('api/team-leader/add-staff/', api.TeamLeaderAddStaffAPIView.as_view(), name='api_team_leader_add_staff'),
+
+//     # --- TEAM LEADER EDIT STAFF ---
+//     path('api/team-leader/staff/edit/<int:id>/', api.TeamLeaderStaffEditAPIView.as_view(), name='api_team_leader_staff_edit'),
+
+//     # ---  STAFF (CALENDAR) 
+//     path('api/team-leader/staff-calendar/<int:staff_id>/', api.TeamLeaderStaffCalendarAPIView.as_view(), name='api_team_leader_staff_calendar'),
+
+//     # --- TEAM LEADER VIEW STAFF INCENTIVE ---
+//     path('api/team-leader/staff-incentive/<int:staff_id>/', api.TeamLeaderStaffIncentiveAPIView.as_view(), name='api_team_leader_staff_incentive'),
+
+//     # --- TEAM LEADER STAFF LEADS LIST (GET) ---
+//     path('api/team-leader/staff-leads/<int:staff_id>/<str:tag>/', api.TeamLeaderStaffLeadsListAPIView.as_view(), name='api_tl_staff_leads_list'),
+
+//     # --- TEAM LEADER EXPORT LEADS (POST) ---
+//     path('api/team-leader/export-leads/', api.TeamLeaderExportLeadsAPIView.as_view(), name='api_tl_export_leads'),
+
+//     # --- TEAM LEADER ALL LEADS (CARD CLICK) ---
+//     path('api/team-leader/all-leads/<str:tag>/', api.TeamLeadLeadsReportAPIView.as_view(), name='api_tl_all_leads'),
+
+//     #STAFFPRODUCTIVITY
+//     path('api/team-leader/productivity-report/', api.TeamLeaderStaffProductivityReportAPIView.as_view(), name='api_team_leader_productivity_report'),
+
+//     # --- FREELANCER PRODUCTIVITY REPORT ---
+//     path('team-leader/freelancer-productivity/', TeamLeaderFreelancerProductivityAPIView.as_view(), name='teamleader-freelancer-productivity'),
+
+//     # --- TEAM LEADER LEADS DASHBOARD ---
+//     path('api/leads/', LeadsDashboardAPIView.as_view(), name='leads-dashboard'),
+
+//     #ADDLEADAPI
+//     path('api/leads/add/', AddLeadAPI.as_view(), name='api-add-lead'),
+
+
+//     #TEAMCUSTOMESTAGSS
+//     path('api/teamcustomer/<str:tag>/', TeamCustomerAPIView.as_view(), name='api-teamcustomer-tag'),
+
+//     # --- TEAM LEADER UPDATE LEAD STATUS ---
+//     path('api/team-leader/update-lead/<int:id>/', api.TeamLeaderUpdateLeadAPIView.as_view(), name='api_tl_update_lead'),
+
+//     # --- TEAM LEADER LEAD HISTORY ---
+//     path('api/team-leader/lead-history/<int:id>/', api.TeamLeaderLeadHistoryAPIView.as_view(), name='api_tl_lead_history'),
+
+//     #ACTIVITY LOGS
+//     path('api/activityteamlogs/', ActivityLogsRoleAPIView.as_view(), name='api-activitylogs-role'),
+
+//     #VISITTEAMLEADER
+//     path('api/visits/', VisitTeamLeaderAPIView.as_view(), name='api-visits'),
+
+//     # EXPORTSLEADS
+//     path('api/team-leader/export-dashboard-leads/', api.TeamLeaderExportDashboardLeadsAPIView.as_view(), name='api_tl_export_dashboard'),
+
+//     # --- TEAM LEADER PROFILE ---
+//     path('api/team-leader/profile/', api.TeamLeaderProfileViewAPIView.as_view(), name='api_tl_profile'),
+
+//      #... ADD SELL FREELANCER ...
+//     path('api/v2/add_sell_freelancer/<int:id>/', AddSellFreelancerV2APIView.as_view(), name='api_add_sell_freelancer_v2'),
+
+
+
+
+
+
+
+
+
+
+
+
+// from django.urls import path
+// from . import views
+// from django.conf import settings
+// from django.conf.urls.static import static
+// urlpatterns = [
+//     path('', views.login, name='login'),
+//     path('update-password/', views.update_password, name='update_password'),
+//     path('leam_lead_show/<int:id>/<str:tag>/', views.teamleader_perticular_leads, name='leam_lead_show'),
+//     path('export_leads_status_wise_staff/', views.export_leads_status_wise_staff, name='export_leads_status_wise_staff'),
+//     # path('', views.super_dashboard, name='super_dashboard'),
+//     path('super_admin/', views.super_admin, name='super_admin'),
+//     path('super_user_dashboard/', views.super_user_dashboard, name='super_user_dashboard'),
+//     path('admin_side_leads_record/<str:tag>/', views.admin_side_leads_record, name='admin_side_leads_record'),
+//     path('admin_add/', views.admin_add, name='admin_add'),
+//     path('team_dashboard/', views.team_dashboard, name='team_dashboard'),
+//     path('add_team_leader_user/', views.add_team_leader_user, name='add_team_leader_user'),
+//     path('team_leader_userss/', views.team_leader_user, name='team_leader_user'),
+//     # path('home/', views.home, name='home'),
+//     path('leads/', views.leads, name='leads'),
+//     path('export_leads_staff/', views.export_leads_staff, name='export_leads_staff'),
+//     path('customer_details/<str:email>/', views.customer_details, name='customer_details'),
+//     path('assigned/<str:email>/',views.assigned,name='assigned'),
+    
+//     path('view_profile/', views.view_profile, name='view_profile'),
+//     # path('add_user/', views.add_user, name='add_user'),
+//     path('lost_leads/<str:tag>/', views.lost_leads, name='lost_leads'),
+//     path('import_leads/', views.import_leads, name='import_leads'),
+//     path('customer/', views.customer, name='customer'),
+//     path('visits_staff/', views.visits_staff, name='visits_staff'),
+//     path('maybe/', views.maybe, name='maybe'),
+//     path('not_picked/', views.not_picked, name='not_picked'),
+//     path('lost/', views.lost, name='lost'),
+//     path('total_leads_admin/', views.total_leads_admin, name='total_leads_admin'),
+//     path('visit_lead_staff_side/', views.visit_lead_staff_side, name='visit_lead_staff_side'),
+//     # path('staff/', views.staff, name='staff'),
+//     # path('new_staff_add/', views.new_staff_add, name='new_staff_add'),
+//     path('logout/', views.logout_view, name='logout'),
+//     path('status_update/', views.status_update, name='status_update'),
+//     path('staff_user/', views.staff_user, name='staff_user'),
+//     path('all_leads_data/<str:tag>/', views.all_leads_data, name='all_leads_data'),
+//     path('add_staff/', views.add_staff, name='add_staff'),
+//     path('staff_dashboard/', views.staff_dashboard, name='staff_dashboard'),
+//     path('admin_view_profile/', views.admin_view_profile,name='admin_view_profile'),
+//     # path('import/', views.import_data, name='import_data'),
+//     path('excel_upload/', views.excel_upload, name='excel_upload'),
+//     # path('update_user/', views.update_user, name='update_user'),
+//     # path('Staff_excel_upload/', views.Staff_excel_upload, name='Staff_excel_upload'),
+//     path('team_view_profile/', views.team_view_profile, name='team_view_profile'),
+//     path('staff_view_profile/', views.staff_view_profile, name='staff_view_profile'),
+//     # path('send-data/', views.send_data, name='send_data'),
+//     path('adminedit/<int:id>/', views.adminedit, name='editadmin'),
+//     path('teamedit/<int:id>/', views.teamedit, name='teamedit'),
+//     path('staffedit/<int:id>/', views.staffedit, name='staffedit'),
+//     path('bulk_from/', views.bulk_from, name='bulk_from'),
+//     path('lead/', views.lead, name='lead'),
+//     path('to-test-data/', views.bulk_from_data, name='bulk_from_data'),
+//     path('update_send_status/', views.update_send_status, name='update_send_status'),
+//     path('activitylogs/', views.activitylogs, name='activitylogs'),
+//     path('log_activity_add/', views.log_activity_add, name='log_activity_add'),
+//     path('edit-marketing/<str:source>/', views.edit_record, name='edit-marketing'),
+//     path('update-record/', views.update_record, name='update_record'),
+//     path('export/', views.export_users, name='export_users'),
+//     # path('customer_details/<int:id>/',views.customer_details,name='customer_details'),
+
+//     path('team_leader_staff_interested_leads/<int:id>/', views.team_leader_staff_interested_leads, name='team_leader_staff_interested_leads'),
+    
+//     path('teamcustomer/<str:tag>/', views.teamcustomer, name='teamcustomer'),
+//     path('teamlost_leads/', views.teamlost_leads, name='teamlost_leads'),
+//     path('teammaybe/', views.teammaybe, name='teammaybe'),
+//     path('teamnot_picked/', views.teamnot_picked, name='teamnot_picked'),
+//     path('teamlost/', views.teamlost, name='teamlost'),
+//     path('visit_team_leader_side/', views.visit_team_leader_side, name='visit_team_leader_side'),
+
+//     path('lead_user/<int:id>/', views.get_lead_user_data, name='get_lead_user_data'),
+//     path('lead_user/update/<int:id>/', views.update_lead_user, name='update_lead_user'),
+//     path('auto-assign/', views.auto_assign_leads, name='auto_assign'),
+
+//     path('project/', views.project, name='project'),
+
+//     path('send_file/<int:file_id>/', views.send_file_to_client,
+//         name='send_file_to_client'),
+        
+//     path('executive-manager/add-inquiry/', views.add_inquiry, name="add_inquiry" ),
+//     path('update-inquiry-forms/<int:id>/', views.update_inquiry_forms, name='update-inquiry-forms'),
+//     path('interested-not-interested-inquiry/', views.interested_not_interested_inquiry, name="interested-not-interested-inquiry" ),
+//     path('update-inquiry/<int:id>', views.update_inquiry, name="update_inquiry" ),
+//     path('update-delivery-status/', views.update_inquiry_status, name="update_delivery" ),
+//     path('inquiry_-lits/<str:status>', views.pending_inquiry_lists, name="inquiry_lists"),
+//     # ----------------------------- Super Admin ------------------------------
+//     path('get-team-leaders/', views.get_team_leaders, name='get_team_leaders'),
+//     path('get_admin/', views.get_admin, name='get_admin'),
+//     path('get_staff/', views.get_staff, name='get_staff'),
+
+//     path('add_team_leader_admin_side/', views.add_team_leader_admin_side, name='add_team_leader_admin_side'),
+//     path('add_staff_admin_side/', views.add_staff_admin_side, name='add_staff_admin_side'),
+//     path('get_team_leaders_admin_side/', views.get_team_leaders_admin_side, name='get_team_leaders_admin_side'),
+//     path('productivity_index/', views.productivity_index, name='productivity_index'),
+//     path('staff-productivity/', views.staff_productivity_view, name='staff_productivity_view'),
+//     path('teamleader_productivity_view/', views.teamleader_productivity_view, name='teamleader_productivity_view'),
+//     path('admin_productivity_view/', views.admin_productivity_view, name='admin_productivity_view'),
+//     path('freelancer_productivity_view/', views.freelancer_productivity_view, name='freelancer_productivity_view'),
+//     path('toggle-user-active/', views.toggle_user_active, name='toggle_user_active'),
+//     path('super_user_side_staff_leads/<str:tag>/', views.super_user_side_staff_leads, name='super_user_side_staff_leads'),
+
+//     path('project_list/<str:tag>/', views.project_list, name='project_list'),
+//     path('project_edit/<int:id>/', views.project_edit, name='project_edit'),
+//     path('staff/<int:staff_id>/calendar/', views.staff_productivity_calendar_view, name='staff_calendar'),
+//     path('check-location/', views.check_location, name='check_location'),
+//     path('check-superuser/', views.check_superuser, name='check_superuser'),
+//     path('incentive_slap_staff/<int:staff_id>/', views.incentive_slap_staff, name='incentive_slap_staff'),
+//     path('add_sell_freelancer/<int:id>/', views.add_sell_freelancer, name='add_sell_freelancer'),
+
+//     path('add_freelancer/', views.add_freelancer, name='add_freelancer'),
+//     path('add_freelancer_super_side/', views.add_freelancer_super_side, name='add_freelancer_super_side'),
+//     path('team_lead_leads_report/<int:id>/<str:tag>/', views.team_lead_leads_report, name='team_lead_leads_report'),
+//     path('api/get-matching-leads/', views.get_matching_leads, name='get_matching_leads'),
+//     path('api/today-interested-leads/', views.today_interested_count, name='today_interested_leads'),
+//     path('attendance_calendar/<int:id>/', views.attendance_calendar, name='attendance_calendar'),
+//     path('get-task-details/', views.get_task_details, name='get_task_details'),
+//     path('get_logo/', views.get_logo, name='get_logo'),
+//     path('it_staff_list/', views.it_staff_super_admin_side, name='it_staff_list'),
+//     path('add_lead/', views.AddLeadBySelf, name='add_lead_by_self'),
+//     path('lead_listory/<int:id>/', views.LeadHistory, name='lead_listory'),
+
+// ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

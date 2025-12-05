@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Cookies from 'js-cookie';
 import {
   User,
   Mail,
@@ -304,7 +305,10 @@ const LoginPage = () => {
 
       if (data.status) {
         if (typeof window !== 'undefined') {
-          localStorage.setItem('authToken', data.data.token_detail);
+          const token = data.data.token_detail;
+          const userEmail = data.data.email;
+          const userId = data.data.id;
+
           // Determine role from API response
           let userRole = 'superadmin'; // Default to superadmin if no other role matches
           if (data.data.is_admin) {
@@ -316,9 +320,18 @@ const LoginPage = () => {
           } else if (data.data.is_freelancer) {
             userRole = 'freelancer';
           }
+
+          // Set localStorage for client-side usage
+          localStorage.setItem('authToken', token);
           localStorage.setItem('userRole', userRole);
-          localStorage.setItem('userEmail', data.data.email); // Store user's email
-          localStorage.setItem('userId', data.data.id); // Store user's ID
+          localStorage.setItem('userEmail', userEmail);
+          localStorage.setItem('userId', userId);
+
+          // Set cookies for server-side middleware
+          Cookies.set('authToken', token, { expires: 7, path: '/' });
+          Cookies.set('userRole', userRole, { expires: 7, path: '/' });
+          Cookies.set('userId', String(userId), { expires: 7, path: '/' });
+
           setIsAuthenticated(true);
           handleRedirect(userRole);
         }

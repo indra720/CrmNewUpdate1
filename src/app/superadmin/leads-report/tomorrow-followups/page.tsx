@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation'; // Import useSearchParams
+import { format } from 'date-fns';
 // Force re-save for DialogClose error
 import {
   ColumnDef,
@@ -47,12 +48,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus , HistoryIcon } from 'lucide-react';
+import { Search, Loader2, Phone, MessageSquare, ArrowUpDown, Calendar as CalendarIcon, FileDown, ArrowLeft, Briefcase, Users, Clock, Tag, MoreVertical, Plus, Minus , HistoryIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DatePicker } from '@/components/ui/date-picker';
+import { getTeamCustomerLeads } from '@/lib/api';
+import { Calendar } from '@/components/ui/calendar';
 
 export default function TomorrowFollowupsPage() {
   const [search, setSearch] = useState('');
@@ -71,35 +75,23 @@ export default function TomorrowFollowupsPage() {
   const [messageValue, setMessageValue] = useState('');
   const [followDate, setFollowDate] = useState('');
   const [followTime, setFollowTime] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
-
-  const searchParams = useSearchParams(); // Get search params
-  const source = searchParams.get('source'); // Get the source parameter
 
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
 
   async function fetchLeads() {
-    const token = localStorage.getItem("authToken");
     try {
       setLoading(true);
-      // Call the new generic function with the source
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/dashboard/super-admin/`,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        }
-      );
+      const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
+      const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setLeads(data.tomorrow_followups || []);
-      setTotalPages(1); // Adjust as needed
+      const data = await getTeamCustomerLeads('tommorrow_follow', search, formattedStartDate, formattedEndDate); 
+      setLeads(data.results);
+      setTotalPages(Math.ceil(data.count / 10)); // Assuming 10 items per page
     } catch (err: any) {
       setError(err.message || 'Failed to fetch leads.');
     } finally {
@@ -109,7 +101,7 @@ export default function TomorrowFollowupsPage() {
 
   useEffect(() => {
     fetchLeads();
-  }, [page, search, source]); // Add source to dependency array
+  }, [page, search, startDate, endDate]);
 
   async function openEditModal(lead: any) {
     setEditingLead(lead);
@@ -272,52 +264,34 @@ export default function TomorrowFollowupsPage() {
   return (
     <TooltipProvider>
     <div className="space-y-6 flex flex-col h-full pt-6">
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-start gap-4">
-        <div className="relative w-full max-w-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+          {/* Search Input */}
+          <div className="relative w-full lg:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search leads..."
               value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-              onChange={(event) =>
-                table.getColumn('name')?.setFilterValue(event.target.value)
-              }
+              onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
               className="pl-10"
             />
-        </div>
-        <form className="hidden lg:flex lg:items-end lg:gap-4">
-          <div className="space-y-2 w-48">
-            <Label htmlFor="start_date">Start Date</Label>
-            <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
           </div>
-          <div className="space-y-2 w-48">
-            <Label htmlFor="end_date">End Date</Label>
-            <Input id="end_date" name="end_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
-          </div>
-          <Button type="submit" className="h-9 w-24">
-            <FileDown className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        </form>
-      </div>
-
-      <div className="space-y-4">
-        <form className="lg:hidden grid grid-cols-3 gap-14 md:gap-0 items-end">
-          <div className="space-y-2 w-28 md:w-48">
-            <Label htmlFor="start_date">Start Date</Label>
-            <Input id="start_date" name="start_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
-          </div>
-          <div className="space-y-2 w-28 md:w-48">
-            <Label htmlFor="end_date">End Date</Label>
-            <Input id="end_date" name="end_date" type="text" placeholder="mm/dd/yyyy" onFocus={(e) => (e.target.type = 'date')} onBlur={(e) => {if (!e.target.value) e.target.type = 'text'}} className="h-9" />
-          </div>
-          <div className="md:w-auto w-12">
-            <Button type="submit" className="h-9 bg-orange-500 hover:bg-orange-600 text-white md:w-auto w-12 px-2 md:px-3">
-              <FileDown className="mr-0 md:mr-2 h-4 w-4" />
-              <span className="hidden md:inline">Export</span>
+          
+          {/* Date Pickers and Export Form */}
+          <form className="flex flex-col gap-4 md:flex-row md:items-end w-full lg:w-auto">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="start_date">Start Date</Label>
+              <DatePicker date={startDate} setDate={setStartDate} />
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="end_date">End Date</Label>
+              <DatePicker date={endDate} setDate={setEndDate} />
+            </div>
+            <Button type="submit" className="h-9 w-full md:w-auto">
+              <FileDown className="mr-2 h-4 w-4" />
+              Export
             </Button>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
 
 
       <div className="grid gap-4">
