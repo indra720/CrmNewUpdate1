@@ -755,19 +755,15 @@ export default function TeamLeaderManagementPage() {
                             </TooltipProvider>
                         </div>
                          <div className="md:hidden">
-                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreVertical className="h-4 w-4" />
-                                      <span className="sr-only">More</span>
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
-                                  <Pencil className="mr-2 h-4 w-4" /> Edit
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleOpenEditForm(user)}
+                                className="h-8 w-8"
+                            >
+                                <Pencil className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                            </Button>
                           </div>
                       </TableCell>
                     </TableRow>
