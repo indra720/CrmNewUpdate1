@@ -19,10 +19,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { Button } from '../ui/button';
 
 
-const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) => {
+const NavItem = ({ item, isCollapsed, setSidebarOpen }: { item: any; isCollapsed: boolean; setSidebarOpen: (open: boolean) => void }) => {
   const pathname = usePathname();
   
   const isActive = item.path === pathname || (item.submenu && item.subMenuItems.some((sub:any) => sub.path === pathname));
+
+  // Function to handle link click and close sidebar
+  const handleClick = () => {
+    setSidebarOpen(false);
+  };
 
   if (isCollapsed) {
     return (
@@ -45,7 +50,7 @@ const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) =>
                   <DropdownMenuContent side="right" align="start" className="ml-2 bg-popover border-border text-popover-foreground">
                     {item.subMenuItems.map((subItem: any) => (
                       <DropdownMenuItem key={subItem.title} asChild>
-                        <Link href={subItem.path} className={cn(pathname === subItem.path && 'bg-accent')}>
+                        <Link href={subItem.path} className={cn(pathname === subItem.path && 'bg-accent')} onClick={handleClick}>
                           {subItem.title}
                         </Link>
                       </DropdownMenuItem>
@@ -59,6 +64,7 @@ const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) =>
                   'flex items-center justify-center w-full h-12 p-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors duration-200 rounded-lg',
                   isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground'
                 )}
+                onClick={handleClick}
               >
                 {item.icon}
                  <span className="sr-only">{item.title}</span>
@@ -104,6 +110,7 @@ const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) =>
                     'block p-2 text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors duration-200 rounded-md',
                      pathname === subItem.path && 'text-primary-foreground bg-sidebar-primary/50 font-semibold'
                   )}
+                  onClick={handleClick}
                 >
                   {subItem.title}
                 </Link>
@@ -123,6 +130,7 @@ const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) =>
           'flex items-center p-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors duration-200 rounded-lg',
           isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground'
         )}
+        onClick={handleClick}
       >
         {item.icon}
         <span className="ml-4">{item.title}</span>
@@ -132,7 +140,7 @@ const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) =>
 };
 
 
-const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => {
+const SidebarContent = ({ isCollapsed, setSidebarOpen }: { isCollapsed: boolean, setSidebarOpen: (open: boolean) => void }) => {
   const pathname = usePathname();
   const isActive = (path: string) => {
     if (path === '/staff') return pathname === path;
@@ -142,7 +150,7 @@ const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => {
   return (
     <ul className="space-y-2">
       {STAFF_SIDENAV_ITEMS.map((item) => (
-          <NavItem key={item.title} item={item} isCollapsed={isCollapsed} />
+          <NavItem key={item.title} item={item} isCollapsed={isCollapsed} setSidebarOpen={setSidebarOpen} />
       ))}
     </ul>
   );
@@ -181,12 +189,12 @@ export function StaffSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, setIs
     </div>
   );
 
-  const SidebarStructure = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsCollapsed: (collapsed: boolean) => void }) => (
+  const SidebarStructure = ({ isCollapsed, setIsCollapsed, setSidebarOpen }: { isCollapsed: boolean, setIsCollapsed: (collapsed: boolean) => void, setSidebarOpen: (open: boolean) => void }) => (
     <>
       <SidebarHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <div className="flex-1 overflow-y-auto" data-sidebar="content">
         <nav className="mt-4 p-4">
-          <SidebarContent isCollapsed={isCollapsed}/>
+          <SidebarContent isCollapsed={isCollapsed} setSidebarOpen={setSidebarOpen}/>
         </nav>
       </div>
     </>
@@ -252,7 +260,7 @@ export function StaffSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, setIs
         "w-64",
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
-        <SidebarStructure isCollapsed={false} setIsCollapsed={() => {}} />
+        <SidebarStructure isCollapsed={false} setIsCollapsed={() => {}} setSidebarOpen={setSidebarOpen} />
         <SidebarFooter isCollapsed={false} setIsCollapsed={() => {}}/>
       </aside>
 
