@@ -22,12 +22,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { DateRange } from 'react-day-picker';
+import { addDays, format } from 'date-fns';
+
+// ... other imports and component code ...
 
 const ProductivityTeamLeaderPage = () => {
   const [admins, setAdmins] = useState<any[]>([]);
   const [selectedAdmin, setSelectedAdmin] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 0), // Default to today's date for both start and end
+  });
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
   const [teamLeaderData, setTeamLeaderData] = useState<any>(null);
@@ -38,9 +45,30 @@ const ProductivityTeamLeaderPage = () => {
     const token = localStorage.getItem('authToken');
     setLoading(true);
     setError(null);
+
+    const fromDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : '';
+    const toDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : '';
+
+    let apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/productivity/team-leader/`;
+    const params = new URLSearchParams();
+
+    if (selectedAdmin && selectedAdmin !== 'all-admins') {
+      params.append('admin_id', selectedAdmin);
+    }
+    if (fromDate) {
+      params.append('start_date', fromDate);
+    }
+    if (toDate) {
+      params.append('end_date', toDate);
+    }
+
+    if (params.toString()) {
+      apiUrl += `?${params.toString()}`;
+    }
+
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/productivity/team-leader/`,
+        apiUrl,
         {
           method: 'GET',
           headers: {
@@ -65,7 +93,7 @@ const ProductivityTeamLeaderPage = () => {
 
   useEffect(() => {
     fetchTeamLeaderData();
-  }, [selectedAdmin, startDate, endDate]);
+  }, [selectedAdmin, dateRange]);
 
   const handleAdminChange = (value: string) => {
     setSelectedAdmin(value);
@@ -121,32 +149,9 @@ const ProductivityTeamLeaderPage = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="start-date">Start Date</Label>
-              <div className="relative">
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="end-date">End Date</Label>
-              <div className="relative">
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="pl-10"
-                />
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              </div>
+            <div className="space-y-2 lg:col-span-1 sm:col-span-2">
+              <Label htmlFor="date-range">Date Range</Label>
+              <DateRangePicker date={dateRange} setDate={setDateRange} />
             </div>
           </div>
         </CardContent>
