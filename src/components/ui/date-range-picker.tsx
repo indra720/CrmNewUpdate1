@@ -16,17 +16,29 @@ import {
 
 interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
   date?: DateRange;
-  onDateChange: (date: DateRange | undefined) => void;
+  setDate: (date: DateRange | undefined) => void;
 }
 
 export function DateRangePicker({
   className,
   date,
-  onDateChange
+  setDate
 }: DateRangePickerProps) {
 
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)'); // md breakpoint
+    setIsMobile(mediaQuery.matches);
+
+    const handler = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    mediaQuery.addEventListener('change', handler);
+
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
   const handleSelect = (range: DateRange | undefined) => {
-    onDateChange(range);
+    setDate(range);
   }
 
   return (
@@ -37,7 +49,7 @@ export function DateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal",
+              "w-full justify-start text-left font-normal", // Changed w-[300px] to w-full
               !date && "text-muted-foreground"
             )}
           >
@@ -56,17 +68,18 @@ export function DateRangePicker({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 z-50" align={isMobile ? "center" : "start"}> {/* Adjusted align for mobile */}
           <Calendar
             initialFocus
             mode="range"
             defaultMonth={date?.from}
             selected={date}
             onSelect={handleSelect}
-            numberOfMonths={2}
+            numberOfMonths={isMobile ? 1 : 2} // Conditionally render 1 or 2 months
           />
         </PopoverContent>
       </Popover>
     </div>
   )
 }
+
