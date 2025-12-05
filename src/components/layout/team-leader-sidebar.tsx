@@ -17,6 +17,8 @@ import { TEAM_LEADER_SIDENAV_ITEMS } from '@/lib/constants';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Button } from '../ui/button';
+import { useToast } from "@/hooks/use-toast"; // Added import
+import Cookies from 'js-cookie'; // Added missing import
 
 
 const NavItem = ({ item, isCollapsed }: { item: any; isCollapsed: boolean; }) => {
@@ -156,11 +158,27 @@ export function TeamLeaderSidebar({ isSidebarOpen, setSidebarOpen, isCollapsed, 
   setIsCollapsed: (collapsed: boolean) => void 
 }) {
   const router = useRouter();
-  
+  const { toast } = useToast(); // Initialize useToast
+
   const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('userRole');
-    }
+    // Clear all user-related data from localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+
+    // Clear authentication cookies (critical for middleware)
+    Cookies.remove('authToken', { path: '/' });
+    Cookies.remove('userRole', { path: '/' });
+    Cookies.remove('userId', { path: '/' });
+
+    toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+        className: 'bg-green-500 text-white'
+    });
+
     router.push('/login');
   };
 

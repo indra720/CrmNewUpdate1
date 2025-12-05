@@ -1,7 +1,7 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,126 +9,160 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, User } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast";
 
-interface UserData {
-  name: string;
-  email: string;
-  avatarFallback: string;
-  profileLink: string;
-}
-
-const roleData: { [key: string]: UserData } = {
-  admin: {
-    name: 'Admin User',
-    email: 'admin@nexus.com',
-    avatarFallback: 'A',
-    profileLink: '/admin/profile',
-  },
-  superadmin: {
-    name: 'Super Admin',
-    email: 'super@nexus.com',
-    avatarFallback: 'SA',
-    profileLink: '/superadmin/profile',
-  },
-  'team-leader': {
-    name: 'Team Leader',
-    email: 'leader@nexus.com',
-    avatarFallback: 'TL',
-    profileLink: '/team-leader/profile',
-  },
-  staff: {
-    name: 'Staff User',
-    email: 'staff@nexus.com',
-    avatarFallback: 'S',
-    profileLink: '/staff/profile',
-  },
-};
 
 export function UserNav() {
+  console.log('UserNav: Component function called.'); // Added log
   const router = useRouter();
-  const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const { toast } = useToast();
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const storedRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
-    const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null; // Get email from localStorage
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      const storedUserName = localStorage.getItem('userName');
+      const storedUserEmail = localStorage.getItem('userEmail');
+      const storedUserRole = localStorage.getItem('userRole');
+      const storedUserId = localStorage.getItem('userId');
 
-    if (storedRole && roleData[storedRole]) {
-      setCurrentUser({
-        ...roleData[storedRole],
-        email: storedEmail || roleData[storedRole].email, // Use storedEmail or fallback
+      console.log('UserNav: Data from localStorage:', {
+        storedUserName,
+        storedUserEmail,
+        storedUserRole,
+        storedUserId,
       });
-    } else {
-      setCurrentUser(null);
-    }
-  }, [pathname]);
 
+      setUserName(storedUserName);
+      setUserEmail(storedUserEmail);
+      setUserRole(storedUserRole);
+      setUserId(storedUserId);
+    }
+  }, []);
+
+  if (!isMounted || !userName || !userEmail || !userRole) {
+    console.log('UserNav: Not rendering due to missing data or not mounted.', {
+      isMounted,
+      userName,
+      userEmail,
+      userRole,
+    });
+    return null; // Don't render if not mounted or user data is missing
+  }
 
   const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('userRole');
-    }
+    // Clear all user-related data from localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+
+    // Clear authentication cookies (critical for middleware)
+    Cookies.remove('authToken', { path: '/' });
+    Cookies.remove('userRole', { path: '/' });
+    Cookies.remove('userId', { path: '/' });
+
+    toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+        className: 'bg-green-500 text-white'
+    });
+
     router.push('/login');
   };
-  
-  if (!currentUser) {
-    return null; // Or a loading skeleton
-  }
+
+  // Function to get profile link based on role
+  const getUserProfileLink = (role: string | null) => {
+    switch (role) {
+      case 'superadmin':
+        return '/superadmin/profile';
+      case 'admin':
+        // Assuming admin has a profile page under /admin/profile, adjust if needed
+        return '/admin/profile'; 
+      case 'team-leader':
+        return '/team-leader/profile';
+      case 'staff':
+        return '/staff/profile';
+      default:
+        return '/profile'; // Generic profile or login if no role
+    }
+  };
+
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-auto rounded-full px-2">
-            <div className='flex items-center gap-3'>
-                <div className='text-right hidden sm:block'>
-                    <p className="text-sm font-medium leading-none">{currentUser.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                        {currentUser.email}
-                    </p>
-                </div>
-                <Avatar className="h-9 w-9 border-2 border-primary">
-                    <AvatarImage
-                        src={`https://i.pravatar.cc/150?u=${currentUser.email}`}
-                        alt="User avatar"
-                    />
-                    <AvatarFallback className="bg-primary text-primary-foreground">{currentUser.avatarFallback}</AvatarFallback>
-                </Avatar>
-            </div>
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+          <Avatar className="h-9 w-9">
+            {/* Display first letter of userName as fallback if no image */}
+            <AvatarFallback>{userName ? userName[0].toUpperCase() : 'U'}</AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{currentUser.name}</p>
+            <p className="text-sm font-medium leading-none">{userName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {currentUser.email}
+              {userEmail}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href={currentUser.profileLink}>
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-          </Link>
+          <DropdownMenuItem onClick={() => router.push(getUserProfileLink(userRole))}>
+            Profile
+            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+          </DropdownMenuItem>
           <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+            Settings
+            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}> {/* Prevent DropdownMenu from closing */}
+                    Log out
+                    <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+                </DropdownMenuItem>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action will log you out of your account.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout}>Log Out</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </DropdownMenuContent>
     </DropdownMenu>
   );

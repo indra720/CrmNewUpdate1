@@ -539,30 +539,28 @@ export default function TeamLeaderDashboardPage() {
 
       <Card>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:flex-row md:items-end gap-4 w-full"> {/* Main filter div, simplified */}
-            <div className="space-y-2 w-full flex-1"> {/* Start Date Picker Container */}
+          <div className="flex flex-col md:flex-row md:items-end gap-4 w-full">
+            <div className="space-y-2 w-full md:w-auto lg:w-52">
               <Label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">Start Date</Label>
               <DatePicker date={startDate} setDate={setStartDate} />
             </div>
-            <div className="space-y-2 w-full flex-1"> {/* End Date Picker Container */}
+            <div className="space-y-2 w-full md:w-auto lg:w-52">
               <Label htmlFor="endDate" className="text-sm font-medium text-muted-foreground">End Date</Label>
               <DatePicker date={endDate} setDate={setEndDate} />
             </div>
-            <div className="w-full flex-1 md:flex-none md:w-auto"> {/* Filter Button Container */}
+            <div className="flex gap-2 w-full md:w-auto"> {/* New wrapper for buttons */}
               <Button
                 onClick={handleFilter}
-                className="flex items-center w-full" /* Always show icon and text */
+                className="flex items-center flex-1" // Use flex-1 to distribute space
                 disabled={loading}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 <span>{loading ? "Filtering..." : "Filter"}</span>
               </Button>
-            </div>
-            <div className="w-full flex-1 md:flex-none md:w-auto"> {/* Refresh Button Container */}
               <Button
                 onClick={handleRefresh}
                 variant="outline"
-                className="flex items-center w-full" /* Always show icon and text */
+                className="flex items-center flex-1" // Use flex-1 to distribute space
                 disabled={loading}
               >
                 <RotateCw className="h-4 w-4 mr-2" />
@@ -783,7 +781,7 @@ export default function TeamLeaderDashboardPage() {
       </Card>
 
       <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
+        <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
           <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
             <DialogTitle className="text-xl font-bold">Add New Staff</DialogTitle>
             <DialogDescription>
@@ -1011,7 +1009,7 @@ export default function TeamLeaderDashboardPage() {
                   </motion.div>
                 </AnimatePresence>
               </div>
-              <DialogFooter className="p-6 pt-4 border-t bg-muted/50 flex justify-between w-full flex-shrink-0">
+              <DialogFooter className="p-6 pt-4 border-t bg-muted/50 gap-2 flex justify-between w-full flex-shrink-0">
                 {activeTab === "personal" ? (
                   <div></div>
                 ) : (
@@ -1064,7 +1062,7 @@ export default function TeamLeaderDashboardPage() {
                 className="flex-1 flex flex-col min-h-0"
               >
                 <div className="px-6 pt-4 flex-shrink-0">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-1 md:grid-cols-2">
                     <TabsTrigger value="personal">Personal Details</TabsTrigger>
                     <TabsTrigger value="account">Account Details</TabsTrigger>
                   </TabsList>

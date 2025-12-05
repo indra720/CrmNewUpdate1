@@ -26,7 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from 'js-cookie';
 import {
   User,
@@ -60,28 +60,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
 
 const LoadingOverlay = () => {
-    return (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
-            <div className="flex items-center space-x-2">
-                <motion.div
-                    className="h-4 w-4 bg-primary rounded-full"
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.div
-                    className="h-4 w-4 bg-primary rounded-full"
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-                />
-                <motion.div
-                    className="h-4 w-4 bg-primary rounded-full"
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-                />
-            </div>
-            <p className="mt-4 text-lg font-medium text-primary">Authenticating...</p>
-        </div>
-    );
+  return (
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
+      <div className="flex items-center space-x-2">
+        <motion.div
+          className="h-4 w-4 bg-primary rounded-full"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="h-4 w-4 bg-primary rounded-full"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+        />
+        <motion.div
+          className="h-4 w-4 bg-primary rounded-full"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+        />
+      </div>
+      <p className="mt-4 text-lg font-medium text-primary">Authenticating...</p>
+    </div>
+  );
 };
 
 
@@ -155,16 +155,35 @@ const InputField = ({
 
 const LoginPage = () => {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [showUnauthenticatedModal, setShowUnauthenticatedModal] = useState(false); // New state for modal
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("personal");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      setTimeout(() => {
+        if (error === 'unauthenticated') {
+          setShowUnauthenticatedModal(true); // Open the modal
+        } else if (error === 'unauthorized') {
+          toast({
+            title: "Authorization Failed",
+            description: "You are not authorized for that page. Please log in with the correct credentials.",
+            variant: "destructive",
+          });
+        }
+      }, 100); // 100ms delay
+    }
+  }, [searchParams, toast]);
 
   const [loginData, setLoginData] = useState({
     username: "",
     password: "",
     rememberMe: false,
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -215,8 +234,8 @@ const LoginPage = () => {
   useEffect(() => {
     const storedRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
     if (storedRole) {
-        setIsAuthenticated(true);
-        handleRedirect(storedRole);
+      setIsAuthenticated(true);
+      handleRedirect(storedRole);
     }
   }, []);
 
@@ -261,25 +280,25 @@ const LoginPage = () => {
   };
 
   const handleRedirect = (role: string) => {
-     switch (role) {
-        case "superadmin":
-            router.push('/superadmin/dashboard');
-            break;
-        case "admin":
-            router.push('/admin/users/team-leader');
-            break;
-        case "team-leader":
-            router.push('/team-leader/');
-            break;
-        case "staff":
-            router.push('/staff/dashboard');
-            break;
-        case "freelancer":
-            router.push('/freelancer/dashboard'); // Assuming /freelancer/dashboard for freelancer
-            break;
-        default:
-            router.push('/login'); 
-            break;
+    switch (role) {
+      case "superadmin":
+        router.push('/superadmin/dashboard');
+        break;
+      case "admin":
+        router.push('/admin/users/team-leader');
+        break;
+      case "team-leader":
+        router.push('/team-leader/');
+        break;
+      case "staff":
+        router.push('/staff/dashboard');
+        break;
+      case "freelancer":
+        router.push('/freelancer/dashboard'); // Assuming /freelancer/dashboard for freelancer
+        break;
+      default:
+        router.push('/login');
+        break;
     }
   }
 
@@ -287,10 +306,10 @@ const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true);
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-    
+
 
     try {
-      const response = await fetch(`${API_BASE_URL}/accounts/apilogin/`,{
+      const response = await fetch(`${API_BASE_URL}/accounts/apilogin/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -321,11 +340,15 @@ const LoginPage = () => {
             userRole = 'freelancer';
           }
 
+          console.log('Login API response data:', data.data); // Added for debugging
+          console.log('Determined userRole:', userRole); // Added for debugging
+
           // Set localStorage for client-side usage
           localStorage.setItem('authToken', token);
           localStorage.setItem('userRole', userRole);
           localStorage.setItem('userEmail', userEmail);
           localStorage.setItem('userId', userId);
+          localStorage.setItem('userName', data.data.name);
 
           // Set cookies for server-side middleware
           Cookies.set('authToken', token, { expires: 7, path: '/' });
@@ -365,56 +388,56 @@ const LoginPage = () => {
 
     const formData = new FormData();
     Object.keys(registerData).forEach(key => {
-        const value = registerData[key as keyof typeof registerData];
-        if (value instanceof File) {
-            formData.append(key, value);
-        } else if (value !== null && value !== undefined) {
-            formData.append(key, String(value));
-        }
+      const value = registerData[key as keyof typeof registerData];
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, String(value));
+      }
     });
 
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     const REGISTER_API_URL = `${API_BASE_URL}/accounts/register/`;
 
     try {
-        const response = await fetch(REGISTER_API_URL, {
-            method: "POST",
-            body: formData,
-        });
+      const response = await fetch(REGISTER_API_URL, {
+        method: "POST",
+        body: formData,
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (data.status) {
-            toast({
-                title: "Registration Successful!",
-                description: data.message,
-                className: 'bg-green-500 text-white'
-            });
-            setIsRegisterOpen(false);
-        } else {
-            toast({
-                title: "Registration Failed",
-                description: data.message || "An unexpected error occurred.",
-                variant: "destructive",
-            });
-        }
-    } catch (error) {
-        console.error("Registration API error:", error);
+      if (data.status) {
         toast({
-            title: "Registration Error",
-            description: "Could not connect to the server. Please try again.",
-            variant: "destructive",
+          title: "Registration Successful!",
+          description: data.message,
+          className: 'bg-green-500 text-white'
         });
+        setIsRegisterOpen(false);
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: data.message || "An unexpected error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Registration API error:", error);
+      toast({
+        title: "Registration Error",
+        description: "Could not connect to the server. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
-  
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-        title: "Password Reset",
-        description: "If an account with that email exists, a reset link has been sent.",
+      title: "Password Reset",
+      description: "If an account with that email exists, a reset link has been sent.",
     });
   }
 
@@ -453,553 +476,556 @@ const LoginPage = () => {
   );
 
   return (
-    <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
-      {(isLoading || isAuthenticated) && <LoadingOverlay />}
-      {!isAuthenticated && (
-      <section className="min-h-screen w-full flex items-center justify-center bg-card p-4">
-        <Card className="w-full max-w-5xl mx-auto rounded-3xl shadow-2xl overflow-hidden bg-background backdrop-blur-sm border-white/20">
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="p-6 sm:p-8 flex flex-col justify-center">
-              <div className="mb-8 text-center md:text-left">
-                <h1 className="text-3xl md:text-4xl font-bold mt-1 text-foreground">
-                  Welcome back!
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  Enter your login credentials
-                </p>
-              </div>
+    <>
+      {(isLoading || isAuthenticated) && <LoadingOverlay />} {/* Moved here */}
 
-              <form id="login-form" onSubmit={handleLoginSubmit}>
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      type="email"
-                      id="username"
-                      name="username"
-                      placeholder="you@example.com"
-                      value={loginData.username}
-                      onChange={handleLoginChange}
-                      required
-                      className="h-11 rounded-lg"
-                    />
+      {/* Unauthenticated Access Dialog */}
+      <Dialog open={showUnauthenticatedModal} onOpenChange={setShowUnauthenticatedModal}>
+        {!isAuthenticated && (
+          <section className="min-h-screen w-full flex items-center justify-center bg-card p-4">
+            <Card className="w-full max-w-5xl mx-auto rounded-3xl shadow-2xl overflow-hidden bg-background backdrop-blur-sm border-white/20">
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <div className="p-6 sm:p-8 flex flex-col justify-center">
+                  <div className="mb-8 text-center md:text-left">
+                    <h1 className="text-3xl md:text-4xl font-bold mt-1 text-foreground">
+                      Welcome back!
+                    </h1>
+                    <p className="text-muted-foreground mt-2">
+                      Enter your login credentials
+                    </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="password">Password</Label>
-                       <Dialog>
-                        <DialogTrigger asChild>
-                           <Button
+                  <form id="login-form" onSubmit={handleLoginSubmit}>
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                          type="email"
+                          id="username"
+                          name="username"
+                          placeholder="you@example.com"
+                          value={loginData.username}
+                          onChange={handleLoginChange}
+                          required
+                          className="h-11 rounded-lg"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label htmlFor="password">Password</Label>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
                                 type="button"
                                 variant="link"
                                 className="p-0 h-auto text-sm font-medium text-primary"
-                            >
+                              >
                                 Forget password?
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                             <DialogHeader>
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
                                 <DialogTitle>Forgot Password</DialogTitle>
                                 <DialogDescription>
-                                    Enter your email to receive a password reset link.
+                                  Enter your email to receive a password reset link.
                                 </DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleForgotPassword} className="space-y-4">
+                              </DialogHeader>
+                              <form onSubmit={handleForgotPassword} className="space-y-4">
                                 <div className="space-y-2">
-                                <Label htmlFor="forgot-email">Email</Label>
-                                <Input id="forgot-email" type="email" placeholder="you@example.com" required />
+                                  <Label htmlFor="forgot-email">Email</Label>
+                                  <Input id="forgot-email" type="email" placeholder="you@example.com" required />
                                 </div>
                                 <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button type="button" variant="outline">Cancel</Button>
-                                    </DialogClose>
-                                    <Button type="submit">Send Reset Link</Button>
+                                  <DialogClose asChild>
+                                    <Button type="button" variant="outline">Cancel</Button>
+                                  </DialogClose>
+                                  <Button type="submit">Send Reset Link</Button>
                                 </DialogFooter>
-                            </form>
-                        </DialogContent>
-                       </Dialog>
-                    </div>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        id="password"
-                        name="password"
-                        placeholder="••••••••"
-                        value={loginData.password}
-                        onChange={handleLoginChange}
-                        required
-                        className="h-11 rounded-lg pr-10"
-                      />
+                              </form>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            id="password"
+                            name="password"
+                            placeholder="••••••••"
+                            value={loginData.password}
+                            onChange={handleLoginChange}
+                            required
+                            className="h-11 rounded-lg pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </Button>
+                        </div>
+                      </div>
+
+
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="rememberMe"
+                          name="rememberMe"
+                          checked={loginData.rememberMe}
+                          onCheckedChange={(checked) =>
+                            setLoginData({ ...loginData, rememberMe: !!checked })
+                          }
+                        />
+                        <Label
+                          htmlFor="rememberMe"
+                          className="font-normal text-sm text-muted-foreground"
+                        >
+                          Remember for 30 days
+                        </Label>
+                      </div>
+
                       <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
+                        type="submit"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 h-auto text-base rounded-lg"
+                        disabled={isLoading}
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        Login
                       </Button>
                     </div>
-                  </div>
-                  
+                  </form>
 
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="rememberMe"
-                      name="rememberMe"
-                      checked={loginData.rememberMe}
-                      onCheckedChange={(checked) =>
-                        setLoginData({ ...loginData, rememberMe: !!checked })
-                      }
-                    />
-                    <Label
-                      htmlFor="rememberMe"
-                      className="font-normal text-sm text-muted-foreground"
-                    >
-                      Remember for 30 days
-                    </Label>
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 h-auto text-base rounded-lg"
-                    disabled={isLoading}
-                  >
-                    Login
-                  </Button>
-                </div>
-              </form>
+                  <div className="grid grid-cols-1 gap-3">
+                    <Button variant="outline" className="w-full h-11 rounded-lg">
+                      <GoogleIcon className="mr-2 h-5 w-5" />
+                      Sign in with Google
+                    </Button>
+                  </div>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <div className="text-center mt-6 text-sm">
+                    <span className="text-muted-foreground">Not Registered?</span>{" "}
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="p-0 h-auto font-medium text-primary hover:underline"
+                      >
+                        Create an account
+                      </Button>
+                    </DialogTrigger>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3">
-                <Button variant="outline" className="w-full h-11 rounded-lg">
-                  <GoogleIcon className="mr-2 h-5 w-5" />
-                  Sign in with Google
-                </Button>
-              </div>
-
-              <div className="text-center mt-6 text-sm">
-                <span className="text-muted-foreground">Not Registered?</span>{" "}
-                <DialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="p-0 h-auto font-medium text-primary hover:underline"
-                  >
-                    Create an account
-                  </Button>
-                </DialogTrigger>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center justify-center p-8 bg-gradient-to-br from-primary/10 to-background rounded-l-3xl m-4 ml-0">
-                <Image 
-                    src="https://picsum.photos/seed/login/800/600" 
+                <div className="hidden md:flex items-center justify-center p-8 bg-gradient-to-br from-primary/10 to-background rounded-l-3xl m-4 ml-0">
+                  <Image
+                    src="https://picsum.photos/seed/login/800/600"
                     alt="Login illustration"
                     width={800}
                     height={600}
                     className="rounded-2xl object-cover"
                     data-ai-hint="office team"
-                />
-            </div>
-          </div>
-        </Card>
-      </section>
-      )}
-      <DialogContent className="sm:max-w-4xl max-h-[95vh] p-0 bg-card rounded-2xl shadow-2xl flex flex-col">
-        <DialogHeader className="p-6 md:p-8 pb-0 flex-shrink-0">
-          <DialogTitle className="text-2xl md:text-3xl font-bold text-foreground">
-            Freelancer Registration
-          </DialogTitle>
-          <DialogDescription className="hidden md:block text-muted-foreground text-base">
-            Fill out the form below to create your account.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleRegisterSubmit} className="flex-1 flex flex-col min-h-0">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="flex-1 flex flex-col min-h-0"
-          >
-            <div className="px-6 md:px-8 mt-4">
-              <TabsList className="relative grid grid-cols-1 md:grid-cols-3 w-full bg-muted/80 rounded-lg p-1">
-                <TabsTrigger value="personal">
-                  Personal Information
-                </TabsTrigger>
-                <TabsTrigger value="account">
-                  Account Details
-                </TabsTrigger>
-                <TabsTrigger value="review">
-                  Review &amp; Submit
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            <div className="flex-grow mt-4 px-6 md:px-8 overflow-y-auto hide-scrollbar">
-              <TabsContent value="personal">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                  <InputField
-                    id="reg-name"
-                    label="Name"
-                    name="name"
-                    placeholder="John Doe"
-                    icon={User}
-                    value={registerData.name}
-                    onChange={handleRegisterChange}
-                    required
                   />
-                  <InputField
-                    id="reg-email"
-                    label="E-Mail Address"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    icon={Mail}
-                    value={registerData.email}
-                    onChange={handleRegisterChange}
-                    required
-                  />
-                   <div className="relative flex flex-col space-y-2">
-                        <Label htmlFor="reg-password">Password</Label>
-                        <div className="relative">
-                            <Input
-                                id="reg-password"
-                                type={showRegPassword ? "text" : "password"}
-                                name="password"
-                                placeholder="••••••••••••"
-                                value={registerData.password}
-                                onChange={handleRegisterChange}
-                                required
-                                className="pl-4 pr-10 h-11"
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:bg-transparent"
-                                onClick={() => setShowRegPassword(!showRegPassword)}
-                            >
-                                {showRegPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </Button>
-                        </div>
-                    </div>
-                  <InputField
-                    id="reg-mobile"
-                    label="Mobile Number"
-                    name="mobile"
-                    type="tel"
-                    placeholder="9876543210"
-                    icon={Phone}
-                    value={registerData.mobile}
-                    onChange={handleRegisterChange}
-                    required
-                  />
-                  <InputField
-                    id="reg-dob"
-                    label="Date of Birth"
-                    name="dob"
-                    type="date"
-                    icon={Calendar}
-                    value={registerData.dob}
-                    onChange={handleRegisterChange}
-                  />
-                  <div className="md:col-span-2">
+                </div>
+              </div>
+            </Card>
+          </section>
+        )}
+        <DialogContent className="sm:max-w-4xl max-h-[95vh] p-0 bg-card rounded-2xl shadow-2xl flex flex-col">
+          <DialogHeader className="p-6 md:p-8 pb-0 flex-shrink-0">
+            <DialogTitle className="text-2xl md:text-3xl font-bold text-foreground">
+              Freelancer Registration
+            </DialogTitle>
+            <DialogDescription className="hidden md:block text-muted-foreground text-base">
+              Fill out the form below to create your account.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleRegisterSubmit} className="flex-1 flex flex-col min-h-0">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <div className="px-6 md:px-8 mt-4">
+                <TabsList className="relative grid grid-cols-1 md:grid-cols-3 w-full bg-muted/80 rounded-lg p-1">
+                  <TabsTrigger value="personal">
+                    Personal Information
+                  </TabsTrigger>
+                  <TabsTrigger value="account">
+                    Account Details
+                  </TabsTrigger>
+                  <TabsTrigger value="review">
+                    Review &amp; Submit
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <div className="flex-grow mt-4 px-6 md:px-8 overflow-y-auto hide-scrollbar">
+                <TabsContent value="personal">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                     <InputField
-                      id="reg-address"
-                      label="Address"
-                      name="address"
-                      value={registerData.address}
+                      id="reg-name"
+                      label="Name"
+                      name="name"
+                      placeholder="John Doe"
+                      icon={User}
+                      value={registerData.name}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <InputField
+                      id="reg-email"
+                      label="E-Mail Address"
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      icon={Mail}
+                      value={registerData.email}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <div className="relative flex flex-col space-y-2">
+                      <Label htmlFor="reg-password">Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="reg-password"
+                          type={showRegPassword ? "text" : "password"}
+                          name="password"
+                          placeholder="••••••••••••"
+                          value={registerData.password}
+                          onChange={handleRegisterChange}
+                          required
+                          className="pl-4 pr-10 h-11"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:bg-transparent"
+                          onClick={() => setShowRegPassword(!showRegPassword)}
+                        >
+                          {showRegPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </Button>
+                      </div>
+                    </div>
+                    <InputField
+                      id="reg-mobile"
+                      label="Mobile Number"
+                      name="mobile"
+                      type="tel"
+                      placeholder="9876543210"
+                      icon={Phone}
+                      value={registerData.mobile}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <InputField
+                      id="reg-dob"
+                      label="Date of Birth"
+                      name="dob"
+                      type="date"
+                      icon={Calendar}
+                      value={registerData.dob}
+                      onChange={handleRegisterChange}
+                    />
+                    <div className="md:col-span-2">
+                      <InputField
+                        id="reg-address"
+                        label="Address"
+                        name="address"
+                        value={registerData.address}
+                        onChange={handleRegisterChange}
+                        required
+                      >
+                        <Textarea className="pl-4 pr-4 min-h-[80px]" />
+                      </InputField>
+                    </div>
+                    <InputField
+                      id="reg-city"
+                      label="City"
+                      name="city"
+                      placeholder="Mumbai"
+                      icon={Building2}
+                      value={registerData.city}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <InputField
+                      id="reg-state"
+                      label="State"
+                      name="state"
+                      icon={Map}
+                      value={registerData.state}
                       onChange={handleRegisterChange}
                       required
                     >
-                      <Textarea className="pl-4 pr-4 min-h-[80px]" />
+                      <Select
+                        onValueChange={(value) =>
+                          handleRegisterSelectChange("state", value)
+                        }
+                        name="state"
+                        required
+                      >
+                        <SelectTrigger className="pl-4 pr-10 h-11">
+                          <SelectValue placeholder="Select State" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                          <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                          <SelectItem value="Gujarat">Gujarat</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </InputField>
+                    <InputField
+                      id="reg-pincode"
+                      label="Pincode"
+                      name="pincode"
+                      placeholder="400001"
+                      icon={MapPin}
+                      value={registerData.pincode}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <InputField
+                      id="reg-profile-image"
+                      label="Profile Image"
+                      name="profileImage"
+                      type="file"
+                      icon={Camera}
+                      onChange={handleRegisterChange} value={""} />
+                    <InputField
+                      id="reg-degree"
+                      label="Degree"
+                      name="degree"
+                      placeholder="B.Tech in CS"
+                      icon={GraduationCap}
+                      value={registerData.degree}
+                      onChange={handleRegisterChange}
+                    />
+                    <InputField
+                      id="reg-referral"
+                      label="Referral Code"
+                      name="referralCode"
+                      placeholder="REF123"
+                      icon={Tag}
+                      value={registerData.referralCode}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="account">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    <InputField
+                      id="reg-bank-name"
+                      label="Bank Name"
+                      name="bankName"
+                      placeholder="State Bank of India"
+                      icon={Landmark}
+                      value={registerData.bankName}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <InputField
+                      id="reg-account-number"
+                      label="Account Number"
+                      name="accountNumber"
+                      placeholder="Your Bank Account Number"
+                      icon={Wallet}
+                      value={registerData.accountNumber}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <InputField
+                      id="reg-ifsc"
+                      label="IFSC Code"
+                      name="ifscCode"
+                      placeholder="SBIN000000"
+                      icon={Hash}
+                      value={registerData.ifscCode}
+                      onChange={handleRegisterChange}
+                      required
+                    />
+                    <InputField
+                      id="reg-upi"
+                      label="UPI ID (Optional)"
+                      name="upiId"
+                      placeholder="yourname@upi"
+                      icon={LinkIcon}
+                      value={registerData.upiId}
+                      onChange={handleRegisterChange}
+                    />
+                    <InputField
+                      id="reg-user-type"
+                      label="User Type"
+                      name="userType"
+                      icon={Users}
+                      value={registerData.userType}
+                      onChange={handleRegisterChange}
+                      required
+                    >
+                      <Select
+                        onValueChange={(value) =>
+                          handleRegisterSelectChange("userType", value)
+                        }
+                        name="userType"
+                        required
+                      >
+                        <SelectTrigger className="pl-4 pr-10 h-11">
+                          <SelectValue placeholder="Select a User Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Freelancer">Freelancer</SelectItem>
+                          <SelectItem value="Employee">Employee</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </InputField>
                   </div>
-                  <InputField
-                    id="reg-city"
-                    label="City"
-                    name="city"
-                    placeholder="Mumbai"
-                    icon={Building2}
-                    value={registerData.city}
-                    onChange={handleRegisterChange}
-                    required
-                  />
-                  <InputField
-                    id="reg-state"
-                    label="State"
-                    name="state"
-                    icon={Map}
-                    value={registerData.state}
-                    onChange={handleRegisterChange}
-                    required
-                  >
-                    <Select
-                      onValueChange={(value) =>
-                        handleRegisterSelectChange("state", value)
-                      }
-                      name="state"
-                      required
-                    >
-                      <SelectTrigger className="pl-4 pr-10 h-11">
-                        <SelectValue placeholder="Select State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                        <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                        <SelectItem value="Gujarat">Gujarat</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </InputField>
-                  <InputField
-                    id="reg-pincode"
-                    label="Pincode"
-                    name="pincode"
-                    placeholder="400001"
-                    icon={MapPin}
-                    value={registerData.pincode}
-                    onChange={handleRegisterChange}
-                    required
-                  />
-                  <InputField
-                    id="reg-profile-image"
-                    label="Profile Image"
-                    name="profileImage"
-                    type="file"
-                    icon={Camera}
-                    onChange={handleRegisterChange} value={""}                  />
-                  <InputField
-                    id="reg-degree"
-                    label="Degree"
-                    name="degree"
-                    placeholder="B.Tech in CS"
-                    icon={GraduationCap}
-                    value={registerData.degree}
-                    onChange={handleRegisterChange}
-                  />
-                  <InputField
-                    id="reg-referral"
-                    label="Referral Code"
-                    name="referralCode"
-                    placeholder="REF123"
-                    icon={Tag}
-                    value={registerData.referralCode}
-                    onChange={handleRegisterChange}
-                  />
-                </div>
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="account">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                  <InputField
-                    id="reg-bank-name"
-                    label="Bank Name"
-                    name="bankName"
-                    placeholder="State Bank of India"
-                    icon={Landmark}
-                    value={registerData.bankName}
-                    onChange={handleRegisterChange}
-                    required
-                  />
-                  <InputField
-                    id="reg-account-number"
-                    label="Account Number"
-                    name="accountNumber"
-                    placeholder="Your Bank Account Number"
-                    icon={Wallet}
-                    value={registerData.accountNumber}
-                    onChange={handleRegisterChange}
-                    required
-                  />
-                  <InputField
-                    id="reg-ifsc"
-                    label="IFSC Code"
-                    name="ifscCode"
-                    placeholder="SBIN000000"
-                    icon={Hash}
-                    value={registerData.ifscCode}
-                    onChange={handleRegisterChange}
-                    required
-                  />
-                  <InputField
-                    id="reg-upi"
-                    label="UPI ID (Optional)"
-                    name="upiId"
-                    placeholder="yourname@upi"
-                    icon={LinkIcon}
-                    value={registerData.upiId}
-                    onChange={handleRegisterChange}
-                  />
-                  <InputField
-                    id="reg-user-type"
-                    label="User Type"
-                    name="userType"
-                    icon={Users}
-                    value={registerData.userType}
-                    onChange={handleRegisterChange}
-                    required
-                  >
-                    <Select
-                      onValueChange={(value) =>
-                        handleRegisterSelectChange("userType", value)
-                      }
-                      name="userType"
-                      required
-                    >
-                      <SelectTrigger className="pl-4 pr-10 h-11">
-                        <SelectValue placeholder="Select a User Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Freelancer">Freelancer</SelectItem>
-                        <SelectItem value="Employee">Employee</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </InputField>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="review">
-                <div className="space-y-6">
-                  <div className="flex flex-col items-center gap-4 md:flex-row md:items-start">
-                    <Image
-                      src={profileImageUrl}
-                      alt="Profile Preview"
-                      width={120}
-                      height={120}
-                      className="rounded-full object-cover border-4 border-muted"
-                      unoptimized
-                    />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 flex-1 text-center md:text-left">
-                      <ReviewDetailItem
-                        label="Full Name"
-                        value={registerData.name}
+                <TabsContent value="review">
+                  <div className="space-y-6">
+                    <div className="flex flex-col items-center gap-4 md:flex-row md:items-start">
+                      <Image
+                        src={profileImageUrl}
+                        alt="Profile Preview"
+                        width={120}
+                        height={120}
+                        className="rounded-full object-cover border-4 border-muted"
+                        unoptimized
                       />
-                      <ReviewDetailItem
-                        label="Email Address"
-                        value={registerData.email}
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 flex-1 text-center md:text-left">
+                        <ReviewDetailItem
+                          label="Full Name"
+                          value={registerData.name}
+                        />
+                        <ReviewDetailItem
+                          label="Email Address"
+                          value={registerData.email}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                        Personal Information
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <ReviewDetailItem
+                          label="Mobile"
+                          value={registerData.mobile}
+                        />
+                        <ReviewDetailItem
+                          label="Date of Birth"
+                          value={registerData.dob}
+                        />
+                        <ReviewDetailItem
+                          label="Address"
+                          value={registerData.address}
+                        />
+                        <ReviewDetailItem
+                          label="City"
+                          value={registerData.city}
+                        />
+                        <ReviewDetailItem
+                          label="State"
+                          value={registerData.state}
+                        />
+                        <ReviewDetailItem
+                          label="Pincode"
+                          value={registerData.pincode}
+                        />
+                        <ReviewDetailItem
+                          label="Degree"
+                          value={registerData.degree}
+                        />
+                        <ReviewDetailItem
+                          label="Referral"
+                          value={registerData.referralCode}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+                        Account Details
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <ReviewDetailItem
+                          label="Bank Name"
+                          value={registerData.bankName}
+                        />
+                        <ReviewDetailItem
+                          label="Account No."
+                          value={registerData.accountNumber}
+                        />
+                        <ReviewDetailItem
+                          label="IFSC Code"
+                          value={registerData.ifscCode}
+                        />
+                        <ReviewDetailItem
+                          label="UPI ID"
+                          value={registerData.upiId}
+                        />
+                        <ReviewDetailItem
+                          label="User Type"
+                          value={registerData.userType}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-foreground border-b pb-2">
-                      Personal Information
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <ReviewDetailItem
-                        label="Mobile"
-                        value={registerData.mobile}
-                      />
-                      <ReviewDetailItem
-                        label="Date of Birth"
-                        value={registerData.dob}
-                      />
-                      <ReviewDetailItem
-                        label="Address"
-                        value={registerData.address}
-                      />
-                      <ReviewDetailItem
-                        label="City"
-                        value={registerData.city}
-                      />
-                      <ReviewDetailItem
-                        label="State"
-                        value={registerData.state}
-                      />
-                      <ReviewDetailItem
-                        label="Pincode"
-                        value={registerData.pincode}
-                      />
-                      <ReviewDetailItem
-                        label="Degree"
-                        value={registerData.degree}
-                      />
-                      <ReviewDetailItem
-                        label="Referral"
-                        value={registerData.referralCode}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-foreground border-b pb-2">
-                      Account Details
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <ReviewDetailItem
-                        label="Bank Name"
-                        value={registerData.bankName}
-                      />
-                      <ReviewDetailItem
-                        label="Account No."
-                        value={registerData.accountNumber}
-                      />
-                      <ReviewDetailItem
-                        label="IFSC Code"
-                        value={registerData.ifscCode}
-                      />
-                      <ReviewDetailItem
-                        label="UPI ID"
-                        value={registerData.upiId}
-                      />
-                      <ReviewDetailItem
-                        label="User Type"
-                        value={registerData.userType}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
-          <DialogFooter className="mt-auto p-6 pt-4 border-t bg-muted/50 flex-shrink-0">
-            <div className="flex justify-between w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  activeTab === "account"
-                    ? setActiveTab("personal")
-                    : activeTab === "review"
-                    ? setActiveTab("account")
-                    : setActiveTab("personal")
-                }
-                className={cn(activeTab === "personal" && "invisible")}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Previous
-              </Button>
-              {activeTab !== "review" ? (
+                </TabsContent>
+              </div>
+            </Tabs>
+            <DialogFooter className="mt-auto p-6 pt-4 border-t bg-muted/50 flex-shrink-0">
+              <div className="flex justify-between w-full">
                 <Button
                   type="button"
+                  variant="outline"
                   onClick={() =>
-                    activeTab === "personal"
-                      ? setActiveTab("account")
+                    activeTab === "account"
+                      ? setActiveTab("personal")
                       : activeTab === "review"
+                        ? setActiveTab("account")
+                        : setActiveTab("personal")
                   }
+                  className={cn(activeTab === "personal" && "invisible")}
                 >
-                  Next
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Previous
                 </Button>
-              ) : (
-                <Button type="submit" className="w-48 h-11 text-base" disabled={isLoading}>
-                  Create Account
-                </Button>
-              )}
-            </div>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+                {activeTab !== "review" ? (
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      activeTab === "personal"
+                        ? setActiveTab("account")
+                        : activeTab === "review"
+                    }
+                  >
+                    Next
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button type="submit" className="w-48 h-11 text-base" disabled={isLoading}>
+                    Create Account
+                  </Button>
+                )}
+              </div>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      </>
+      );
 };
-
 export default LoginPage;
