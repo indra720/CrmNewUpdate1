@@ -802,18 +802,15 @@ export default function StaffManagementPage() {
                           </TooltipProvider>
                         </div>
                         <div className="md:hidden">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                                <span className="sr-only">More</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuItem onClick={() => handleOpenEditForm(user)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>                          </DropdownMenu>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleOpenEditForm(user)}
+                            className="h-8 w-8"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -890,7 +887,7 @@ export default function StaffManagementPage() {
       </Card>
 
       <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
+        <DialogContent className="sm:max-w-3xl w-[90vw] max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
           <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
             <DialogTitle className="text-xl font-bold">Add New Staff</DialogTitle>
             <DialogDescription>
@@ -898,7 +895,7 @@ export default function StaffManagementPage() {
             </DialogDescription>
           </DialogHeader>
           <form className="flex-1 flex flex-col min-h-0">
-            <div className="px-6 pt-4 flex gap-4">
+            <div className="px-6 pt-4 flex flex-col md:flex-row gap-4">
               <div className="w-full">
                 <Label className="text-sm font-medium text-muted-foreground">Admin *</Label>
                 <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" required>
