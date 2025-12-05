@@ -22,17 +22,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
-import { DateRange } from 'react-day-picker';
+import { DatePicker } from '@/components/ui/date-picker'; // Import DatePicker
 import { addDays, format } from 'date-fns';
 
 const  ProductivityStaffPage= () => {
   const [admins, setAdmins] = useState<any[]>([]);
   const [selectedAdmin, setSelectedAdmin] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 0), // Default to today's date for both start and end
-  });
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined); // Revert to separate Date objects
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined); // Revert to separate Date objects
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
   const [teamLeaderData, setTeamLeaderData] = useState<any>(null);
@@ -44,8 +41,8 @@ const  ProductivityStaffPage= () => {
     setLoading(true);
     setError(null);
 
-    const fromDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : '';
-    const toDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : '';
+    const fromDate = startDate ? format(startDate, 'yyyy-MM-dd') : '';
+    const toDate = endDate ? format(endDate, 'yyyy-MM-dd') : '';
 
     let apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/productivity/staff/`;
     const params = new URLSearchParams();
@@ -91,7 +88,7 @@ const  ProductivityStaffPage= () => {
 
   useEffect(() => {
     fetchTeamLeaderData();
-  }, [selectedAdmin, dateRange]);
+  }, [selectedAdmin, startDate, endDate]);
 
   const handleAdminChange = (value: string) => {
     setSelectedAdmin(value);
@@ -147,9 +144,14 @@ const  ProductivityStaffPage= () => {
               </Select>
             </div>
 
-            <div className="space-y-2 lg:col-span-1 sm:col-span-2">
-              <Label htmlFor="date-range">Date Range</Label>
-              <DateRangePicker date={dateRange} setDate={setDateRange} />
+            <div className="space-y-2">
+              <Label htmlFor="start-date">Start Date</Label>
+              <DatePicker date={startDate} setDate={setStartDate} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="end-date">End Date</Label>
+              <DatePicker date={endDate} setDate={setEndDate} />
             </div>
           </div>
         </CardContent>
