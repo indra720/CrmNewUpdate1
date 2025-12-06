@@ -37,28 +37,33 @@ function NotInterestedLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchLeads() {
-      try {
-        setLoading(true);
-        setError(null);
-        let data;
-        const tag = 'not_interested';
+useEffect(() => {
+  async function fetchLeads() {
+    try {
+      setLoading(true);
+      setError(null);
+      let data;
+      const tag = 'not_interested';
 
-        if (source === 'staff') {
-          data = await fetchAdminnStaffLeadsKpiCountByTag(tag);
-        } else {
-          data = await fetchAdminStaffLeadsKpiCountByTag(tag);
-        }
-        setLeads(data.results || data || []);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch leads.');
+      if (source === 'staff') {
+        data = await fetchAdminnStaffLeadsKpiCountByTag(tag);
+      } else {
+        data = await fetchAdminStaffLeadsKpiCountByTag(tag);
       }
+
+      setLeads(data.result || data || []);
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch leads.');
     } finally {
-        setLoading(false);
-      }
-    fetchLeads();
-  }, [source]);
+      // ✔ finally ALWAYS runs
+      setLoading(false);
+    }
+  }
+
+  fetchLeads();
+}, [source]);
+
 
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
