@@ -190,7 +190,7 @@ export function EditProfileDialog({ isOpen, onClose, profile, onProfileUpdate }:
                 throw new Error('Authentication token not found.');
             }
 
-            const response = await fetch('http://127.0.0.1:8000/accounts/api/admin/profile/', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/profile/`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Token ${token}`,

@@ -277,7 +277,7 @@ export default function ProjectPage() {
                                   <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                                     {project.media_file ? (
                                       <img 
-                                        src={`http://127.0.0.1:8000${project.media_file}`} 
+                                        src={`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/${project.media_file}`} 
                                         alt="Project" 
                                         className="w-full h-full object-cover rounded-full" 
                                       />

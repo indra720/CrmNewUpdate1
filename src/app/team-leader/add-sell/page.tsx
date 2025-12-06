@@ -35,7 +35,7 @@ export default function AddSellPage() {
         return;
       }
       
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
       const url = new URL('/accounts/api/team-leader/staff-dashboard/', baseUrl);
 
       const staffResponse = await fetch(url.toString(), {
@@ -78,7 +78,7 @@ export default function AddSellPage() {
       const token = localStorage.getItem('authToken');
       const { staff, ...sellData } = form; 
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
       const url = new URL(`/accounts/api/v2/add_sell_freelancer/${form.staff}/`, baseUrl);
 
       const response = await fetch(url.toString(), {

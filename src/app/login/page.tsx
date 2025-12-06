@@ -25,9 +25,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import Image from "next/image";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from 'js-cookie';
+import Image from "next/image";
+import loginImage from "@/assests/login2.gif";
+import loginimage2 from "@/assests/login4.png"
 import {
   User,
   Mail,
@@ -163,20 +166,29 @@ const LoginPage = () => {
 
   useEffect(() => {
     const error = searchParams.get('error');
-    if (error) {
-      setTimeout(() => {
-        if (error === 'unauthenticated') {
-          setShowUnauthenticatedModal(true); // Open the modal
-        } else if (error === 'unauthorized') {
-          toast({
-            title: "Authorization Failed",
-            description: "You are not authorized for that page. Please log in with the correct credentials.",
-            variant: "destructive",
-          });
-        }
-      }, 100); // 100ms delay
+    const storedRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+
+    if (error === 'unauthenticated' || error === 'unauthorized') {
+      // If there's an error, we must show the modal.
+      // Invalidate the local session because the middleware has deemed it invalid.
+      if (typeof window !== 'undefined') {
+        Cookies.remove('authToken');
+        Cookies.remove('userRole');
+        Cookies.remove('userId');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
+      }
+      // Show the modal.
+      setShowUnauthenticatedModal(true);
+    } else if (storedRole) {
+      // ONLY if there is no error, and the user is still logged in, redirect them.
+      setIsAuthenticated(true);
+      handleRedirect(storedRole);
     }
-  }, [searchParams, toast]);
+  }, [searchParams]);
 
   const [loginData, setLoginData] = useState({
     username: "",
@@ -477,10 +489,32 @@ const LoginPage = () => {
 
   return (
     <>
-      {(isLoading || isAuthenticated) && <LoadingOverlay />} {/* Moved here */}
+      {(isLoading || isAuthenticated) && <LoadingOverlay />}
 
       {/* Unauthenticated Access Dialog */}
       <Dialog open={showUnauthenticatedModal} onOpenChange={setShowUnauthenticatedModal}>
+        <DialogContent className="sm:max-w-md w-[90vw]">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl font-bold">Please Login</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4">
+            <Image src={loginImage} alt="Please Login" style={{ height: 150, width: 150 }} className="rounded-full" />
+            <p className="mt-4 text-center text-muted-foreground">
+              You need to be logged in to access this page.
+            </p>
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Registration Dialog */}
+      <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
         {!isAuthenticated && (
           <section className="min-h-screen w-full flex items-center justify-center bg-card p-4">
             <Card className="w-full max-w-5xl mx-auto rounded-3xl shadow-2xl overflow-hidden bg-background backdrop-blur-sm border-white/20">
@@ -615,23 +649,25 @@ const LoginPage = () => {
                       Sign in with Google
                     </Button>
                   </div>
-
+                  
+                  {/*
                   <div className="text-center mt-6 text-sm">
                     <span className="text-muted-foreground">Not Registered?</span>{" "}
-                    <DialogTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="p-0 h-auto font-medium text-primary hover:underline"
-                      >
-                        Create an account
-                      </Button>
-                    </DialogTrigger>
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => setIsRegisterOpen(true)}
+                      className="p-0 h-auto font-medium text-primary hover:underline"
+                    >
+                      Create an account
+                    </Button>
                   </div>
+                  */}
+
                 </div>
                 <div className="hidden md:flex items-center justify-center p-8 bg-gradient-to-br from-primary/10 to-background rounded-l-3xl m-4 ml-0">
                   <Image
-                    src="https://picsum.photos/seed/login/800/600"
+                    src={loginimage2}
                     alt="Login illustration"
                     width={800}
                     height={600}
@@ -1025,7 +1061,7 @@ const LoginPage = () => {
           </form>
         </DialogContent>
       </Dialog>
-      </>
-      );
+    </>
+  );
 };
 export default LoginPage;

@@ -170,7 +170,7 @@ export default function StaffIncentivesPage() {
       const token = localStorage.getItem("authToken");
       if (!token) throw new Error("Authentication token not found.");
       
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
       const url = new URL('/accounts/api/team-leader/staff-dashboard/', baseUrl);
 
       const res = await fetch(url.toString(), {
@@ -218,7 +218,7 @@ export default function StaffIncentivesPage() {
         throw new Error("Authentication token not found.");
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
       const url = new URL(`/accounts/api/team-leader/staff-incentive/${staffId}/`, baseUrl);
       url.searchParams.append('year', String(year));
       url.searchParams.append('month', String(month));

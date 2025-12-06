@@ -3,8 +3,8 @@ import type { NextRequest } from 'next/server';
 
 // Define the authorized base path for each role. Access is restricted to these prefixes.
 const roleAuthorizedBasePaths: Record<string, string[]> = {
-  // Superadmin can access all role-specific sections
-  superadmin: ['/superadmin', '/admin', '/team-leader', '/staff'],
+  // Superadmin can only access their own role-specific sections
+  superadmin: ['/superadmin'],
   admin: ['/admin'],
   'team-leader': ['/team-leader'],
   staff: ['/staff'],
