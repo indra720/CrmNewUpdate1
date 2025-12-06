@@ -70,8 +70,8 @@ const ProductivityTeamLeaderPage = () => {
 
   const fetchTeamLeaderData = async (
     adminId?: string,
-    start?: Date | undefined, // Changed to Date | undefined
-    end?: Date | undefined // Changed to Date | undefined
+    start?: Date | undefined, 
+    end?: Date | undefined 
   ) => {
     const formattedStartDate = start ? format(start, 'yyyy-MM-dd') : undefined;
     const formattedEndDate = end ? format(end, 'yyyy-MM-dd') : undefined;
