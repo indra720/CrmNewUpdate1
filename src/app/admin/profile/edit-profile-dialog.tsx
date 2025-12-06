@@ -130,7 +130,7 @@ export function EditProfileDialog({ isOpen, onClose, profile, onProfileUpdate }:
     const [editableData, setEditableData] = useState<EditableProfileData>({});
 
     useEffect(() => {
-        console.log('Dialog received profile:', profile);
+        //console.log('Dialog received profile:', profile);
         if (profile) {
             setEditableData({
                 admin_id: profile.admin_id || '',
@@ -227,7 +227,7 @@ export function EditProfileDialog({ isOpen, onClose, profile, onProfileUpdate }:
                 });
             }
         } catch (error) {
-            console.error("Update API error:", error);
+            //console.error("Update API error:", error);
             toast({
                 title: "Update Error",
                 description: "Could not connect to the server. Please try again.",

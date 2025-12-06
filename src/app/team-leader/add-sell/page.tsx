@@ -31,7 +31,7 @@ export default function AddSellPage() {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        console.error("Authentication token not found");
+        //console.error("Authentication token not found");
         return;
       }
       
@@ -44,13 +44,13 @@ export default function AddSellPage() {
 
       if (staffResponse.ok) {
         const staffData = await staffResponse.json();
-        console.log("Add Sell Page - Staff API Response:", staffData);
+        //console.log("Add Sell Page - Staff API Response:", staffData);
         setStaffs(staffData.staff_list || []);
       } else {
-        console.error("Add Sell Page - Staff API failed with status:", staffResponse.status);
+        //console.error("Add Sell Page - Staff API failed with status:", staffResponse.status);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      //console.error('Error fetching data:', error);
     }
   };
 
@@ -69,7 +69,7 @@ export default function AddSellPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.staff) {
-      console.error("Please select a staff member.");
+      //console.error("Please select a staff member.");
       return;
     }
     setLoading(true);
@@ -101,10 +101,10 @@ export default function AddSellPage() {
         });
       } else {
         const errorData = await response.json();
-        console.error('Error submitting form:', errorData);
+        //console.error('Error submitting form:', errorData);
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
+      //console.error('Error submitting form:', error);
     } finally {
       setLoading(false);
     }

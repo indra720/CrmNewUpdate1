@@ -182,17 +182,17 @@ export default function StaffIncentivesPage() {
       });
       if (!res.ok) throw new Error(`Staff list HTTP error: ${res.status}`);
       const json = await res.json();
-      console.log("fetchStaffList response:", json); // Added log
+      //console.log("fetchStaffList response:", json); // Added log
       const list: StaffListItem[] = json.staff_list || [];
       setStaffList(list);
       if (list.length > 0 && !staffId) {
         setStaffId(String(list[0].id));
-        console.log("Setting initial staffId:", list[0].id); // Added log
+        //console.log("Setting initial staffId:", list[0].id); // Added log
       } else if (list.length === 0) {
-        console.log("fetchStaffList returned an empty list."); // Added log
+        //console.log("fetchStaffList returned an empty list."); // Added log
       }
     } catch (err: any) {
-      console.error("fetchStaffList error:", err); // Added log
+      //console.error("fetchStaffList error:", err); // Added log
       toast({
         title: "Error",
         description: err.message || "Failed to fetch staff list",
@@ -209,12 +209,12 @@ export default function StaffIncentivesPage() {
     setLoading(true);
     setError('');
     setNotFound(false);
-    console.log("Fetching incentive data for staffId:", staffId, "year:", year, "month:", month); // Added log
+    //console.log("Fetching incentive data for staffId:", staffId, "year:", year, "month:", month); // Added log
 
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        console.error("Authentication token not found."); // Added log
+        //console.error("Authentication token not found."); // Added log
         throw new Error("Authentication token not found.");
       }
 
@@ -233,7 +233,7 @@ export default function StaffIncentivesPage() {
         }
       );
 
-      console.log("Incentive API response status:", response.status); // Added log
+      //console.log("Incentive API response status:", response.status); // Added log
 
       if (response.status === 404) {
         setNotFound(true);
@@ -243,18 +243,18 @@ export default function StaffIncentivesPage() {
         setIncentiveAmount(0);
         setCurrentSlab(null);
         setMonthsList([]);
-        console.log("No incentive data found (404)."); // Added log
+        //console.log("No incentive data found (404)."); // Added log
         return;
       }
 
       if (!response.ok) {
         const errorText = await response.text(); // Get raw error text
-        console.error(`HTTP error! status: ${response.status}, details: ${errorText}`); // Added log
+        //console.error(`HTTP error! status: ${response.status}, details: ${errorText}`); // Added log
         throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
       }
 
       const data: ApiResponse = await response.json();
-      console.log("Incentive API data:", data); // Added log
+      //console.log("Incentive API data:", data); // Added log
 
       setSellProperties(data.sell_property || []);
       setSlabs(data.slab || []);

@@ -204,7 +204,7 @@ export default function StaffManagementPage() {
       }
 
       const data = await response.json();
-      console.log("Staff Report API Response:", data);
+      //console.log("Staff Report API Response:", data);
 
       // Set card data from lead_counts
       setcardData(data.lead_counts);
@@ -242,7 +242,7 @@ export default function StaffManagementPage() {
         setAdmins(adminsData);
         setTeamLeaders(teamLeadersData);
       } catch (error) {
-        console.error("Failed to fetch dropdown data:", error);
+        //console.error("Failed to fetch dropdown data:", error);
         setAdmins([]);
         setTeamLeaders([]);
         toast({
@@ -302,7 +302,7 @@ export default function StaffManagementPage() {
       }
 
       const staffData = await response.json();
-      console.log("Staff Edit Data:", staffData);
+      //console.log("Staff Edit Data:", staffData);
 
       // Populate edit form with fetched data
       setEditingUser({
@@ -329,7 +329,7 @@ export default function StaffManagementPage() {
 
       setIsEditFormOpen(true);
     } catch (error: any) {
-      console.error("Error fetching staff data:", error);
+      //console.error("Error fetching staff data:", error);
       toast({
         title: "Error",
         description: "Failed to fetch staff data for editing.",
@@ -349,8 +349,8 @@ export default function StaffManagementPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    console.log("=== FORM SUBMISSION START ===");
-    console.log("Form Data:", formData);
+    //console.log("=== FORM SUBMISSION START ===");
+    //console.log("Form Data:", formData);
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -397,13 +397,13 @@ export default function StaffManagementPage() {
     if (formData.upi_id) data.append('upi_id', formData.upi_id);
     if (formData.salary) data.append('salary', formData.salary);
 
-    console.log("=== API CALL DATA ===");
+    //console.log("=== API CALL DATA ===");
     for (let [key, value] of data.entries()) {
-      console.log(`${key}: ${value}`);
+      //console.log(`${key}: ${value}`);
     }
 
     try {
-      console.log("Making API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/add/`);
+      //console.log("Making API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/add/`);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/add/`, {
         method: "POST",
@@ -413,12 +413,12 @@ export default function StaffManagementPage() {
         body: data,
       });
 
-      console.log("API Response Status:", response.status);
-      console.log("API Response OK:", response.ok);
+      //console.log("API Response Status:", response.status);
+      //console.log("API Response OK:", response.ok);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("API Error Data:", errorData);
+        //console.log("API Error Data:", errorData);
 
         let errorMessage = "Failed to add staff.";
 
@@ -438,7 +438,7 @@ export default function StaffManagementPage() {
       }
 
       const newUser = await response.json();
-      console.log("API Success Response:", newUser);
+      //console.log("API Success Response:", newUser);
 
       setUsers([...users, newUser]);
       toast({
@@ -449,9 +449,9 @@ export default function StaffManagementPage() {
       handleCloseAddForm();
       fetchPageData(); // Refresh the data
     } catch (error: any) {
-      console.error("=== API ERROR ===");
-      console.error("Error:", error);
-      console.error("Error Message:", error.message);
+      //console.error("=== API ERROR ===");
+      //console.error("Error:", error);
+      //console.error("Error Message:", error.message);
 
       toast({
         title: "Error",
@@ -460,7 +460,7 @@ export default function StaffManagementPage() {
       });
     } finally {
       setIsSubmitting(false);
-      console.log("=== FORM SUBMISSION END ===");
+      //console.log("=== FORM SUBMISSION END ===");
     }
   };
 
@@ -477,8 +477,8 @@ export default function StaffManagementPage() {
     e.preventDefault();
     if (!editingUser) return;
 
-    console.log("=== EDIT FORM SUBMISSION START ===");
-    console.log("Edit Form Data:", editingUser);
+    //console.log("=== EDIT FORM SUBMISSION START ===");
+    //console.log("Edit Form Data:", editingUser);
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -512,13 +512,13 @@ export default function StaffManagementPage() {
     if (editingUser.teamLeader) data.append('team_leader', editingUser.teamLeader);
     if (editingUser.admin) data.append('admin', editingUser.admin);
 
-    console.log("=== EDIT API CALL DATA ===");
+    //console.log("=== EDIT API CALL DATA ===");
     for (let [key, value] of data.entries()) {
-      console.log(`${key}: ${value}`);
+      //console.log(`${key}: ${value}`);
     }
 
     try {
-      console.log("Making PATCH API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${editingUser.id}/`);
+      //console.log("Making PATCH API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${editingUser.id}/`);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${editingUser.id}/`, {
         method: "PATCH",
@@ -528,12 +528,12 @@ export default function StaffManagementPage() {
         body: data,
       });
 
-      console.log("Edit API Response Status:", response.status);
-      console.log("Edit API Response OK:", response.ok);
+      //console.log("Edit API Response Status:", response.status);
+      //console.log("Edit API Response OK:", response.ok);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("Edit API Error Data:", errorData);
+        //console.log("Edit API Error Data:", errorData);
 
         let errorMessage = "Failed to update staff.";
         if (errorData) {
@@ -551,7 +551,7 @@ export default function StaffManagementPage() {
       }
 
       const updatedUser = await response.json();
-      console.log("Edit API Success Response:", updatedUser);
+      //console.log("Edit API Success Response:", updatedUser);
 
       // Update users list
       setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...updatedUser } : u));
@@ -566,9 +566,9 @@ export default function StaffManagementPage() {
       setEditingUser(null);
       fetchPageData(); // Refresh the data
     } catch (error: any) {
-      console.error("=== EDIT API ERROR ===");
-      console.error("Error:", error);
-      console.error("Error Message:", error.message);
+      //console.error("=== EDIT API ERROR ===");
+      //console.error("Error:", error);
+      //console.error("Error Message:", error.message);
 
       toast({
         title: "Error",
@@ -576,7 +576,7 @@ export default function StaffManagementPage() {
         variant: "destructive",
       });
     } finally {
-      console.log("=== EDIT FORM SUBMISSION END ===");
+      //console.log("=== EDIT FORM SUBMISSION END ===");
     }
   };
 
@@ -613,7 +613,7 @@ export default function StaffManagementPage() {
     } catch (error: any) {
       // 2. Failure: Revert state and show error
       setUsers(originalUsers);
-      console.error("Failed to update user status:", error);
+      //console.error("Failed to update user status:", error);
       toast({
         title: "Error",
         description: `Failed to update user status: ${error.message || "Unknown error"

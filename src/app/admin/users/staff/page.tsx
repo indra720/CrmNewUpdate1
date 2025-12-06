@@ -220,7 +220,7 @@ export default function StaffManagementPage() {
   };
   
   const handleAddFormSelectChange = (name: string, value: string) => {
-    console.log(`Setting ${name} to ${value}`);
+    //console.log(`Setting ${name} to ${value}`);
     setFormData({ ...formData, [name]: value });
   };
   
@@ -298,7 +298,7 @@ export default function StaffManagementPage() {
   
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Data on submit:", formData);
+    //console.log("Form Data on submit:", formData);
     const token = localStorage.getItem("authToken");
 
     if (!token) {

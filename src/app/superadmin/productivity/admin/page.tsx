@@ -70,7 +70,7 @@ const ProductivityAdminPage = () => {
       const data = await response.json();
       setadminData(data.staff_data || []);
       // setAdmins(data.admins_filter_list || []); // No admin filter for this page
-      console.log('Data fetched successfully', data);
+      //console.log('Data fetched successfully', data);
     } catch (error: any) {
       setError(error.message);
     } finally {

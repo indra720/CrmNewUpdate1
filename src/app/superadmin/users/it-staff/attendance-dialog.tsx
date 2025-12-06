@@ -60,7 +60,7 @@ export function AttendanceDialog({
         });
 
         if (!response.ok) {
-          console.error("Failed to fetch attendance");
+          //console.error("Failed to fetch attendance");
           // Reset data on failure
           setAttendanceData({ present_days: [], absent_days: [] });
           setPresentCount(0);
@@ -92,7 +92,7 @@ export function AttendanceDialog({
         setTaskData(tasks);
 
       } catch (error) {
-        console.error("Error fetching attendance:", error);
+        //console.error("Error fetching attendance:", error);
         setAttendanceData({ present_days: [], absent_days: [] });
         setPresentCount(0);
         setAbsentCount(0);

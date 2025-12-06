@@ -72,7 +72,7 @@ export default function AddSellPage() {
         setStaffs(staffData.staff_list || []);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      //console.error('Error fetching data:', error);
     }
   };
 
@@ -116,7 +116,7 @@ export default function AddSellPage() {
         });
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
+      //console.error('Error submitting form:', error);
     } finally {
       setLoading(false);
     }

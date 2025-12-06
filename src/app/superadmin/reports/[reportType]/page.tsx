@@ -16,7 +16,7 @@ const ReportPage = ({ params }: { params: { reportType: string } }) => {
         const component = await import(`../../../reports/${reportType}/page`);
         setDynamicReportComponent(() => component.default);
       } catch (error) {
-        console.error(`Failed to load report component for ${reportType}:`, error);
+        //console.error(`Failed to load report component for ${reportType}:`, error);
         // Optionally, redirect to a 404 page or show an error message
         router.push('/404');
       }

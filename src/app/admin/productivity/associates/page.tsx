@@ -57,9 +57,9 @@ const ProductivityAssociatesPage = () => {
       // Use team_leaders_list directly
       const teamLeadersList = data.team_leaders_list || [];
       setTeamLeaders(teamLeadersList);
-      console.log('Team Leaders fetched successfully', teamLeadersList);
+      //console.log('Team Leaders fetched successfully', teamLeadersList);
     } catch (error: any) {
-      console.error('Error fetching team leaders:', error.message);
+      //console.error('Error fetching team leaders:', error.message);
       // Do not set main error state for admin fetching failure
     }
   };
@@ -98,7 +98,7 @@ const ProductivityAssociatesPage = () => {
       }
       const data = await response.json();
       setAssociatesData(data);
-      console.log('Data fetched successfully', data);
+      //console.log('Data fetched successfully', data);
     } catch (error: any) {
       setError(error.message);
     } finally {

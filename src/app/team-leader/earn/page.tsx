@@ -66,7 +66,7 @@ export default function EarnCalendarPage() {
         setStaffId(String(list[0].id));
       }
     } catch (err: any) {
-      console.error("fetchStaffList error:", err);
+      //console.error("fetchStaffList error:", err);
       toast({
         title: "Error",
         description: err.message || "Failed to fetch staff list",
@@ -88,7 +88,7 @@ export default function EarnCalendarPage() {
       const token = localStorage.getItem("authToken");
       if (!token) throw new Error("Authentication token not found.");
 
-      console.log("=== FETCHING STAFF CALENDAR ===", { staffId, year, month });
+      //console.log("=== FETCHING STAFF CALENDAR ===", { staffId, year, month });
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff-calendar/${staffId}/?year=${year}&month=${month}`,
@@ -101,11 +101,11 @@ export default function EarnCalendarPage() {
         }
       );
 
-      console.log("API Response Status:", response.status);
+      //console.log("API Response Status:", response.status);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
-      console.log("API Response Data:", data);
+      //console.log("API Response Data:", data);
 
 
       const calendarArr: any[] = data.calendar_data || data.daily_productivity_data || data.calendar || [];
@@ -148,7 +148,7 @@ export default function EarnCalendarPage() {
       });
 
     } catch (err: any) {
-      console.error("=== API ERROR ===", err);
+      //console.error("=== API ERROR ===", err);
       setError(err.message || "Failed to fetch calendar data");
       toast({
         title: "Error",

@@ -57,7 +57,7 @@ const TimeSheetPage = () => {
       setTotalPages(data.total_pages || 1);    // FIXED
     }
   } catch (error) {
-    console.error('Error fetching activity logs:', error);
+    //console.error('Error fetching activity logs:', error);
   } finally {
     setLoading(false);
   }

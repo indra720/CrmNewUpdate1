@@ -80,7 +80,7 @@ const ProductivityTeamLeaderPage = () => {
       const data = await response.json();
       setTeamLeaderData(data);
       setAdmins(data.admins_filter_list || []);
-      console.log('Data fetched successfully', data);
+      //console.log('Data fetched successfully', data);
     } catch (error: any) {
       setError(error.message);
     } finally {

@@ -614,7 +614,7 @@ export default function TeamLeaderManagementPage() {
                                         <Users className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
                                         <span className="text-sm font-medium">Admin:</span>
                                       </div>
-                                      <span className="text-sm capitalize ml-auto md:ml-0">{user.admin?.name || 'N/A'}</span>
+                                      <span className="text-sm capitalize  ml-5 md:ml-0">{user.admin?.name || 'N/A'}</span>
                                     </div>
                                     <div className="p-3 border-b border-l md:border-l-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                       <div className="flex items-center">
@@ -782,7 +782,7 @@ export default function TeamLeaderManagementPage() {
 
       {editingUser && (
         <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md w-[calc(100vw-2rem)] ">
             <DialogHeader>
               <DialogTitle>Edit Team Leader</DialogTitle>
               <DialogDescription>
@@ -806,7 +806,7 @@ export default function TeamLeaderManagementPage() {
                 <Label htmlFor="edit-password">New Password (optional)</Label>
                 <Input id="edit-password" name="password" type="password" placeholder="Leave blank to keep current password" onChange={handleEditFormChange} />
               </div>
-              <DialogFooter>
+              <DialogFooter className='gap-2'>
                 <Button type="button" variant="outline" onClick={() => setIsEditFormOpen(false)}>Cancel</Button>
                 <Button type="submit">Save Changes</Button>
               </DialogFooter>
@@ -817,170 +817,3 @@ export default function TeamLeaderManagementPage() {
     </>
   );
 };
-
-
-
-
-
-// class TeamLeaderAddAPIView(APIView):
-//     """
-//     API endpoint naya Team Leader banane ke liye.
-//     Sirf Admin user hi ise access kar sakte hain.
-//     GET: Dropdown ke liye Admin ki list deta hai.
-//     POST: Naya Team Leader banata hai.
-//     """
-    
-//     # Sirf Admin User hi access kar sakta hai
-//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
-//     # File (profile_image) upload ke liye parsers
-//     parser_classes = [MultiPartParser, FormParser]
-
-//     def get(self, request, format=None):
-//         """
-//         Form ke 'Select Admin' dropdown ke liye data return karta hai.
-//         """
-//         # Aapke original function ka GET logic
-//         all_admins = User.objects.filter(is_admin=True)
-//         serializer = DashboardUserSerializer(all_admins, many=True)
-//         return Response(serializer.data, status=status.HTTP_200_OK)
-
-//     def post(self, request, format=None):
-//         """
-//         Naya Team Leader create karta hai.
-//         """
-        
-//         # Hum TeamLeaderCreateSerializer ka istemal karenge jo pehle se bana hai.
-//         # Hum 'context={'request': request}' bhej rahe hain taaki serializer
-//         # request.user ko access kar sake (apne logic ke liye).
-//         serializer = TeamLeaderCreateSerializer(data=request.data, context={'request': request})
-        
-//         if serializer.is_valid():
-//             # Serializer ka .save() method automatically .create() method 
-//             # ko call karega aur naya Team Leader bana dega.
-//             serializer.save()
-//             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-//         # Agar validation fail hua
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-// class TeamLeaderCreateSerializer(serializers.ModelSerializer):
-//     """
-//     Serializer naya Team Leader User aur Profile banane ke liye.
-//     """
-//     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
-//     profile_image = serializers.FileField(required=False, allow_null=True)
-//     admin_id = serializers.IntegerField(write_only=True, required=False) 
-
-//     #User ke roles
-//     # on_boarding_manager = serializers.BooleanField(required=False)
-//     # dsr_manager = serializers.BooleanField(required=False)
-//     # executive_manager = serializers.BooleanField(required=False)
-//     # delivery_manager = serializers.BooleanField(required=False)
-
-//     class Meta:
-//         model = Team_Leader
-//         fields = [
-//             'name', 'email', 'mobile', 'password', 'profile_image',
-//             'address', 'city', 'state', 'pincode', 'dob', 'pancard', 
-//             'aadharCard', 'marksheet', 'degree', 'account_number', 
-//             'upi_id', 'bank_name', 'ifsc_code', 'salary',
-//             'admin_id', 'on_boarding_manager', 'dsr_manager', 'executive_manager', 'delivery_manager'
-//         ]
-//         extra_kwargs = {'email': {'required': True}}
-
-//     def validate_email(self, value):
-//         if User.objects.filter(email=value).exists():
-//             raise serializers.ValidationError("Email Already Exists")
-//         if User.objects.filter(username=value).exists():
-//             raise serializers.ValidationError("Username (Email) Already Exists")
-//         return value
-
-//     # serializers.py (def create method ko isse REPLACE karo)
-
-//     # serializers.py (def create method ko isse REPLACE karo)
-
-//     def create(self, validated_data):
-//         # 1. Data separation
-//         password = validated_data.pop('password')
-//         profile_image = validated_data.pop('profile_image', None)
-//         admin_id = validated_data.pop('admin_id', None)
-        
-//          on_boarding_manager = validated_data.pop('on_boarding_manager', False)
-//          dsr_manager = validated_data.pop('dsr_manager', False)
-//          executive_manager = validated_data.pop('executive_manager', False)
-//          delivery_manager = validated_data.pop('delivery_manager', False)
-        
-//         email = validated_data.get('email')
-//         name = validated_data.get('name')
-//         mobile = validated_data.get('mobile')
-//         request = self.context['request']
-
-//         # 2. Admin Object fetch karo (FINAL ROBUST LOGIC)
-//         admin_obj = None
-//         current_user = request.user
-        
-//         if current_user.is_superuser:
-//             # Superuser always uses the provided admin_id
-//             if admin_id:
-//                 try:
-//                     admin_obj = Admin.objects.get(id=int(admin_id))
-//                 except (Admin.DoesNotExist, ValueError):
-//                     raise serializers.ValidationError({"admin_id": "Admin profile not found with this ID or ID is invalid."})
-
-//         elif current_user.is_admin:
-//             # Admin must be creating for themselves (i.e., they are the admin_obj)
-//             admin_obj = Admin.objects.filter(self_user=current_user).last()
-            
-//         if not admin_obj:
-//             # Agar koi Admin profile nahi mili, toh error raise karo
-//             # Yeh error ab Admin, Superuser dono cases ko handle karega
-//             raise serializers.ValidationError({"admin": "Admin profile is required and could not be determined."})
-
-//         # 3. Naya User object banao
-//         try:
-//             new_user = User.objects.create_user(
-//                 username=email, email=email, password=password,
-//                 profile_image=profile_image, name=name, mobile=mobile, 
-//                 # is_team_leader=True, on_boarding_manager=on_boarding_manager,
-//                 # dsr_manager=dsr_manager, executive_manager=executive_manager, 
-//                 # delivery_manager=delivery_manager
-//             )
-//         except IntegrityError as e:
-//             raise serializers.ValidationError(f"Error creating user: {e}")
-        
-//         # 4. Naya Team Leader profile object banao
-//         try:
-//             team_leader = Team_Leader.objects.create(
-//                 admin=admin_obj, 
-//                 user=new_user,
-//                 **validated_data
-//             )
-            
-//             # --- Activity Log Logic ---
-//             user_type = ""
-//             if current_user.is_superuser: user_type = "Super User"
-//             elif current_user.is_admin: user_type = "Admin User"
-            
-//             ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
-//             tagline = f"Team Lead({name}) created by user[Email : {current_user.email}, {user_type}]"
-//             tag2 = f"Team Lead({name}) created"
-            
-//             if current_user.is_superuser:
-//                  ActivityLog.objects.create(
-//                     user=current_user, description=tagline, ip_address=ip, email=current_user.email,
-//                     user_type=user_type, activity_type=tag2, name=current_user.name
-//                 )
-//             elif current_user.is_admin:
-//                 ActivityLog.objects.create(
-//                     admin=admin_obj, 
-//                     description=tagline, ip_address=ip, email=current_user.email,
-//                     user_type=user_type, activity_type=tag2, name=current_user.name
-//                 )
-            
-//         except Exception as e:
-//             new_user.delete()
-//             raise serializers.ValidationError({"non_field_errors": f"Error creating team leader profile: {e}"})
-
-//         return team_leader
-    

@@ -184,7 +184,7 @@ const ImportLeadPage = () => {
 
       } catch (error) {
 
-        console.error("Error uploading file:", error);
+        //console.error("Error uploading file:", error);
 
         toast({
 

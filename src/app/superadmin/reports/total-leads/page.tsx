@@ -213,7 +213,7 @@ const TotalLeadsPage = () => {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
+    //console.log("Form Submitted:", formData);
     const newLead: Lead = {
       ...formData,
       id: Date.now(),

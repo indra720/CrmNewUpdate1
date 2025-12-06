@@ -71,7 +71,7 @@ const ProductivityAssociatesPage = () => {
       const adminData = await adminResponse.json();
       setAdmins(adminData.users || []);
     } else {
-      console.error("filed to fetching admin failed");
+      //console.error("filed to fetching admin failed");
     }
     try {
       const response = await fetch(
@@ -90,7 +90,7 @@ const ProductivityAssociatesPage = () => {
       const data = await response.json();
       setAssociateData(data);
       // setAdmins(data.admins_filter_list || []);
-      console.log("Data fetched successfully", data);
+      //console.log("Data fetched successfully", data);
     } catch (error: any) {
       setError(error.message);
     } finally {

@@ -17,13 +17,13 @@ export async function toggleUserActiveStatus(
     is_active: isActive,
   };
 
-  console.log("=== TOGGLE API CALL ===");
-  console.log("Request Data:", requestData);
-  console.log(
-    "API URL:",
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/toggle-active/`
-  );
-  console.log("Request Body:", JSON.stringify(requestData));
+  // console.log("=== TOGGLE API CALL ===");
+  // console.log("Request Data:", requestData);
+  // console.log(
+  //   "API URL:",
+  //   `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/toggle-active/`
+  // );
+  //console.log("Request Body:", JSON.stringify(requestData));
 
   try {
     const response = await fetch(
@@ -38,22 +38,22 @@ export async function toggleUserActiveStatus(
       }
     );
 
-    console.log("API Response Status:", response.status);
-    console.log("API Response OK:", response.ok);
+    // console.log("API Response Status:", response.status);
+    // console.log("API Response OK:", response.ok);
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("API Error Response:", errorData);
+      //console.log("API Error Response:", errorData);
       throw new Error(
         errorData.message || `HTTP error! status: ${response.status}`
       );
     }
 
-    console.log("=== TOGGLE API SUCCESS ===");
+    //console.log("=== TOGGLE API SUCCESS ===");
     // No need to return anything specific, just resolve if successful
   } catch (error: any) {
-    console.error("=== TOGGLE API ERROR ===");
-    console.error("Failed to toggle user status:", error);
+    // console.error("=== TOGGLE API ERROR ===");
+    // console.error("Failed to toggle user status:", error);
     throw new Error(
       `Failed to toggle user status: ${error.message || "Unknown error"}`
     );
@@ -72,7 +72,7 @@ export async function fetchAdminLeadsByTag(
 
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/admin-leads/${tag}/`;
-    console.log("Fetching URL:", url);
+    //console.log("Fetching URL:", url);
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -90,7 +90,7 @@ export async function fetchAdminLeadsByTag(
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch leads for tag ${tag}:`, error);
+    //console.error(`Failed to fetch leads for tag ${tag}:`, error);
     throw new Error(
       `Failed to fetch leads: ${error.message || "Unknown error"}`
     );
@@ -137,10 +137,10 @@ export async function updateLeadStatusAndFollowUp(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to update lead ${leadId} status and follow-up:`,
-      error
-    );
+    //console.error(
+    //   `Failed to update lead ${leadId} status and follow-up:`,
+    //   error
+    // );
     throw new Error(
       `Failed to update lead status and follow-up: ${
         error.message || "Unknown error"
@@ -179,10 +179,10 @@ export async function fetchAdmins(): Promise<any[]> {
     const data = await response.json();
     return data.users || [];
   } catch (error: any) {
-    console.error("Failed to fetch admins:", error);
-    throw new Error(
-      `Failed to fetch admins: ${error.message || "Unknown error"}`
-    );
+    // console.error("Failed to fetch admins:", error);
+    // throw new Error(
+    //   `Failed to fetch admins: ${error.message || "Unknown error"}`
+    // );
   }
 }
 
@@ -215,10 +215,10 @@ export async function fetchSuperuserStaffLeadsByTag(tag: string): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch superuser staff leads for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch superuser staff leads for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch superuser staff leads: ${
         error.message || "Unknown error"
@@ -257,10 +257,10 @@ export async function editTeamLeader(id: number, formData: any): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error("Failed to edit team leader:", error);
-    throw new Error(
-      `Failed to edit team leader: ${error.message || "Unknown error"}`
-    );
+    // console.error("Failed to edit team leader:", error);
+    // throw new Error(
+    //   `Failed to edit team leader: ${error.message || "Unknown error"}`
+    // );
   }
 }
 
@@ -294,10 +294,10 @@ export async function fetchSuperuserTeamLeaderLeadsByTag(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch superuser team leader leads for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch superuser team leader leads for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch superuser team leader leads: ${
         error.message || "Unknown error"
@@ -336,10 +336,10 @@ export async function fetchSuperuserFreelancerLeadsByTag(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch superuser freelancer leads for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch superuser freelancer leads for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch superuser freelancer leads: ${
         error.message || "Unknown error"
@@ -374,10 +374,10 @@ export async function fetchAdminsForSelection(): Promise<any[]> {
     const data = await response.json();
     return data.users || [];
   } catch (error: any) {
-    console.error("Failed to fetch admins:", error);
-    throw new Error(
-      `Failed to fetch admins: ${error.message || "Unknown error"}`
-    );
+    // console.error("Failed to fetch admins:", error);
+    // throw new Error(
+    //   `Failed to fetch admins: ${error.message || "Unknown error"}`
+    // );
   }
 }
 
@@ -407,10 +407,10 @@ export async function fetchTeamLeaders(): Promise<any[]> {
     const data = await response.json();
     return data.results || [];
   } catch (error: any) {
-    console.error("Failed to fetch team leaders:", error);
-    throw new Error(
-      `Failed to fetch team leaders: ${error.message || "Unknown error"}`
-    );
+    // console.error("Failed to fetch team leaders:", error);
+    // throw new Error(
+    //   `Failed to fetch team leaders: ${error.message || "Unknown error"}`
+    // );
   }
 }
 
@@ -434,7 +434,7 @@ export async function fetchAdminStaffReport(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching Admin Staff Report:`, url);
+    //console.log(`Fetching Admin Staff Report:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -455,7 +455,7 @@ export async function fetchAdminStaffReport(
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Admin Staff Report Data:`, error);
+    //console.error(`Failed to fetch Admin Staff Report Data:`, error);
     throw new Error(
       `Failed to fetch Admin Staff Report Data: ${
         error.message || "Unknown error"
@@ -494,7 +494,7 @@ export async function fetchTeamLeaderStaffList(): Promise<any[]> {
     const data = await response.json();
     return data.staff_list || []; // Assuming staff_list contains the staff data
   } catch (error: any) {
-    console.error("Failed to fetch Team Leader's staff list:", error);
+    //console.error("Failed to fetch Team Leader's staff list:", error);
     throw new Error(
       `Failed to fetch Team Leader's staff list: ${
         error.message || "Unknown error"
@@ -533,7 +533,7 @@ export async function fetchInterestedLeads(): Promise<Lead[]> {
     const data = await response.json();
     return data.results || []; // Adjusted for paginated response from backend snippet
   } catch (error: any) {
-    console.error("Failed to fetch interested leads:", error);
+    //console.error("Failed to fetch interested leads:", error);
     throw new Error(
       `Failed to fetch interested leads: ${error.message || "Unknown error"}`
     );
@@ -617,7 +617,7 @@ export async function fetchLeadHistory(
       throw new Error(result.message || "Failed to fetch lead history.");
     }
   } catch (error: any) {
-    console.error(`Failed to fetch history for lead ${leadId}:`, error);
+    //console.error(`Failed to fetch history for lead ${leadId}:`, error);
     throw new Error(
       `Failed to fetch lead history: ${error.message || "Unknown error"}`
     );
@@ -636,7 +636,7 @@ export async function fetchAdminLeadHistoryById(leadId: string): Promise<any> {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/lead-history/${leadId}/`;
 
-    console.log(`Fetching Admin Lead History for Lead ID ${leadId}:`, url);
+    //console.log(`Fetching Admin Lead History for Lead ID ${leadId}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -655,10 +655,10 @@ export async function fetchAdminLeadHistoryById(leadId: string): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Admin Lead History for Lead ID ${leadId}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Admin Lead History for Lead ID ${leadId}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Admin Lead History: ${error.message || "Unknown error"}`
     );
@@ -717,7 +717,7 @@ export async function fetchLeadsForSuperuser(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching URL for source ${source}:`, url);
+    //console.log(`Fetching URL for source ${source}:`, url);
 
     const response = await fetch(
       url,
@@ -743,10 +743,10 @@ export async function fetchLeadsForSuperuser(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch leads for tag ${tag} and source ${source}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch leads for tag ${tag} and source ${source}:`,
+    //   error
+    // );
 
     throw new Error(
       `Failed to fetch leads: ${error.message || "Unknown error"}`
@@ -768,7 +768,7 @@ export async function fetchLeadsForStaff(tag: string): Promise<any> {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`;
 
-    console.log(`Fetching URL for staff leads:`, url);
+    //console.log(`Fetching URL for staff leads:`, url);
 
     const response = await fetch(
       url,
@@ -794,7 +794,7 @@ export async function fetchLeadsForStaff(tag: string): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch leads for tag ${tag} for staff:`, error);
+    //console.error(`Failed to fetch leads for tag ${tag} for staff:`, error);
 
     throw new Error(
       `Failed to fetch leads: ${error.message || "Unknown error"}`
@@ -814,7 +814,7 @@ export async function fetchStaffLeadsReport(tag: string): Promise<any> {
   try {     
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/staff/interested-leads/${tag}/`;
 
-    console.log(`Fetching staff leads report for tag ${tag}:`, url);
+    //console.log(`Fetching staff leads report for tag ${tag}:`, url);
 
     const response = await fetch(
       url,
@@ -840,7 +840,7 @@ export async function fetchStaffLeadsReport(tag: string): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch staff leads report for tag ${tag}:`, error);
+    //console.error(`Failed to fetch staff leads report for tag ${tag}:`, error);
 
     throw new Error(
       `Failed to fetch staff leads report: ${error.message || "Unknown error"}`
@@ -861,10 +861,10 @@ export async function fetchTeamLeaderInterestedLeadsReport(
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/interested-leads/${tag}/`;
 
-    console.log(
-      `Fetching Team Leader interested leads report for tag ${tag}:`,
-      url
-    );
+    //console.log(
+    //   `Fetching Team Leader interested leads report for tag ${tag}:`,
+    //   url
+    // );
 
     const response = await fetch(url, {
       method: "GET",
@@ -883,10 +883,10 @@ export async function fetchTeamLeaderInterestedLeadsReport(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Team Leader interested leads report for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Team Leader interested leads report for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Team Leader interested leads report: ${
         error.message || "Unknown error"
@@ -908,7 +908,7 @@ export async function fetchTeamLeaderLostLeadsReport(
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/lost-leads/${tag}/`;
 
-    console.log(`Fetching Team Leader lost leads report for tag ${tag}:`, url);
+   // console.log(`Fetching Team Leader lost leads report for tag ${tag}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -927,10 +927,10 @@ export async function fetchTeamLeaderLostLeadsReport(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Team Leader lost leads report for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Team Leader lost leads report for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Team Leader lost leads report: ${
         error.message || "Unknown error"
@@ -953,10 +953,10 @@ export async function fetchTeamLeaderStaffLeadsReportByTag(
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/staff-leads/${staffId}/${tag}/`;
 
-    console.log(
-      `Fetching Team Leader staff leads report for staff ${staffId} with tag ${tag}:`,
-      url
-    );
+    // console.log(
+    //   `Fetching Team Leader staff leads report for staff ${staffId} with tag ${tag}:`,
+    //   url
+    // );
 
     const response = await fetch(url, {
       method: "GET",
@@ -975,10 +975,10 @@ export async function fetchTeamLeaderStaffLeadsReportByTag(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Team Leader staff leads report for staff ${staffId} with tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Team Leader staff leads report for staff ${staffId} with tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Team Leader staff leads report: ${
         error.message || "Unknown error"
@@ -1001,10 +1001,10 @@ export async function fetchAdminStaffLeadsByTag(
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-leads/by-staff/${staffId}/${tag}/`;
 
-    console.log(
-      `Fetching Admin staff leads for staff ${staffId} with tag ${tag}:`,
-      url
-    );
+    // console.log(
+    //   `Fetching Admin staff leads for staff ${staffId} with tag ${tag}:`,
+    //   url
+    // );
 
     const response = await fetch(url, {
       method: "GET",
@@ -1023,10 +1023,10 @@ export async function fetchAdminStaffLeadsByTag(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Admin staff leads for staff ${staffId} with tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Admin staff leads for staff ${staffId} with tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Admin staff leads: ${error.message || "Unknown error"}`
     );
@@ -1052,7 +1052,7 @@ export async function getTeamCustomersByTag(tag: string, formattedStartDate: str
     //   url += `?${params.toString()}`;
     // }
 
-    console.log(`Fetching Team Leader customers for tag ${tag}:`, url);
+    //console.log(`Fetching Team Leader customers for tag ${tag}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1071,10 +1071,10 @@ export async function getTeamCustomersByTag(tag: string, formattedStartDate: str
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Team Leader customers for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Team Leader customers for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Team Leader customers: ${
         error.message || "Unknown error"
@@ -1112,7 +1112,7 @@ export async function getTeamCustomerLeads(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching Team Customer leads for tag ${tag}:`, url);
+    //console.log(`Fetching Team Customer leads for tag ${tag}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1131,10 +1131,10 @@ export async function getTeamCustomerLeads(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Team Customer leads for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Team Customer leads for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Team Customer leads: ${
         error.message || "Unknown error"
@@ -1155,7 +1155,7 @@ export async function fetchTeamLeaderVisitLeads(): Promise<any> {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/visits/`;
 
-    console.log(`Fetching Team Leader visit leads:`, url);
+    //console.log(`Fetching Team Leader visit leads:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1174,7 +1174,7 @@ export async function fetchTeamLeaderVisitLeads(): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Team Leader visit leads:`, error);
+    //console.error(`Failed to fetch Team Leader visit leads:`, error);
     throw new Error(
       `Failed to fetch Team Leader visit leads: ${
         error.message || "Unknown error"
@@ -1194,7 +1194,7 @@ export async function fetchTeamLeaderLeadsPageData(): Promise<any> {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/leads/`;
 
-    console.log(`Fetching Team Leader leads page data:`, url);
+    //console.log(`Fetching Team Leader leads page data:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1213,7 +1213,7 @@ export async function fetchTeamLeaderLeadsPageData(): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Team Leader leads page data:`, error);
+    //console.error(`Failed to fetch Team Leader leads page data:`, error);
     throw new Error(
       `Failed to fetch Team Leader leads page data: ${
         error.message || "Unknown error"
@@ -1233,7 +1233,7 @@ export async function fetchTeamLeaderAllLeadsByTag(tag: string): Promise<any> {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/all-leads/${tag}/`;
 
-    console.log(`Fetching Team Leader all leads report for tag ${tag}:`, url);
+    //console.log(`Fetching Team Leader all leads report for tag ${tag}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1252,10 +1252,10 @@ export async function fetchTeamLeaderAllLeadsByTag(tag: string): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Team Leader all leads report for tag ${tag}:`,
-      error
-    );
+    // console.error(
+    //   `Failed to fetch Team Leader all leads report for tag ${tag}:`,
+    //   error
+    // );
     throw new Error(
       `Failed to fetch Team Leader all leads report: ${
         error.message || "Unknown error"
@@ -1282,8 +1282,8 @@ export async function exportTeamLeaderLeads(
 
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/team-leader/export-leads/`; // Corrected URL
-    console.log("Attempting to export from URL:", url); 
-    console.log("Request body:", JSON.stringify(payload)); // Log the payload
+    // console.log("Attempting to export from URL:", url); 
+    // console.log("Request body:", JSON.stringify(payload)); // Log the payload
 
     const response = await fetch(url, {
       method: "POST",
@@ -1326,7 +1326,7 @@ export async function exportTeamLeaderLeads(
     a.remove();
     window.URL.revokeObjectURL(downloadUrl);
   } catch (error: any) {
-    console.error(`Failed to export leads for status ${payload.status}:`, error);
+    //console.error(`Failed to export leads for status ${payload.status}:`, error);
     throw new Error(
       `Failed to export leads: ${error.message || "Unknown error"}`
     );
@@ -1354,7 +1354,7 @@ export async function fetchAdminTeamLeaderReportData(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching Admin Team Leaders:`, url);
+    //console.log(`Fetching Admin Team Leaders:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1373,7 +1373,7 @@ export async function fetchAdminTeamLeaderReportData(
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Admin Team Leaders:`, error);
+    //console.error(`Failed to fetch Admin Team Leaders:`, error);
     throw new Error(
       `Failed to fetch Admin Team Leaders: ${error.message || "Unknown error"}`
     );
@@ -1400,7 +1400,7 @@ export async function fetchAdminTeamLeaders(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching Admin Team Leaders:`, url);
+    //console.log(`Fetching Admin Team Leaders:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1419,7 +1419,7 @@ export async function fetchAdminTeamLeaders(
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Admin Team Leaders:`, error);
+    //console.error(`Failed to fetch Admin Team Leaders:`, error);
     throw new Error(
       `Failed to fetch Admin Team Leaders: ${error.message || "Unknown error"}`
     );
@@ -1451,7 +1451,7 @@ export async function fetchAdminStaffs(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching Admin Staffs:`, url);
+    //console.log(`Fetching Admin Staffs:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1473,7 +1473,7 @@ export async function fetchAdminStaffs(
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Admin Staffs:`, error);
+    //console.error(`Failed to fetch Admin Staffs:`, error);
 
     throw new Error(
       `Failed to fetch Admin Staffs: ${error.message || "Unknown error"}`
@@ -1496,11 +1496,11 @@ export async function fetchAdminStaffIncentive(
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-incentive/${staffId}/?year=${year}&month=${month}`;
 
-    console.log(
-      `Fetching Admin staff incentive for staff ${staffId} with year ${year} and month ${month}:`,
+    // //console.log(
+    //   `Fetching Admin staff incentive for staff ${staffId} with year ${year} and month ${month}:`,
 
-      url
-    );
+    //   url
+    // );
 
     const response = await fetch(url, {
       method: "GET",
@@ -1522,11 +1522,7 @@ export async function fetchAdminStaffIncentive(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Admin staff incentive for staff ${staffId}:`,
-
-      error
-    );
+    // console.error(  `Failed to fetch Admin staff incentive for staff ${staffId}:`,error );
 
     throw new Error(
       `Failed to fetch Admin staff incentive: ${
@@ -1557,7 +1553,7 @@ export async function fetchAdminStaffLeadsKpiCountByTag(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching Admin staff leads KPI count for tag ${tag}:`, url);
+    // console.log(`Fetching Admin staff leads KPI count for tag ${tag}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1591,10 +1587,7 @@ export async function fetchAdminStaffLeadsKpiCountByTag(
       ? data.results.length
       : 0;
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Admin staff leads KPI count for tag ${tag}:`,
-      error
-    );
+    //console.error(`Failed to fetch Admin staff leads KPI count for tag ${tag}:`,error );
     throw new Error(
       `Failed to fetch Admin staff leads KPI count: ${
         error.message || "Unknown error"
@@ -1624,7 +1617,7 @@ export async function fetchAdminnStaffLeadsKpiCountByTag(
       url += `?${params.toString()}`;
     }
 
-    console.log(`Fetching Admin (new) staff leads KPI count for tag ${tag}:`, url);
+   // console.log(`Fetching Admin (new) staff leads KPI count for tag ${tag}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1652,10 +1645,7 @@ export async function fetchAdminnStaffLeadsKpiCountByTag(
       ? data.results.length
       : 0;
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Admin (new) staff leads KPI count for tag ${tag}:`,
-      error
-    );
+    //console.error(`Failed to fetch Admin (new) staff leads KPI count for tag ${tag}:`, error);
     throw new Error(
       `Failed to fetch Admin (new) staff leads KPI count: ${
         error.message || "Unknown error"
@@ -1676,7 +1666,7 @@ export async function fetchAdminTotalLeads(): Promise<any> {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/total-leads/`;
 
-    console.log(`Fetching Admin Total Leads:`, url);
+    //console.log(`Fetching Admin Total Leads:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1695,7 +1685,7 @@ export async function fetchAdminTotalLeads(): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch Admin Total Leads:`, error);
+    //console.error(`Failed to fetch Admin Total Leads:`, error);
     throw new Error(
       `Failed to fetch Admin Total Leads: ${error.message || "Unknown error"}`
     );
@@ -1719,8 +1709,8 @@ export async function addAdminLead(leadData: {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/leads/admin/add/`;
 
-    console.log(`Adding Admin Lead to:`, url);
-    console.log(`Lead Data:`, leadData);
+    // console.log(`Adding Admin Lead to:`, url);
+    // console.log(`Lead Data:`, leadData);
 
     const response = await fetch(url, {
       method: "POST",
@@ -1740,7 +1730,7 @@ export async function addAdminLead(leadData: {
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to add Admin Lead:`, error);
+    //console.error(`Failed to add Admin Lead:`, error);
     throw new Error(
       `Failed to add Admin Lead: ${error.message || "Unknown error"}`
     );
@@ -1760,7 +1750,7 @@ export async function fetchAdminDashboardLeadHistoryById(
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/lead-history/${leadId}/`;
 
-    console.log(`Fetching Admin Lead History for Lead ID ${leadId}:`, url);
+    //console.log(`Fetching Admin Lead History for Lead ID ${leadId}:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1779,10 +1769,7 @@ export async function fetchAdminDashboardLeadHistoryById(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to fetch Admin Lead History for Lead ID ${leadId}:`,
-      error
-    );
+    //console.error(`Failed to fetch Admin Lead History for Lead ID ${leadId}:`,error);
     throw new Error(
       `Failed to fetch Admin Lead History: ${error.message || "Unknown error"}`
     );
@@ -1824,8 +1811,8 @@ export async function updateAdminLeadStatus(
 
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/change-lead-status/${leadId}/`;
-    console.log(`Updating Admin Lead Status for Lead ID ${leadId}:`, url);
-    console.log(`Request Body:`, requestBody);
+    // console.log(`Updating Admin Lead Status for Lead ID ${leadId}:`, url);
+    // console.log(`Request Body:`, requestBody);
 
     const response = await fetch(url, {
       method: "POST", // Changed to POST as per user's instruction
@@ -1838,7 +1825,7 @@ export async function updateAdminLeadStatus(
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("API Error Response:", errorData);
+      //console.error("API Error Response:", errorData);
       throw new Error(
         errorData.message || `HTTP error! status: ${response.status}`
       );
@@ -1846,10 +1833,7 @@ export async function updateAdminLeadStatus(
 
     return await response.json();
   } catch (error: any) {
-    console.error(
-      `Failed to update Admin Lead Status for Lead ID ${leadId}:`,
-      error
-    );
+    //console.error(`Failed to update Admin Lead Status for Lead ID ${leadId}:`,error);
     throw new Error(
       `Failed to update Admin Lead Status: ${error.message || "Unknown error"}`
     );
@@ -1867,7 +1851,7 @@ export async function fetchCurrentUserProfile(): Promise<{ name: string; email: 
 
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/profile/`; // Assuming this endpoint exists
-    console.log(`Fetching current user profile from:`, url);
+    //console.log(`Fetching current user profile from:`, url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -1884,7 +1868,7 @@ export async function fetchCurrentUserProfile(): Promise<{ name: string; email: 
 
     return await response.json();
   } catch (error: any) {
-    console.error(`Failed to fetch current user profile:`, error);
+    //console.error(`Failed to fetch current user profile:`, error);
     throw new Error(`Failed to fetch user profile: ${error.message || "Unknown error"}`);
   }
 }

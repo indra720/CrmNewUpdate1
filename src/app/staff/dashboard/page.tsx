@@ -176,7 +176,7 @@ export default function StaffDashboardPage() {
   }, []);
 
   const fetchStaffDashboardData = async (startDate?: string, endDate?: string) => {
-    console.log("Fetching staff dashboard data...");
+    //console.log("Fetching staff dashboard data...");
     const token = localStorage.getItem('authToken');
     if (!token) {
       toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
@@ -194,7 +194,7 @@ export default function StaffDashboardPage() {
     }
 
     try {
-      console.log("API URL for staff dashboard:", url);
+      //console.log("API URL for staff dashboard:", url);
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -205,8 +205,8 @@ export default function StaffDashboardPage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("API Response status:", response.status);
-        console.log("API Response data:", data);
+        //console.log("API Response status:", response.status);
+        //console.log("API Response data:", data);
 
         if (data.results) {
           const formattedLeads = data.results.map((lead: any) => ({
@@ -217,12 +217,12 @@ export default function StaffDashboardPage() {
             project: lead.project,
           }));
           setLeads(formattedLeads);
-          console.log("Leads after setLeads:", formattedLeads);
+          //console.log("Leads after setLeads:", formattedLeads);
         }
 
         if (data.projects) {
           setProjects(data.projects);
-          console.log("Projects after setProjects:", data.projects);
+          //console.log("Projects after setProjects:", data.projects);
         }
         
         if (data.counts) {
@@ -243,7 +243,7 @@ export default function StaffDashboardPage() {
         toast({ title: "Error", description: "Failed to fetch dashboard data.", variant: "destructive" });
       }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      //console.error("Error fetching dashboard data:", error);
       toast({ title: "Error", description: "An error occurred while fetching data.", variant: "destructive" });
     }
   };
@@ -298,7 +298,7 @@ export default function StaffDashboardPage() {
       toast({ title: "Status Updated", description: "Lead status has been successfully updated." });
 
     } catch (error: any) {
-      console.error("Error updating lead status:", error);
+      //console.error("Error updating lead status:", error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
@@ -342,7 +342,7 @@ export default function StaffDashboardPage() {
       toast({ title: "Project Updated", description: "Lead project has been successfully updated." });
 
     } catch (error: any) {
-      console.error("Error updating lead project:", error);
+      //console.error("Error updating lead project:", error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
@@ -367,7 +367,7 @@ export default function StaffDashboardPage() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // आपके अनुरोध के अनुसार फॉर्म डेटा को कंसोल में प्रिंट किया जा रहा है
-    console.log("Submitting the following data:", formData);
+    //console.log("Submitting the following data:", formData);
 
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -415,7 +415,7 @@ export default function StaffDashboardPage() {
         });
       }
     } catch (error) {
-      console.error("Error adding lead:", error);
+      //console.error("Error adding lead:", error);
       toast({
         title: "Error",
         description: "Failed to add lead. Please try again.",
@@ -454,7 +454,7 @@ export default function StaffDashboardPage() {
         });
       }
     } catch (error) {
-      console.error("Error auto-assigning leads:", error);
+      //console.error("Error auto-assigning leads:", error);
       toast({
         title: "Error",
         description: "An error occurred during auto-assignment.",
@@ -464,9 +464,9 @@ export default function StaffDashboardPage() {
   };
 
 
-  console.log("Current leads state:", leads);
-  console.log("Current search query:", search);
-  console.log("Filtered leads for table:", filteredLeads);
+  //console.log("Current leads state:", leads);
+  //console.log("Current search query:", search);
+  //console.log("Filtered leads for table:", filteredLeads);
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Staff Dashboard</h1>

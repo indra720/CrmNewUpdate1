@@ -260,7 +260,7 @@ export default function ProfilePage() {
         const data: ProfileData = await response.json();
         setProfile(data);
       } catch (err: any) {
-        console.error('Error fetching profile:', err);
+        //console.error('Error fetching profile:', err);
         toast({
           title: "Error",
           description: "Failed to load profile.",
@@ -388,7 +388,7 @@ export default function ProfilePage() {
         });
       }
     } catch (error) {
-      console.error("Update API error:", error);
+      //console.error("Update API error:", error);
       toast({
         title: "Update Error",
         description: "Could not connect to the server. Please try again.",

@@ -241,7 +241,7 @@ export default function AssociatesPage() {
         className: 'bg-blue-500 text-white'
       });
     } catch (error) {
-      console.error(error);
+      //console.error(error);
       toast({
         title: 'Error',
         description: 'Failed to update user status.',

@@ -352,8 +352,8 @@ const LoginPage = () => {
             userRole = 'freelancer';
           }
 
-          console.log('Login API response data:', data.data); // Added for debugging
-          console.log('Determined userRole:', userRole); // Added for debugging
+          //console.log('Login API response data:', data.data); // Added for debugging
+          //console.log('Determined userRole:', userRole); // Added for debugging
 
           // Set localStorage for client-side usage
           localStorage.setItem('authToken', token);
@@ -383,7 +383,7 @@ const LoginPage = () => {
         });
       }
     } catch (error) {
-      console.error("Login API error:", error);
+      //console.error("Login API error:", error);
       toast({
         title: "Login Error",
         description: "Could not connect to the server. Please try again.",
@@ -434,7 +434,7 @@ const LoginPage = () => {
         });
       }
     } catch (error) {
-      console.error("Registration API error:", error);
+      //console.error("Registration API error:", error);
       toast({
         title: "Registration Error",
         description: "Could not connect to the server. Please try again.",
@@ -558,7 +558,7 @@ const LoginPage = () => {
                                 Forget password?
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="w-[90vw]" >
                               <DialogHeader>
                                 <DialogTitle>Forgot Password</DialogTitle>
                                 <DialogDescription>
@@ -570,7 +570,7 @@ const LoginPage = () => {
                                   <Label htmlFor="forgot-email">Email</Label>
                                   <Input id="forgot-email" type="email" placeholder="you@example.com" required />
                                 </div>
-                                <DialogFooter>
+                                <DialogFooter className="gap-2">
                                   <DialogClose asChild>
                                     <Button type="button" variant="outline">Cancel</Button>
                                   </DialogClose>

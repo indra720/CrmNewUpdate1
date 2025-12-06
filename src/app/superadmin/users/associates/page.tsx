@@ -248,7 +248,7 @@ export default function AssociatesPage() {
       
       setIsEditFormOpen(true);
     } catch (error: any) {
-      console.error("Error fetching associate data:", error);
+      //console.error("Error fetching associate data:", error);
       toast({
         title: "Error",
         description: "Failed to fetch associate data for editing.",
@@ -366,7 +366,7 @@ export default function AssociatesPage() {
     } catch (error: any) {
       // 2. Failure: Revert state and show error
       setUsers(originalUsers);
-      console.error("Failed to update user status:", error);
+      //console.error("Failed to update user status:", error);
       toast({
         title: "Error",
         description: `Failed to update user status: ${

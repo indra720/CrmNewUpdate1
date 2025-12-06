@@ -42,7 +42,7 @@ export default function AddSellPage() {
       { id: 2, name: "Second Staff" },
     ],
     submitForm: async (formData: any) => {
-      console.log("Submitting form:", formData);
+      //console.log("Submitting form:", formData);
       await new Promise(resolve => setTimeout(resolve, 500));
       return { success: true, message: "Sell added successfully!" };
     },

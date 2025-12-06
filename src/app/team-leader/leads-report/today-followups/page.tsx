@@ -119,8 +119,8 @@ export default function TodayFollowupsPage() {
         description: "Your leads have been exported.",
         className: 'bg-green-500 text-white'
     });
-    } catch (error: any) { // Type the error for console.error
-        console.error("Export failed", error);
+    } catch (error: any) { // Type the error for //console.error
+        //console.error("Export failed", error);
         toast({
             title: "Export Failed",
             description: error.message || "Could not export leads. Please try again.", // Display error message from API

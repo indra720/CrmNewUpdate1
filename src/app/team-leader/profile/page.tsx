@@ -302,7 +302,7 @@ export default function ProfilePage() {
         };
         setProfile(data);
       } catch (err: any) {
-        console.error('Error fetching profile:', err);
+        //console.error('Error fetching profile:', err);
         toast({
           title: "Error",
           description: "Failed to load profile.",
@@ -874,6 +874,10 @@ export default function ProfilePage() {
 
 
 
+
+function changeTeamLeaderPassword(newPassword: string, confirmNewPassword: string) {
+  throw new Error("Function not implemented.");
+}
 // class TeamLeaderProfileViewAPIView(APIView):
 //     """
 //     API endpoint for 'team_view_profile' (Team Leader Dashboard).

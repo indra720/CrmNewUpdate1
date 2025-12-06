@@ -44,7 +44,7 @@ export default function AddLeadPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
+    //console.log("Form Submitted:", formData);
     toast({
         title: "Lead Added!",
         description: `${formData.name} has been successfully added.`,

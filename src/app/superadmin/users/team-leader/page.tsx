@@ -249,7 +249,7 @@ export default function TeamLeaderManagementPage() {
       const fetchedAdmins = data.users.map((admin: any) => ({ id: admin.id, name: admin.name }));
       setAdmins(fetchedAdmins);
     } catch (err: any) {
-      console.error("Failed to fetch admins:", err);
+      //console.error("Failed to fetch admins:", err);
       toast({
         title: "Error",
         description: "Failed to load admin list for the dropdown.",
@@ -305,7 +305,7 @@ export default function TeamLeaderManagementPage() {
       }
 
       const teamLeaderData = await response.json();
-      console.log("Team Leader Edit Data:", teamLeaderData);
+      //console.log("Team Leader Edit Data:", teamLeaderData);
 
       // Populate edit form with fetched data
       setEditingUser({
@@ -331,7 +331,7 @@ export default function TeamLeaderManagementPage() {
       
       setIsEditFormOpen(true);
     } catch (error: any) {
-      console.error("Error fetching team leader data:", error);
+      //console.error("Error fetching team leader data:", error);
       toast({
         title: "Error",
         description: "Failed to fetch team leader data for editing.",
@@ -353,7 +353,7 @@ export default function TeamLeaderManagementPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
+    //console.log("Form Data Submitted:", formData);
     const token = localStorage.getItem("authToken");
 
     const data = new FormData();
@@ -379,7 +379,7 @@ export default function TeamLeaderManagementPage() {
         if (!response.ok) {
             const errorData = await response.json();
             // Log the detailed error from the server
-            console.error("Server validation error:", errorData);
+            //console.error("Server validation error:", errorData);
             throw new Error(Object.entries(errorData).map(([key, value]) => `${key}: ${value}`).join(", ") || 'Failed to add team leader');
         }
 
@@ -408,8 +408,8 @@ export default function TeamLeaderManagementPage() {
     e.preventDefault();
     if (!editingUser) return;
 
-    console.log("=== TEAM LEADER EDIT FORM SUBMISSION START ===");
-    console.log("Edit Form Data:", editingUser);
+    //console.log("=== TEAM LEADER EDIT FORM SUBMISSION START ===");
+    //console.log("Edit Form Data:", editingUser);
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -442,13 +442,13 @@ export default function TeamLeaderManagementPage() {
     if (editingUser.salary) data.append('salary', editingUser.salary);
     if (editingUser.admin) data.append('admin', editingUser.admin);
 
-    console.log("=== TEAM LEADER EDIT API CALL DATA ===");
+    //console.log("=== TEAM LEADER EDIT API CALL DATA ===");
     for (let [key, value] of data.entries()) {
-      console.log(`${key}: ${value}`);
+      //console.log(`${key}: ${value}`);
     }
 
     try {
-      console.log("Making PATCH API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/team-leader/edit/${editingUser.id}/`);
+      //console.log("Making PATCH API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/team-leader/edit/${editingUser.id}/`);
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/team-leader/edit/${editingUser.id}/`, {
         method: "PATCH",
@@ -458,12 +458,12 @@ export default function TeamLeaderManagementPage() {
         body: data,
       });
 
-      console.log("Team Leader Edit API Response Status:", response.status);
-      console.log("Team Leader Edit API Response OK:", response.ok);
+      //console.log("Team Leader Edit API Response Status:", response.status);
+      //console.log("Team Leader Edit API Response OK:", response.ok);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("Team Leader Edit API Error Data:", errorData);
+        //console.log("Team Leader Edit API Error Data:", errorData);
         
         let errorMessage = "Failed to update team leader.";
         if (errorData) {
@@ -481,7 +481,7 @@ export default function TeamLeaderManagementPage() {
       }
 
       const updatedUser = await response.json();
-      console.log("Team Leader Edit API Success Response:", updatedUser);
+      //console.log("Team Leader Edit API Success Response:", updatedUser);
 
       // Update users list
       setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...updatedUser } : u));
@@ -496,9 +496,9 @@ export default function TeamLeaderManagementPage() {
       setEditingUser(null);
       fetchPageData(); // Refresh the data
     } catch (error: any) {
-      console.error("=== TEAM LEADER EDIT API ERROR ===");
-      console.error("Error:", error);
-      console.error("Error Message:", error.message);
+      //console.error("=== TEAM LEADER EDIT API ERROR ===");
+      //console.error("Error:", error);
+      //console.error("Error Message:", error.message);
       
       toast({
         title: "Error",
@@ -506,7 +506,7 @@ export default function TeamLeaderManagementPage() {
         variant: "destructive",
       });
     } finally {
-      console.log("=== TEAM LEADER EDIT FORM SUBMISSION END ===");
+      //console.log("=== TEAM LEADER EDIT FORM SUBMISSION END ===");
     }
   };
 
@@ -548,7 +548,7 @@ export default function TeamLeaderManagementPage() {
     } catch (error: any) {
       // 2. Failure: Revert state and show error
       setUsers(originalUsers);
-      console.error("Failed to update user status:", error);
+      //console.error("Failed to update user status:", error);
       toast({
         title: "Error",
         description: `Failed to update user status: ${

@@ -203,7 +203,7 @@ const [data, setData] = useState<Lead[]>([]);
   }
   const data = await response.json();
   setData(data.results);
-  console.log(data);
+  //console.log(data);
   
   
 }
@@ -245,7 +245,7 @@ useEffect(()=>{
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
+    //console.log("Form Submitted:", formData);
     const newLead: Lead = {
       ...formData,
       id: Date.now(),

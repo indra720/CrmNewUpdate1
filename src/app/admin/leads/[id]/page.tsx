@@ -44,7 +44,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 export default function StaffLeadsPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const staffId = params.id;
-    console.log('Staff ID from params:', staffId);
+    //console.log('Staff ID from params:', staffId);
 
     const [leads, setLeads] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

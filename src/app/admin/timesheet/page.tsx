@@ -53,7 +53,7 @@ const TimeSheetPage = () => {
         setTotalPages(Math.ceil((data.count || 0) / itemsPerPage));
       }
     } catch (error) {
-      console.error('Error fetching activity logs:', error);
+      //console.error('Error fetching activity logs:', error);
     } finally {
       setLoading(false);
     }

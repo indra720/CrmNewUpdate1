@@ -53,7 +53,7 @@ export default function LeadHistoryPage() {
           const result = await fetchAdminDashboardLeadHistoryById(leadId);
           setData(result || []);
         } catch (err: any) { // Type err as any for message property
-          console.error("Failed to fetch lead history:", err);
+          //console.error("Failed to fetch lead history:", err);
           setData([]);
           setHistoryError(err.message || 'Failed to fetch lead history.');
         } finally {

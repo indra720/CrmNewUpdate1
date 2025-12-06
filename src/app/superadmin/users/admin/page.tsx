@@ -463,7 +463,7 @@ export default function AdminManagementPage() {
         fetchcardData();
       }, 500);
     } catch (error: any) {
-      console.error("Failed to add admin:", error);
+      //console.error("Failed to add admin:", error);
       toast({
         title: "Error",
         description: `Failed to add admin: ${error.message || "Unknown error"}`,
@@ -518,7 +518,7 @@ export default function AdminManagementPage() {
         fetchcardData();
       }, 500);
     } catch (error: any) {
-      console.error("Failed to update admin:", error);
+      //console.error("Failed to update admin:", error);
       toast({
         title: "Error",
         description: `Failed to update admin: ${
@@ -566,7 +566,7 @@ export default function AdminManagementPage() {
     } catch (error: any) {
       // 2. Failure: Revert state and show error
       setUsers(originalUsers);
-      console.error("Failed to update user status:", error);
+      //console.error("Failed to update user status:", error);
       toast({
         title: "Error",
         description: `Failed to update user status: ${

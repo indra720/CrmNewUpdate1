@@ -72,10 +72,10 @@ export default function EarnCalendarPage() {
         throw new Error("Authentication token not found.");
       }
 
-      console.log("=== FETCHING STAFF CALENDAR ===");
-      console.log("Staff ID:", staffId);
-      console.log("Year:", year);
-      console.log("Month:", month);
+      // console.log("=== FETCHING STAFF CALENDAR ===");
+      // console.log("Staff ID:", staffId);
+      // console.log("Year:", year);
+      // console.log("Month:", month);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/admin/staff-calendar/${staffId}/?year=${year}&month=${month}`,
@@ -88,14 +88,14 @@ export default function EarnCalendarPage() {
         }
       );
 
-      console.log("API Response Status:", response.status);
+      //console.log("API Response Status:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: ApiResponse = await response.json();
-      console.log("API Response Data:", data);
+      //console.log("API Response Data:", data);
 
       setCalendarData(data.daily_productivity_data || []);
       setStaffData(data.staff);
@@ -110,8 +110,8 @@ export default function EarnCalendarPage() {
       });
 
     } catch (err: any) {
-      console.error("=== API ERROR ===");
-      console.error("Error:", err);
+      // console.error("=== API ERROR ===");
+      // console.error("Error:", err);
       setError(err.message);
       toast({
         title: "Error",

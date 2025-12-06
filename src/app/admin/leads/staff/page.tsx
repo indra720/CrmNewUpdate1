@@ -45,7 +45,7 @@ function StaffLeadsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const staffIdFromUrl = searchParams.get('id');
-    console.log('Staff ID from URL:', staffIdFromUrl);
+    //console.log('Staff ID from URL:', staffIdFromUrl);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [leads, setLeads] = useState<any[]>([]);

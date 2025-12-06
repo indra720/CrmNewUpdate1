@@ -72,7 +72,7 @@ export function MarketingDialog() {
     }
     formData.append('create_id', '2'); // Always create new record for now
 
-    console.log("Submitting form data:", formData); // Log form data
+    //console.log("Submitting form data:", formData); // Log form data
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/marketing/update/`, {
         method: 'POST',

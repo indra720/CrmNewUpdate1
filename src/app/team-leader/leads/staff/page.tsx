@@ -262,7 +262,7 @@ export default function StaffLeadsPage() {
 
                    } catch (error: any) {
 
-                     console.error("Export failed", error);
+                     //console.error("Export failed", error);
 
                      toast({title: "Export Failed",description: error.message || "Could not export staff leads. Please try again.",variant: "destructive"});
 

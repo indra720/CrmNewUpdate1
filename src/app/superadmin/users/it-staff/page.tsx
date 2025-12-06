@@ -143,13 +143,13 @@ export default function ItStaffPage() {
         }
       );
       if (!response.ok) {
-        console.error("Failed to fetch IT staff", response.status);
+        //console.error("Failed to fetch IT staff", response.status);
         return;
       }
       const data = await response.json();
       setUsers(data);
     } catch (error) {
-      console.error("Error fetching IT staff:", error);
+      //console.error("Error fetching IT staff:", error);
     }
   };
 
@@ -185,7 +185,7 @@ export default function ItStaffPage() {
     } catch (error: any) {
       // 2. Failure: Revert state and show error
       setUsers(originalUsers);
-      console.error("Failed to update user status:", error);
+      //console.error("Failed to update user status:", error);
       toast({
         title: "Error",
         description: `Failed to update user status: ${

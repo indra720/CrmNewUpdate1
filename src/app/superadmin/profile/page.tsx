@@ -62,7 +62,7 @@ export default function ProfilePage() {
         });
         if (response.ok) {
           const data = await response.json();
-          console.log("Superadmin Profile API Response data:", data); // Add this line
+          //console.log("Superadmin Profile API Response data:", data); // Add this line
           const admin = data.admin;
           if (admin) {
             setFullName(admin.name || 'Super Admin');
@@ -77,7 +77,7 @@ export default function ProfilePage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        //console.error('Error fetching profile:', error);
       }
     }
     fetchProfile();
@@ -105,12 +105,12 @@ export default function ProfilePage() {
   }, [fullName, email, rawPhone, address, form]);
 
   function onSubmit(values: ProfileFormValues) {
-    // console.log("Profile update form submitted:", values); // Keep for debugging if needed
+    // //console.log("Profile update form submitted:", values); // Keep for debugging if needed
 
     async function submitUpdate() {
         const token = localStorage.getItem("authToken");
         if (!token) {
-            console.error("Authentication token not found.");
+            //console.error("Authentication token not found.");
             // Optionally show a toast for auth error
             return;
         }
@@ -156,7 +156,7 @@ export default function ProfilePage() {
                 setIsDialogOpen(false); // Close dialog on success
             } else {
                 const errorData = await response.json();
-                console.error("Profile update failed:", errorData);
+                //console.error("Profile update failed:", errorData);
                 // Show error toast
                 toast({
                     title: "Update Failed",
@@ -165,7 +165,7 @@ export default function ProfilePage() {
                 });
             }
         } catch (error) {
-            console.error("Error updating profile:", error);
+            //console.error("Error updating profile:", error);
             // Show generic error toast
             toast({
                 title: "Update Failed",

@@ -113,10 +113,10 @@ export default function StaffLeadsPage() {
       // Default staff ID = 1 (you can make this dynamic later)
       const staffId = '1';
 
-      console.log("=== FETCHING STAFF LEADS ===");
-      console.log("Staff ID:", staffId);
-      console.log("Status Filter:", statusFilter);
-      console.log("Date Range:", startDate, "to", endDate);
+      //console.log("=== FETCHING STAFF LEADS ===");
+      //console.log("Staff ID:", staffId);
+      //console.log("Status Filter:", statusFilter);
+      //console.log("Date Range:", startDate, "to", endDate);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/leads/staff/${staffId}/${statusFilter}/`,
@@ -129,14 +129,14 @@ export default function StaffLeadsPage() {
         }
       );
 
-      console.log("API Response Status:", response.status);
+      //console.log("API Response Status:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: ApiResponse = await response.json();
-      console.log("API Response Data:", data);
+      //console.log("API Response Data:", data);
 
       setLeads(data.results || []);
       setPagination({
@@ -146,8 +146,8 @@ export default function StaffLeadsPage() {
       });
 
     } catch (err: any) {
-      console.error("=== API ERROR ===");
-      console.error("Error:", err);
+      //console.error("=== API ERROR ===");
+      //console.error("Error:", err);
       setError(err.message);
       setLeads([]);
       toast({

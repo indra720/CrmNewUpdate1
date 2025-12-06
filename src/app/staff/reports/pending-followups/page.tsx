@@ -112,7 +112,7 @@ export default function StaffPendingFollowupsPage() {
       setShowModal(false);
       fetchLeads(); // Refresh leads
     } catch (error: any) {
-      console.error("Error saving changes:", error);
+      //console.error("Error saving changes:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update lead status.",
