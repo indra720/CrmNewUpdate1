@@ -179,10 +179,10 @@ export async function fetchAdmins(): Promise<any[]> {
     const data = await response.json();
     return data.users || [];
   } catch (error: any) {
-    // console.error("Failed to fetch admins:", error);
-    // throw new Error(
-    //   `Failed to fetch admins: ${error.message || "Unknown error"}`
-    // );
+    console.error("Failed to fetch admins:", error);
+    throw new Error(
+      `Failed to fetch admins: ${error.message || "Unknown error"}`
+    );
   }
 }
 
@@ -257,10 +257,10 @@ export async function editTeamLeader(id: number, formData: any): Promise<any> {
 
     return await response.json();
   } catch (error: any) {
-    // console.error("Failed to edit team leader:", error);
-    // throw new Error(
-    //   `Failed to edit team leader: ${error.message || "Unknown error"}`
-    // );
+    console.error("Failed to edit team leader:", error);
+    throw new Error(
+      `Failed to edit team leader: ${error.message || "Unknown error"}`
+    );
   }
 }
 
@@ -374,10 +374,10 @@ export async function fetchAdminsForSelection(): Promise<any[]> {
     const data = await response.json();
     return data.users || [];
   } catch (error: any) {
-    // console.error("Failed to fetch admins:", error);
-    // throw new Error(
-    //   `Failed to fetch admins: ${error.message || "Unknown error"}`
-    // );
+    console.error("Failed to fetch admins:", error);
+    throw new Error(
+      `Failed to fetch admins: ${error.message || "Unknown error"}`
+    );
   }
 }
 
@@ -390,7 +390,7 @@ export async function fetchTeamLeaders(): Promise<any[]> {
 
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/superuser/get-team-leaders/`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/superuser/team-leader-dashboard/`,
       {
         method: "GET",
         headers: {
@@ -407,10 +407,10 @@ export async function fetchTeamLeaders(): Promise<any[]> {
     const data = await response.json();
     return data.results || [];
   } catch (error: any) {
-    // console.error("Failed to fetch team leaders:", error);
-    // throw new Error(
-    //   `Failed to fetch team leaders: ${error.message || "Unknown error"}`
-    // );
+    console.error("Failed to fetch team leaders:", error);
+    throw new Error(
+      `Failed to fetch team leaders: ${error.message || "Unknown error"}`
+    );
   }
 }
 
@@ -1876,4 +1876,3 @@ export async function fetchCurrentUserProfile(): Promise<{ name: string; email: 
 
 
 // New function to export Team Leader leads
-

@@ -95,6 +95,7 @@ const kpiData = [
 
 const initialFormData = {
     id: null,
+    user_id: null, // Added user_id
     name: "",
     email: "",
     password: "",
@@ -157,11 +158,10 @@ const ReviewDetailItem = ({ label, value }: { label: string, value: string | und
 export default function TeamLeaderManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
   const [formData, setFormData] = useState<any>(initialFormData);
-  const [editingUser, setEditingUser] = useState<any>(null);
-
+  
   const [activeTab, setActiveTab] = useState("personal");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
@@ -203,7 +203,7 @@ export default function TeamLeaderManagementPage() {
       return;
     }
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/superuser/get-team-leaders/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/api/superuser/team-leader-dashboard/`, {
           headers: { Authorization: ` Token ${token}` },
       });
 
@@ -274,91 +274,56 @@ export default function TeamLeaderManagementPage() {
   };
   
   const handleOpenAddForm = () => {
+    setFormMode('add');
     setFormData(initialFormData);
     setActiveTab("personal");
-    setIsAddFormOpen(true);
+    setIsFormOpen(true);
   }
 
-  const handleOpenEditForm = async (user: any) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        toast({
-          title: "Error",
-          description: "Authentication token not found.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Fetch team leader details from API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/team-leader/edit/${user.id}/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const teamLeaderData = await response.json();
-      //console.log("Team Leader Edit Data:", teamLeaderData);
-
-      // Populate edit form with fetched data
-      setEditingUser({
-        id: teamLeaderData.id,
-        name: teamLeaderData.name || '',
-        email: teamLeaderData.email || '',
-        mobile: teamLeaderData.mobile || '',
-        dob: teamLeaderData.dob || '',
-        address: teamLeaderData.address || '',
-        city: teamLeaderData.city || '',
-        state: teamLeaderData.state || '',
-        pincode: teamLeaderData.pincode || '',
-        degree: teamLeaderData.degree || '',
-        pancard: teamLeaderData.pancard || '',
-        aadharCard: teamLeaderData.aadharCard || '',
-        bank_name: teamLeaderData.bank_name || '',
-        account_number: teamLeaderData.account_number || '',
-        ifsc_code: teamLeaderData.ifsc_code || '',
-        upi_id: teamLeaderData.upi_id || '',
-        salary: teamLeaderData.salary || '',
-        admin: teamLeaderData.admin || '',
-      });
-      
-      setIsEditFormOpen(true);
-    } catch (error: any) {
-      //console.error("Error fetching team leader data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch team leader data for editing.",
-        variant: "destructive",
-      });
-    }
+  const handleOpenEditForm = (user: any) => {
+    setFormMode('edit');
+    // Set form data directly from the user object from the table to avoid a failing network call
+    setFormData({
+      id: user.id, // Team Leader Profile ID
+      user_id: user.user?.id || user.user_id || null, // Base User ID
+      name: user.name || '',
+      email: user.user?.email || '',
+      mobile: user.mobile || '',
+      dob: user.dob || '',
+      address: user.address || '',
+      city: user.city || '',
+      state: user.state || '',
+      pincode: user.pincode || '',
+      degree: user.degree || '',
+      pancard: user.pancard || '',
+      aadharCard: user.aadharCard || '',
+      bank_name: user.bank_name || '',
+      account_number: user.account_number || '',
+      ifsc_code: user.ifsc_code || '',
+      upi_id: user.upi_id || '',
+      salary: user.salary || '',
+      admin: user.admin?.id || '',
+      password: '', // Always start with an empty password field
+    });
+    setActiveTab("personal");
+    setIsFormOpen(true);
   }
-
-
 
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
   
-  const handleCloseAddForm = () => {
-    setIsAddFormOpen(false);
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
     setFormData(initialFormData);
   }
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    //console.log("Form Data Submitted:", formData);
     const token = localStorage.getItem("authToken");
 
     const data = new FormData();
     
-    // Create a copy to avoid mutating state directly
     const submissionData = { ...formData };
 
     Object.keys(submissionData).forEach(key => {
@@ -378,8 +343,6 @@ export default function TeamLeaderManagementPage() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            // Log the detailed error from the server
-            //console.error("Server validation error:", errorData);
             throw new Error(Object.entries(errorData).map(([key, value]) => `${key}: ${value}`).join(", ") || 'Failed to add team leader');
         }
 
@@ -388,7 +351,7 @@ export default function TeamLeaderManagementPage() {
             description: `${formData.name} has been added successfully.`,
             className: 'bg-green-500 text-white'
         });
-        handleCloseAddForm();
+        handleCloseForm();
         fetchPageData();
     } catch (error: any) {
         toast({
@@ -399,17 +362,12 @@ export default function TeamLeaderManagementPage() {
     }
   };
 
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditingUser({ ...editingUser, [name]: value });
-  };
-
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser) return;
-
-    //console.log("=== TEAM LEADER EDIT FORM SUBMISSION START ===");
-    //console.log("Edit Form Data:", editingUser);
+    if (!formData.user_id) {
+        toast({ title: "Error", description: "User ID is missing for update.", variant: "destructive" });
+        return;
+    }
 
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -423,34 +381,23 @@ export default function TeamLeaderManagementPage() {
 
     const data = new FormData();
     
-    // Add all fields to FormData
-    if (editingUser.name) data.append('name', editingUser.name);
-    if (editingUser.email) data.append('email', editingUser.email);
-    if (editingUser.mobile) data.append('mobile', editingUser.mobile);
-    if (editingUser.dob) data.append('dob', editingUser.dob);
-    if (editingUser.address) data.append('address', editingUser.address);
-    if (editingUser.city) data.append('city', editingUser.city);
-    if (editingUser.state) data.append('state', editingUser.state);
-    if (editingUser.pincode) data.append('pincode', editingUser.pincode);
-    if (editingUser.degree) data.append('degree', editingUser.degree);
-    if (editingUser.pancard) data.append('pancard', editingUser.pancard);
-    if (editingUser.aadharCard) data.append('aadharCard', editingUser.aadharCard);
-    if (editingUser.bank_name) data.append('bank_name', editingUser.bank_name);
-    if (editingUser.account_number) data.append('account_number', editingUser.account_number);
-    if (editingUser.ifsc_code) data.append('ifsc_code', editingUser.ifsc_code);
-    if (editingUser.upi_id) data.append('upi_id', editingUser.upi_id);
-    if (editingUser.salary) data.append('salary', editingUser.salary);
-    if (editingUser.admin) data.append('admin', editingUser.admin);
+    // Create a mutable copy of formData to work with
+    const submissionData = { ...formData };
 
-    //console.log("=== TEAM LEADER EDIT API CALL DATA ===");
-    for (let [key, value] of data.entries()) {
-      //console.log(`${key}: ${value}`);
+    // If password is empty or null, don't include it in the submission
+    if (!submissionData.password) {
+        delete submissionData.password;
     }
 
+    // Append all other fields to FormData
+    Object.keys(submissionData).forEach(key => {
+        if (submissionData[key] !== null && submissionData[key] !== undefined) {
+            data.append(key, submissionData[key]);
+        }
+    });
+
     try {
-      //console.log("Making PATCH API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/team-leader/edit/${editingUser.id}/`);
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/team-leader/edit/${editingUser.id}/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/team-leader/edit/${formData.user_id}/`, {
         method: "PATCH",
         headers: {
           Authorization: `Token ${token}`,
@@ -458,19 +405,16 @@ export default function TeamLeaderManagementPage() {
         body: data,
       });
 
-      //console.log("Team Leader Edit API Response Status:", response.status);
-      //console.log("Team Leader Edit API Response OK:", response.ok);
-
       if (!response.ok) {
         const errorData = await response.json();
-        //console.log("Team Leader Edit API Error Data:", errorData);
-        
         let errorMessage = "Failed to update team leader.";
         if (errorData) {
           const errors: string[] = [];
           Object.keys(errorData).forEach(key => {
             if (Array.isArray(errorData[key])) {
               errors.push(`${key}: ${errorData[key].join(', ')}`);
+            } else {
+              errors.push(`${key}: ${errorData[key]}`);
             }
           });
           if (errors.length > 0) {
@@ -481,32 +425,23 @@ export default function TeamLeaderManagementPage() {
       }
 
       const updatedUser = await response.json();
-      //console.log("Team Leader Edit API Success Response:", updatedUser);
 
-      // Update users list
-      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...updatedUser } : u));
+      setUsers(users.map(u => u.id === formData.id ? { ...u, ...updatedUser } : u));
       
       toast({
         title: "Team Leader Updated!",
-        description: `${editingUser.name} has been updated successfully.`,
+        description: `${formData.name} has been updated successfully.`,
         className: 'bg-green-500 text-white'
       });
       
-      setIsEditFormOpen(false);
-      setEditingUser(null);
-      fetchPageData(); // Refresh the data
+      handleCloseForm();
+      fetchPageData(); 
     } catch (error: any) {
-      //console.error("=== TEAM LEADER EDIT API ERROR ===");
-      //console.error("Error:", error);
-      //console.error("Error Message:", error.message);
-      
       toast({
         title: "Error",
         description: error.message || "Failed to update team leader.",
         variant: "destructive",
       });
-    } finally {
-      //console.log("=== TEAM LEADER EDIT FORM SUBMISSION END ===");
     }
   };
 
@@ -520,7 +455,6 @@ export default function TeamLeaderManagementPage() {
   // toggle active
   
   const handleToggle = async (id: number, isActive: boolean) => {
-    // 1. Optimistic UI Update
     const originalUsers = [...users];
     setUsers(
       users.map((u) =>
@@ -532,8 +466,6 @@ export default function TeamLeaderManagementPage() {
 
     try {
       await toggleUserActiveStatus(id, "teamlead", isActive);
-
-      // 3. Success: Show toast
       toast({
         title: "Status Updated",
         description: `User status changed to ${
@@ -542,13 +474,9 @@ export default function TeamLeaderManagementPage() {
         className: "bg-blue-500 text-white",
         duration: 3000,
       });
-
-      // Refetch to ensure consistency
       fetchPageData();
     } catch (error: any) {
-      // 2. Failure: Revert state and show error
       setUsers(originalUsers);
-      //console.error("Failed to update user status:", error);
       toast({
         title: "Error",
         description: `Failed to update user status: ${
@@ -682,7 +610,6 @@ export default function TeamLeaderManagementPage() {
                               {expandedRowId === user.id ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                             </Button>
                           </div>
-                          {/* lg+: only number */}
                           <div className="hidden lg:block">
                             {index + 1}.
                           </div>
@@ -733,7 +660,6 @@ export default function TeamLeaderManagementPage() {
                               </Tooltip>
                             </TooltipProvider>
                         </div>
-                        {/* MD screen: Edit button only */}
                         <div className="hidden md:flex lg:hidden items-center justify-end gap-2">
                           <TooltipProvider>
                               <Tooltip>
@@ -778,10 +704,8 @@ export default function TeamLeaderManagementPage() {
                                   <div className="text-sm text-gray-500">{user.user?.user_active ? 'Active' : 'Inactive'}</div>
                                 </div>
                               </div>
-                              {/* Table-like grid for details: 2 cols on md+, 1 on mobile */}
                               <div className="overflow-hidden">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-gray-200">
-                                  {/* Row 1: Admin | Mobile */}
                                   <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                     <div className="flex items-center">
                                       <Users className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
@@ -796,7 +720,6 @@ export default function TeamLeaderManagementPage() {
                                     </div>
                                     <span className="text-sm ml-auto md:ml-0">{user.mobile || 'N/A'}</span>
                                   </div>
-                                  {/* Row 2: Created Date | Leads Report */}
                                   <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                     <div className="flex items-center">
                                       <Calendar className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
@@ -818,7 +741,6 @@ export default function TeamLeaderManagementPage() {
                                         <option value={`/superadmin/reports/visit`}>Visit</option>
                                     </select>
                                   </div>
-                                  {/* Row 3: Active Status | Edit Button */}
                                   <div className="p-3 border-b border-r md:border-r-0 border-gray-200 flex items-center justify-between md:justify-start md:gap-4">
                                     <div className="flex items-center">
                                       <Check className="h-4 w-4 mr-3 text-gray-500 flex-shrink-0" />
@@ -860,15 +782,15 @@ export default function TeamLeaderManagementPage() {
         </CardContent>
       </Card>
 
-    <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
+    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
             <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
-                <DialogTitle className="text-xl font-bold">Add New Team Leader</DialogTitle>
+                <DialogTitle className="text-xl font-bold">{formMode === 'add' ? 'Add New Team Leader' : 'Edit Team Leader'}</DialogTitle>
                 <DialogDescription>
-                    Fill in the details below.
+                    {formMode === 'add' ? 'Fill in the details below.' : `Update details for ${formData.name}`}
                 </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleAddSubmit} className="flex-1 flex flex-col min-h-0">
+            <form onSubmit={formMode === 'add' ? handleAddSubmit : handleEditSubmit} className="flex-1 flex flex-col min-h-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
                   <div className="px-6 flex-shrink-0">
                     <TabsList className="grid w-full grid-cols-2">
@@ -889,7 +811,7 @@ export default function TeamLeaderManagementPage() {
                         {activeTab === 'personal' && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                               <InputField id="admin" label="Admin" name="admin" value={formData.admin} onChange={(e) => handleAddFormSelectChange("admin", e.target.value)} required>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" defaultValue={formData.admin} required>
+                                <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" value={formData.admin?.toString()} required>
                                     <SelectTrigger className="pl-10 pr-4 h-11">
                                     <SelectValue placeholder="Select Admin" />
                                     </SelectTrigger>
@@ -902,15 +824,15 @@ export default function TeamLeaderManagementPage() {
                               </InputField>
                               <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleAddFormChange} required />
                               <InputField id="email" label="E-Mail Address" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleAddFormChange} required />
-                              <InputField id="password" label="Password" name="password" type="password" placeholder="••••••••" icon={Lock} value={formData.password} onChange={handleAddFormChange} required />
+                              <InputField id="password" label="Password" name="password" type="password" placeholder={formMode === 'edit' ? 'Leave blank to keep current password' : '••••••••'} icon={Lock} value={formData.password} onChange={handleAddFormChange} required={formMode === 'add'} />
                               <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} required />
                               <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} required />
                               <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} required />
-                              <InputField id="marksheets" label="MarkSheets" name="marksheets" type="file" icon={FileText} onChange={handleAddFormChange} value={''} required />
+                              <InputField id="marksheets" label="MarkSheets" name="marksheets" type="file" icon={FileText} onChange={handleAddFormChange} value={''} required={formMode === 'add'} />
                               <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleAddFormChange} required />
                               <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleAddFormChange} required />
                               <InputField id="state" label="State" name="state" value={formData.state} onChange={handleAddFormChange} required>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("state", value)} name="state" defaultValue={formData.state} required>
+                                <Select onValueChange={(value) => handleAddFormSelectChange("state", value)} name="state" value={formData.state} required>
                                     <SelectTrigger className="pl-10 pr-4 h-11">
                                     <SelectValue placeholder="Select State" />
                                     </SelectTrigger>
@@ -945,7 +867,7 @@ export default function TeamLeaderManagementPage() {
                   </div>
                 <DialogFooter className="p-6 pt-4 border-t bg-muted/50 flex justify-between w-full flex-shrink-0">
                   {activeTab === 'personal' ? (
-                      <Button type="button" variant="outline" onClick={handleCloseAddForm}>Cancel</Button>
+                      <Button type="button" variant="outline" onClick={handleCloseForm}>Cancel</Button>
                     ) : (
                       <Button type="button" variant="outline" onClick={(e) => { e.preventDefault(); setActiveTab('personal'); }}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -953,7 +875,7 @@ export default function TeamLeaderManagementPage() {
                       </Button>
                     )}
                     {activeTab === 'account' ? (
-                      <Button type="submit">Save Team Leader</Button>
+                      <Button type="submit">{formMode === 'add' ? 'Save Team Leader' : 'Save Changes'}</Button>
                     ) : (
                       <Button type="button" onClick={(e) => { e.preventDefault(); setActiveTab('account'); }}>
                         Next
@@ -965,43 +887,7 @@ export default function TeamLeaderManagementPage() {
             </form>
         </DialogContent>
     </Dialog>
-
-    {editingUser && (
-      <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="w-[95vw] sm:max-w-lg max-h-[80vh] overflow-y-auto hide-scrollbar rounded-xl">
-          <DialogHeader className="p-6 pb-4 text-center bg-muted/20 border-b border-border">
-            <DialogTitle className="text-2xl font-bold text-foreground">Edit Team Leader</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Update the details for <span className="font-semibold">{editingUser.name}</span>.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4 p-6">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input id="edit-name" name="name" value={editingUser.name} onChange={handleEditFormChange} required className="h-11" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input id="edit-email" name="email" type="email" value={editingUser.email} onChange={handleEditFormChange} required className="h-11" />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="edit-mobile">Mobile</Label>
-              <Input id="edit-mobile" name="mobile" value={editingUser.mobile} onChange={handleEditFormChange} required className="h-11" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-password">New Password (optional)</Label>
-              <Input id="edit-password" name="password" type="password" placeholder="Leave blank to keep current password" onChange={handleEditFormChange} className="h-11" />
-            </div>
-            <DialogFooter className="flex flex-row justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" size="sm" onClick={() => setIsEditFormOpen(false)} className="rounded-md">Cancel</Button>
-              <Button type="submit" size="sm" className="rounded-md">Save Changes</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    )}
       
-
     </div>
   );
 };
@@ -1014,10 +900,279 @@ export default function TeamLeaderManagementPage() {
 
 
 
+// {
+//     "id": 11,
+//     "user_id": 19,
+//     "admin": {
+//         "id": 4,
+//         "admin_id": "475a1ff1-c935-4172-a0bd-317d87d93ff2",
+//         "name": "Abhishek Kumar",
+//         "email": "abhi720@gmail.com",
+//         "mobile": "7890098768",
+//         "address": "Jaipur,rajasthan",
+//         "city": "jaipur",
+//         "pincode": "234556",
+//         "state": "Rajasthan",
+//         "dob": "2004-06-27",
+//         "pancard": "ABCDE7978F",
+//         "aadharCard": "678909876547",
+//         "marksheet": null,
+//         "degree": "B.TECH",
+//         "account_number": "5678905432",
+//         "upi_id": "abhi@123",
+//         "bank_name": "hdfc",
+//         "ifsc_code": "HDFC68HGJL",
+//         "salary": "89060",
+//         "achived_slab": "0",
+//         "created_date": "2025-11-27T06:32:58.813773Z",
+//         "updated_date": "2025-12-08T07:28:24.599972Z",
+//         "user": 1,
+//         "self_user": 18
+//     },
+//     "user": {
+//         "id": 19,
+//         "password": "pbkdf2_sha256$720000$Y6PPHDEIUR2tpI0yHT06aK$pPU/AZWXDvg7vSM2GVhGV9BaS+e6RK4Zy4ZO4A+9HDE=",
+//         "last_login": null,
+//         "is_superuser": false,
+//         "username": "rohitS720@gmail.com",
+//         "first_name": "",
+//         "last_name": "",
+//         "is_staff": false,
+//         "date_joined": "2025-11-27T06:38:12Z",
+//         "name": "Rohit Panchvani",
+//         "mobile": "7890987654",
+//         "email": "rohitS720@gmail.com",
+//         "is_admin": false,
+//         "is_team_leader": true,
+//         "is_staff_new": false,
+//         "is_freelancer": false,
+//         "is_it_staff": false,
+//         "login_time": "2025-11-27T06:38:12Z",
+//         "logout_time": null,
+//         "profile_image": null,
+//         "created_date": "2025-11-27T06:38:12.927618Z",
+//         "updated_date": "2025-12-08T11:37:33.546475Z",
+//         "user_active": true,
+//         "is_user_login": true,
+//         "groups": [],
+//         "user_permissions": []
+//     },
+//     "admin_name": "Abhishek Kumar",
+//     "name": "Rohit Panchvani",
+//     "email": "rohitS720@gmail.com",
+//     "mobile": "7890987654",
+//     "address": "gokuldham society,mumbai,Mahrastara",
+//     "city": "Mumbai",
+//     "state": "Maharashtra",
+//     "pincode": "123456",
+//     "dob": "2002-03-27",
+//     "pancard": "ABCD78FG",
+//     "aadharCard": "789065431234",
+//     "account_number": "234567890987",
+//     "upi_id": "rohit@123",
+//     "bank_name": "SBI",
+//     "ifsc_code": "SBIN00889",
+//     "salary": "67890",
+//     "achived_slab": "0",
+//     "profile_image": null
+// }
 
 
 
 
+
+
+
+
+
+
+// class TeamLeaderEditAPIView(APIView):
+//     """
+//     API ek Team Leader ki profile ko Get aur Update karne ke liye (teamedit function).
+//     [FIX]: Ab yeh SIRF SUPERUSER ko allow karega.
+//     """
+    
+//     # --- [YEH RAHA PERMISSION FIX] ---
+//     # IsCustomAdminUser ko CustomIsSuperuser se badal diya
+//     permission_classes = [IsAuthenticated, CustomIsSuperuser] 
+    
+//     parser_classes = (MultiPartParser, FormParser) # profile_image upload ke liye
+
+//     def get_object(self, id):
+//         """
+//         Helper method se Team_Leader object get karo
+//         """
+//         try:
+//             return Team_Leader.objects.get(id=id)
+//         except Team_Leader.DoesNotExist:
+//             raise Http404
+
+//     def get(self, request, id, *args, **kwargs):
+//         """
+//         Ek Team Leader ki poori details fetch karo.
+//         """
+//         teamleader = self.get_object(id)
+//         # Data dikhane ke liye ProductivityTeamLeaderSerializer use karo
+//         serializer = ProductivityTeamLeaderSerializer(teamleader, context={'request': request})
+//         return Response(serializer.data, status=status.HTTP_200_OK)
+
+//     def patch(self, request, id, *args, **kwargs):
+//         """
+//         Ek Team Leader ki profile ko update karo (PATCH).
+//         """
+//         teamleader = self.get_object(id)
+//         # Data update karne ke liye TeamLeaderUpdateSerializer use karo
+//         serializer = TeamLeaderUpdateSerializer(teamleader, data=request.data, partial=True)
+        
+//         if serializer.is_valid():
+//             updated_teamleader = serializer.save()
+//             # Updated data dikhane ke liye read serializer ka use karo
+//             read_serializer = ProductivityTeamLeaderSerializer(updated_teamleader, context={'request': request})
+//             return Response(read_serializer.data, status=status.HTTP_200_OK)
+        
+//         # Agar error aaye
+//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+//     def post(self, request, id, *args, **kwargs):
+//         # POST ko bhi PATCH ki tarah handle karo
+//         return self.patch(request, id, format)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// {
+//     "counts": {
+//         "pending_followups": 6,
+//         "tomorrow_followups": 0,
+//         "today_followups": 0,
+//         "total_leads": 4,
+//         "total_visit": 6,
+//         "interested": 12,
+//         "not_interested": 5,
+//         "other_location": 2,
+//         "not_picked": 2,
+//         "total_staff": 16,
+//         "active_staff": 2,
+//         "total_lost": 3
+//     },
+//     "count": 18,
+//     "next": null,
+//     "previous": null,
+//     "results": [
+//         {
+//             "id": 12,
+//             "user_id": 33,
+//             "admin": {
+//                 "id": 1,
+//                 "admin_id": "c67f2e6c-dbc4-427a-85c5-132e2ecbff71",
+//                 "name": "abhi",
+//                 "email": "inder@gmail.com",
+//                 "mobile": "9521399707",
+//                 "address": "jaipur",
+//                 "city": "jaipur",
+//                 "pincode": "302012",
+//                 "state": "Rajasthan",
+//                 "dob": "2005-11-18",
+//                 "pancard": "HFHEH2121D",
+//                 "aadharCard": "789658748545",
+//                 "marksheet": "88",
+//                 "degree": "B.TECH",
+//                 "account_number": "25874569852",
+//                 "upi_id": "9521399708@upii",
+//                 "bank_name": "au bank",
+//                 "ifsc_code": "RMGB0000477",
+//                 "salary": "8000",
+//                 "achived_slab": "6081",
+//                 "created_date": "2025-10-29T09:53:31.770082Z",
+//                 "updated_date": "2025-11-21T10:46:39.766715Z",
+//                 "user": 1,
+//                 "self_user": 2
+//             },
+//           }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// class TeamLeaderEditAPIView(APIView):
+//     """
+//     this api is used for edit the team leader by superuser.
+//     """
+    
+//     permission_classes = [IsAuthenticated, CustomIsSuperuser] 
+    
+//     parser_classes = (MultiPartParser, FormParser) # profile_image upload ke liye
+
+//     def get_object(self, id):
+//         """
+//         Helper method se Team_Leader object get karo
+//         """
+//         try:
+//             return Team_Leader.objects.get(user__id=id)
+//         except Team_Leader.DoesNotExist:
+//             raise Http404
+
+//     def get(self, request, id, *args, **kwargs):
+//         """
+//         Ek Team Leader ki poori details fetch karo.
+//         """
+//         teamleader = self.get_object(id)
+//         # Data dikhane ke liye ProductivityTeamLeaderSerializer use karo
+//         serializer = ProductivityTeamLeaderSerializer(teamleader, context={'request': request})
+//         return Response(serializer.data, status=status.HTTP_200_OK)
+
+//     def patch(self, request, id, *args, **kwargs):
+//         """
+//         Ek Team Leader ki profile ko update karo (PATCH).
+//         """
+//         teamleader = self.get_object(id)
+//         # Data update karne ke liye TeamLeaderUpdateSerializer use karo
+//         serializer = TeamLeaderUpdateSerializer(teamleader, data=request.data, partial=True)
+        
+//         if serializer.is_valid():
+//             updated_teamleader = serializer.save()
+//             # Updated data dikhane ke liye read serializer ka use karo
+//             read_serializer = ProductivityTeamLeaderSerializer(updated_teamleader, context={'request': request})
+//             return Response(read_serializer.data, status=status.HTTP_200_OK)
+        
+//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+//     def post(self, request, id, *args, **kwargs):
+        
+//         return self.patch(request, id, format)
 
 
 

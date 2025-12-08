@@ -188,8 +188,8 @@ const initialFormData = {
   state: "",
   pincode: "",
   degree: "",
-  pancard: "",
-  aadharCard: "",
+  pan_card: "",
+  aadhar_card: "",
   bank_name: "",
   account_number: "",
   ifsc_code: "",
@@ -422,6 +422,7 @@ export default function AdminManagementPage() {
 
     setIsSubmitting(true);
     const token = localStorage.getItem("authToken");
+    let response; // Define response here to be accessible in catch block
 
     try {
       const data = new FormData();
@@ -431,7 +432,7 @@ export default function AdminManagementPage() {
         }
       });
 
-      const response = await fetch(
+      response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/admin/add/`,
         {
           method: "POST",
@@ -443,13 +444,10 @@ export default function AdminManagementPage() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
+        // Throw response to be caught and parsed in the catch block
+        throw response;
       }
 
-      setProgress(100);
       setProgress(100);
       toast({
         title: "Admin Added!",
@@ -463,10 +461,21 @@ export default function AdminManagementPage() {
         fetchcardData();
       }, 500);
     } catch (error: any) {
-      //console.error("Failed to add admin:", error);
+      let errorMessage = "An unknown error occurred.";
+      if (error instanceof Response) {
+        try {
+          const errorData = await error.json();
+          errorMessage = JSON.stringify(errorData);
+        } catch (jsonError) {
+          errorMessage = `HTTP error! status: ${error.status} ${error.statusText}`;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Error",
-        description: `Failed to add admin: ${error.message || "Unknown error"}`,
+        title: "Error Adding Admin",
+        description: `Details: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -944,21 +953,21 @@ export default function AdminManagementPage() {
                           onChange={handleAddFormChange}
                         />
                         <InputField
-                          id="pancard"
+                          id="pan_card"
                           label="Pan Card"
-                          name="pancard"
+                          name="pan_card"
                           placeholder="ABCDE1234F"
                           icon={CreditCard}
-                          value={formData.pancard}
+                          value={formData.pan_card}
                           onChange={handleAddFormChange}
                         />
                         <InputField
-                          id="aadharCard"
+                          id="aadhar_card"
                           label="Aadhar Card"
-                          name="aadharCard"
+                          name="aadhar_card"
                           placeholder="1234 5678 9012"
                           icon={Fingerprint}
-                          value={formData.aadharCard}
+                          value={formData.aadhar_card}
                           onChange={handleAddFormChange}
                         />
                         <InputField
@@ -970,17 +979,7 @@ export default function AdminManagementPage() {
                           value={formData.marksheets}
                           onChange={handleAddFormChange}
                         />
-                        {formMode === "edit" && (
-                          <InputField
-                            id="profile_image"
-                            label="Profile Image"
-                            name="profile_image"
-                            type="file"
-                            icon={User}
-                            onChange={handleAddFormChange}
-                            value={""}
-                          />
-                        )}
+
                         <InputField
                           id="degree"
                           label="Degree"
@@ -1115,7 +1114,7 @@ export default function AdminManagementPage() {
                   </motion.div>
                 </AnimatePresence>
               </div>
-              <DialogFooter className="p-6 pt-4 border-t bg-muted/50 flex justify-between w-full flex-shrink-0">
+              <DialogFooter className="p-6 pt-4 border-t bg-muted/50 gap-2 flex justify-between w-full flex-shrink-0">
                 {activeTab === "personal" ? (
                   <div></div>
                 ) : (
@@ -1187,3 +1186,35 @@ export default function AdminManagementPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+// class AdminAddAPIView(APIView):
+//     """
+//     API Superuser ke liye naya Admin user banane ke liye.
+//     """
+//     permission_classes = [IsAuthenticated, CustomIsSuperuser] # Sirf Superuser hi Admin add kar sakta hai
+//     parser_classes = (MultiPartParser, FormParser) # File upload (profile_image) ke liye
+
+//     def post(self, request, *args, **kwargs):
+//         # Serializer ko request context do taaki woh request.user le sake
+//         serializer = AdminCreateSerializer(data=request.data, context={'request': request})
+        
+//         if serializer.is_valid():
+//             admin_instance = serializer.save()
+            
+//             # Naye bane hue admin ka poora data dikhao
+//             read_serializer = DashboardAdminSerializer(admin_instance)
+            
+//             return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+        
+//         # Agar validation fail ho
+//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

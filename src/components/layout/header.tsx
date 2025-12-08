@@ -146,6 +146,7 @@ import {
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
 import { useMemo, useEffect, useState } from 'react';
+import Link from 'next/link';
 
 function getTitleFromPathname(pathname: string) {
   if (pathname === '/admin') return 'Admin Dashboard';
@@ -171,9 +172,19 @@ function getTitleFromPathname(pathname: string) {
     : 'Dashboard';
 }
 
+function getRoleFromPathname(pathname: string) {
+  if (pathname.startsWith('/superadmin')) return 'superadmin';
+  if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/team-leader')) return 'team-leader';
+  if (pathname.startsWith('/staff')) return 'staff';
+  return '';
+}
+
 export function Header({ setSidebarOpen }: { setSidebarOpen?: (open: boolean) => void }) {
   const pathname = usePathname();
   const headerTitle = useMemo(() => getTitleFromPathname(pathname), [pathname]);
+  const role = useMemo(() => getRoleFromPathname(pathname), [pathname]);
+  const notificationsUrl = role ? `/${role}/notifications` : '/login';
 
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -279,10 +290,11 @@ export function Header({ setSidebarOpen }: { setSidebarOpen?: (open: boolean) =>
             </div>
 
             <DropdownMenuSeparator />
-
-            <DropdownMenuItem className="justify-center text-sm text-primary hover:!bg-accent hover:!text-primary">
-              View all notifications
-            </DropdownMenuItem>
+            <Link href={notificationsUrl} passHref>
+              <DropdownMenuItem className="justify-center text-sm text-primary hover:!bg-accent hover:!text-primary cursor-pointer">
+                View all notifications
+              </DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
 

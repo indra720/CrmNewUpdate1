@@ -157,11 +157,10 @@ const ReviewDetailItem = ({ label, value }: { label: string, value: string | und
 export default function StaffManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
   const [formData, setFormData] = useState<any>(initialFormData);
-  const [editingUser, setEditingUser] = useState<any>(null);
-
+  
   const [activeTab, setActiveTab] = useState("personal");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -174,14 +173,9 @@ export default function StaffManagementPage() {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
 
-  // staff teamleader card data 
   const [cardData, setcardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 7),
-  });
 
   const fetchPageData = async () => {
     setLoading(true);
@@ -204,12 +198,8 @@ export default function StaffManagementPage() {
       }
 
       const data = await response.json();
-      //console.log("Staff Report API Response:", data);
-
-      // Set card data from lead_counts
       setcardData(data.lead_counts);
 
-      // Set users from staff_list with proper structure
       const staffUsers = data.staff_list.map((staff: any) => ({
         id: staff.id,
         name: staff.name,
@@ -242,7 +232,6 @@ export default function StaffManagementPage() {
         setAdmins(adminsData);
         setTeamLeaders(teamLeadersData);
       } catch (error) {
-        //console.error("Failed to fetch dropdown data:", error);
         setAdmins([]);
         setTeamLeaders([]);
         toast({
@@ -256,7 +245,7 @@ export default function StaffManagementPage() {
   }, [toast]);
 
 
-  const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     if (type === 'file') {
       const target = e.target as HTMLInputElement;
@@ -266,17 +255,19 @@ export default function StaffManagementPage() {
     }
   };
 
-  const handleAddFormSelectChange = (name: string, value: string) => {
+  const handleSelectChange = (name: string, value: string) => {
     setFormData({ ...formData, [name]: value });
   };
 
   const handleOpenAddForm = () => {
+    setFormMode('add');
     setFormData(initialFormData);
     setActiveTab("personal");
-    setIsAddFormOpen(true);
+    setIsFormOpen(true);
   }
 
   const handleOpenEditForm = async (user: any) => {
+    setFormMode('edit');
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
@@ -288,7 +279,6 @@ export default function StaffManagementPage() {
         return;
       }
 
-      // Fetch staff details from API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${user.id}/`, {
         method: "GET",
         headers: {
@@ -302,10 +292,8 @@ export default function StaffManagementPage() {
       }
 
       const staffData = await response.json();
-      //console.log("Staff Edit Data:", staffData);
-
-      // Populate edit form with fetched data
-      setEditingUser({
+      
+      setFormData({
         id: staffData.id,
         name: staffData.name || '',
         email: staffData.email || '',
@@ -325,11 +313,11 @@ export default function StaffManagementPage() {
         salary: staffData.salary || '',
         teamLeader: staffData.team_leader || '',
         admin: staffData.admin || '',
+        password: '', // Keep password blank for edit
       });
-
-      setIsEditFormOpen(true);
+      setActiveTab("personal");
+      setIsFormOpen(true);
     } catch (error: any) {
-      //console.error("Error fetching staff data:", error);
       toast({
         title: "Error",
         description: "Failed to fetch staff data for editing.",
@@ -338,73 +326,33 @@ export default function StaffManagementPage() {
     }
   };
 
-
-
-  const handleCloseAddForm = () => {
-    setIsAddFormOpen(false);
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
     setFormData(initialFormData);
   }
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    //console.log("=== FORM SUBMISSION START ===");
-    //console.log("Form Data:", formData);
-
     const token = localStorage.getItem("authToken");
     if (!token) {
-      toast({
-        title: "Error",
-        description: "Authentication token not found.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
       setIsSubmitting(false);
       return;
     }
 
-    // Validate required fields
     if (!formData.email || !formData.password || !formData.teamLeader || !formData.admin) {
-      toast({
-        title: "Validation Error",
-        description: "Email, Password, Team Leader, and Admin are required fields.",
-        variant: "destructive",
-      });
+      toast({ title: "Validation Error", description: "Email, Password, Team Leader, and Admin are required fields.", variant: "destructive" });
       setIsSubmitting(false);
       return;
     }
 
     const data = new FormData();
-    data.append('email', formData.email);
-    data.append('password', formData.password);
-    data.append('team_leader', formData.teamLeader);
-    data.append('admin', formData.admin);
-
-    // Optional fields
-    if (formData.name) data.append('name', formData.name);
-    if (formData.mobile) data.append('mobile', formData.mobile);
-    if (formData.dob) data.append('dob', formData.dob);
-    if (formData.address) data.append('address', formData.address);
-    if (formData.city) data.append('city', formData.city);
-    if (formData.state) data.append('state', formData.state);
-    if (formData.pincode) data.append('pincode', formData.pincode);
-    if (formData.degree) data.append('degree', formData.degree);
-    if (formData.pancard) data.append('pancard', formData.pancard);
-    if (formData.aadharCard) data.append('aadharCard', formData.aadharCard);
-    if (formData.bank_name) data.append('bank_name', formData.bank_name);
-    if (formData.account_number) data.append('account_number', formData.account_number);
-    if (formData.ifsc_code) data.append('ifsc_code', formData.ifsc_code);
-    if (formData.upi_id) data.append('upi_id', formData.upi_id);
-    if (formData.salary) data.append('salary', formData.salary);
-
-    //console.log("=== API CALL DATA ===");
-    for (let [key, value] of data.entries()) {
-      //console.log(`${key}: ${value}`);
-    }
+    Object.keys(formData).forEach(key => {
+        if(formData[key]) data.append(key, formData[key]);
+    });
 
     try {
-      //console.log("Making API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/add/`);
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/add/`, {
         method: "POST",
         headers: {
@@ -413,180 +361,105 @@ export default function StaffManagementPage() {
         body: data,
       });
 
-      //console.log("API Response Status:", response.status);
-      //console.log("API Response OK:", response.ok);
-
       if (!response.ok) {
         const errorData = await response.json();
-        //console.log("API Error Data:", errorData);
-
         let errorMessage = "Failed to add staff.";
-
         if (errorData) {
           const errors = [];
           if (errorData.team_leader) errors.push(`Team Leader: ${errorData.team_leader.join(', ')}`);
           if (errorData.email) errors.push(`Email: ${errorData.email.join(', ')}`);
           if (errorData.password) errors.push(`Password: ${errorData.password.join(', ')}`);
           if (errorData.admin) errors.push(`Admin: ${errorData.admin.join(', ')}`);
-
-          if (errors.length > 0) {
-            errorMessage = errors.join('\n');
-          }
+          if (errors.length > 0) errorMessage = errors.join('\n');
         }
-
         throw new Error(errorMessage);
       }
 
       const newUser = await response.json();
-      //console.log("API Success Response:", newUser);
-
       setUsers([...users, newUser]);
-      toast({
-        title: "Staff Added!",
-        description: `Staff has been added successfully.`,
-        className: "bg-green-500 text-white",
-      });
-      handleCloseAddForm();
-      fetchPageData(); // Refresh the data
+      toast({ title: "Staff Added!", description: `Staff has been added successfully.`, className: "bg-green-500 text-white" });
+      handleCloseForm();
+      fetchPageData();
     } catch (error: any) {
-      //console.error("=== API ERROR ===");
-      //console.error("Error:", error);
-      //console.error("Error Message:", error.message);
-
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add staff.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to add staff.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
-      //console.log("=== FORM SUBMISSION END ===");
     }
   };
-
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditingUser({ ...editingUser, [name]: value });
-  };
-
-  const handleEditSelectChange = (name: string, value: string) => {
-    setEditingUser({ ...editingUser, [name]: value });
-  };
-
+  
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser) return;
-
-    //console.log("=== EDIT FORM SUBMISSION START ===");
-    //console.log("Edit Form Data:", editingUser);
-
+    if (!formData.id) return;
+    
+    setIsSubmitting(true);
     const token = localStorage.getItem("authToken");
     if (!token) {
-      toast({
-        title: "Error",
-        description: "Authentication token not found.",
-        variant: "destructive",
-      });
-      return;
+        toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+        setIsSubmitting(false);
+        return;
     }
 
     const data = new FormData();
+    const submissionData = {...formData};
 
-    // Add all fields to FormData
-    if (editingUser.name) data.append('name', editingUser.name);
-    if (editingUser.email) data.append('email', editingUser.email);
-    if (editingUser.mobile) data.append('mobile', editingUser.mobile);
-    if (editingUser.dob) data.append('dob', editingUser.dob);
-    if (editingUser.address) data.append('address', editingUser.address);
-    if (editingUser.city) data.append('city', editingUser.city);
-    if (editingUser.state) data.append('state', editingUser.state);
-    if (editingUser.pincode) data.append('pincode', editingUser.pincode);
-    if (editingUser.degree) data.append('degree', editingUser.degree);
-    if (editingUser.pancard) data.append('pancard', editingUser.pancard);
-    if (editingUser.aadharCard) data.append('aadharCard', editingUser.aadharCard);
-    if (editingUser.bank_name) data.append('bank_name', editingUser.bank_name);
-    if (editingUser.account_number) data.append('account_number', editingUser.account_number);
-    if (editingUser.ifsc_code) data.append('ifsc_code', editingUser.ifsc_code);
-    if (editingUser.upi_id) data.append('upi_id', editingUser.upi_id);
-    if (editingUser.salary) data.append('salary', editingUser.salary);
-    if (editingUser.teamLeader) data.append('team_leader', editingUser.teamLeader);
-    if (editingUser.admin) data.append('admin', editingUser.admin);
-
-    //console.log("=== EDIT API CALL DATA ===");
-    for (let [key, value] of data.entries()) {
-      //console.log(`${key}: ${value}`);
+    if(!submissionData.password) {
+        delete submissionData.password;
     }
+    
+    Object.keys(submissionData).forEach(key => {
+        if (submissionData[key] !== null && submissionData[key] !== undefined) {
+             if (key === 'teamLeader' && submissionData[key]) {
+                data.append('team_leader', submissionData[key]);
+            } else if (submissionData[key]) {
+                 data.append(key, submissionData[key]);
+            }
+        }
+    });
 
     try {
-      //console.log("Making PATCH API call to:", `${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${editingUser.id}/`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${formData.id}/`, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Token ${token}`,
+            },
+            body: data,
+        });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/users/staff/edit/${editingUser.id}/`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        body: data,
-      });
-
-      //console.log("Edit API Response Status:", response.status);
-      //console.log("Edit API Response OK:", response.ok);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        //console.log("Edit API Error Data:", errorData);
-
-        let errorMessage = "Failed to update staff.";
-        if (errorData) {
-          const errors: string[] = [];
-          Object.keys(errorData).forEach(key => {
-            if (Array.isArray(errorData[key])) {
-              errors.push(`${key}: ${errorData[key].join(', ')}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            let errorMessage = "Failed to update staff.";
+            if (errorData) {
+                const errors: string[] = [];
+                Object.keys(errorData).forEach(key => {
+                    if (Array.isArray(errorData[key])) {
+                        errors.push(`${key}: ${errorData[key].join(', ')}`);
+                    }
+                });
+                if (errors.length > 0) {
+                    errorMessage = errors.join('\n');
+                }
             }
-          });
-          if (errors.length > 0) {
-            errorMessage = errors.join('\n');
-          }
+            throw new Error(errorMessage);
         }
-        throw new Error(errorMessage);
-      }
 
-      const updatedUser = await response.json();
-      //console.log("Edit API Success Response:", updatedUser);
-
-      // Update users list
-      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...updatedUser } : u));
-
-      toast({
-        title: "Staff Updated!",
-        description: `${editingUser.name} has been updated successfully.`,
-        className: 'bg-green-500 text-white'
-      });
-
-      setIsEditFormOpen(false);
-      setEditingUser(null);
-      fetchPageData(); // Refresh the data
+        const updatedUser = await response.json();
+        setUsers(users.map(u => u.id === formData.id ? { ...u, ...updatedUser } : u));
+        toast({ title: "Staff Updated!", description: `${formData.name} has been updated successfully.`, className: 'bg-green-500 text-white' });
+        handleCloseForm();
+        fetchPageData();
     } catch (error: any) {
-      //console.error("=== EDIT API ERROR ===");
-      //console.error("Error:", error);
-      //console.error("Error Message:", error.message);
-
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update staff.",
-        variant: "destructive",
-      });
+        toast({ title: "Error", description: error.message || "Failed to update staff.", variant: "destructive" });
     } finally {
-      //console.log("=== EDIT FORM SUBMISSION END ===");
+        setIsSubmitting(false);
     }
   };
 
 
   useEffect(() => {
-    // setUsers(mockUsers);
+    // side effects
   }, []);
 
   const handleToggle = async (id: number, isActive: boolean) => {
-    // 1. Optimistic UI Update
     const originalUsers = [...users];
     setUsers(
       users.map((u) =>
@@ -598,26 +471,17 @@ export default function StaffManagementPage() {
 
     try {
       await toggleUserActiveStatus(id, "staff", isActive);
-
-      // 3. Success: Show toast
       toast({
         title: "Status Updated",
-        description: `User status changed to ${isActive ? "Active" : "Inactive"
-          }.`,
+        description: `User status changed to ${isActive ? "Active" : "Inactive"}.`,
         className: "bg-blue-500 text-white",
         duration: 3000,
       });
-
-      // Optional: Refetch in the background to ensure consistency
-      // fetchData(); // Use fetchData for this component
     } catch (error: any) {
-      // 2. Failure: Revert state and show error
       setUsers(originalUsers);
-      //console.error("Failed to update user status:", error);
       toast({
         title: "Error",
-        description: `Failed to update user status: ${error.message || "Unknown error"
-          }`,
+        description: `Failed to update user status: ${error.message || "Unknown error"}`,
         variant: "destructive",
       });
     }
@@ -886,19 +750,19 @@ export default function StaffManagementPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-3xl w-[90vw] max-h-[90vh] p-0 rounded-2xl shadow-2xl flex flex-col">
           <DialogHeader className="p-6 pb-4 border-b flex-shrink-0">
-            <DialogTitle className="text-xl font-bold">Add New Staff</DialogTitle>
+            <DialogTitle className="text-xl font-bold">{formMode === 'add' ? 'Add New Staff' : 'Edit Staff'}</DialogTitle>
             <DialogDescription>
-              Fill in the details below.
+              {formMode === 'add' ? 'Fill in the details below.' : `Update details for ${formData.name}`}
             </DialogDescription>
           </DialogHeader>
-          <form className="flex-1 flex flex-col min-h-0">
+          <form onSubmit={formMode === 'add' ? handleAddSubmit : handleEditSubmit} className="flex-1 flex flex-col min-h-0">
             <div className="px-6 pt-4 flex flex-col md:flex-row gap-4">
               <div className="w-full">
                 <Label className="text-sm font-medium text-muted-foreground">Admin *</Label>
-                <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" required>
+                <Select onValueChange={(value) => handleSelectChange("admin", value)} name="admin" value={formData.admin?.toString()} required>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Admin" />
                   </SelectTrigger>
@@ -913,7 +777,7 @@ export default function StaffManagementPage() {
               </div>
               <div className="w-full">
                 <Label className="text-sm font-medium text-muted-foreground">Team Leader *</Label>
-                <Select onValueChange={(value) => handleAddFormSelectChange("teamLeader", value)} name="teamLeader" required>
+                <Select onValueChange={(value) => handleSelectChange("teamLeader", value)} name="teamLeader" value={formData.teamLeader?.toString()} required>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Team-Leader" />
                   </SelectTrigger>
@@ -946,16 +810,16 @@ export default function StaffManagementPage() {
                   >
                     {activeTab === 'personal' && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                        <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleAddFormChange} />
-                        <InputField id="email" label="E-Mail Address *" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleAddFormChange} required />
-                        <InputField id="password" label="Password *" name="password" type="password" placeholder="••••••••" icon={Lock} value={formData.password} onChange={handleAddFormChange} required />
-                        <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} />
-                        <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} />
-                        <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} />
-                        <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleAddFormChange} />
-                        <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleAddFormChange} />
-                        <InputField id="state" label="State" name="state" value={formData.state} onChange={handleAddFormChange}>
-                          <Select onValueChange={(value) => handleAddFormSelectChange("state", value)} name="state" defaultValue={formData.state}>
+                        <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleFormChange} />
+                        <InputField id="email" label="E-Mail Address *" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleFormChange} required />
+                        <InputField id="password" label="Password *" name="password" type="password" placeholder={formMode === 'edit' ? 'Leave blank to keep current password' : '••••••••'} icon={Lock} value={formData.password} onChange={handleFormChange} required={formMode === 'add'} />
+                        <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleFormChange} />
+                        <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleFormChange} />
+                        <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleFormChange} />
+                        <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleFormChange} />
+                        <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleFormChange} />
+                        <InputField id="state" label="State" name="state" value={formData.state} onChange={handleFormChange}>
+                          <Select onValueChange={(value) => handleSelectChange("state", value)} name="state" value={formData.state}>
                             <SelectTrigger className="pl-10 pr-4 h-11">
                               <SelectValue placeholder="Select State" />
                             </SelectTrigger>
@@ -966,19 +830,19 @@ export default function StaffManagementPage() {
                             </SelectContent>
                           </Select>
                         </InputField>
-                        <InputField id="mobile" label="Mobile" name="mobile" type="tel" placeholder="9876543210" icon={Phone} value={formData.mobile} onChange={handleAddFormChange} />
-                        <InputField id="salary" label="Salary" name="salary" placeholder="e.g. 50000" icon={Wallet} value={formData.salary} onChange={handleAddFormChange} />
+                        <InputField id="mobile" label="Mobile" name="mobile" type="tel" placeholder="9876543210" icon={Phone} value={formData.mobile} onChange={handleFormChange} />
+                        <InputField id="salary" label="Salary" name="salary" placeholder="e.g. 50000" icon={Wallet} value={formData.salary} onChange={handleFormChange} />
                       </div>
                     )}
                     {activeTab === 'account' && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                        <InputField id="account_number" label="Account Number" name="account_number" placeholder="Your account number" icon={Wallet} value={formData.account_number} onChange={handleAddFormChange} />
-                        <InputField id="upi_id" label="Add UPI" name="upi_id" placeholder="yourname@upi" icon={Briefcase} value={formData.upi_id} onChange={handleAddFormChange} />
-                        <InputField id="bank_name" label="Bank Name" name="bank_name" placeholder="e.g. State Bank of India" icon={Landmark} value={formData.bank_name} onChange={handleAddFormChange} />
-                        <InputField id="ifsc_code" label="IFSC Code" name="ifsc_code" placeholder="SBIN0001234" icon={Hash} value={formData.ifsc_code} onChange={handleAddFormChange} />
-                        <InputField id="pincode" label="Pincode" name="pincode" placeholder="e.g. 110001" icon={MapPin} value={formData.pincode} onChange={handleAddFormChange} />
+                        <InputField id="account_number" label="Account Number" name="account_number" placeholder="Your account number" icon={Wallet} value={formData.account_number} onChange={handleFormChange} />
+                        <InputField id="upi_id" label="Add UPI" name="upi_id" placeholder="yourname@upi" icon={Briefcase} value={formData.upi_id} onChange={handleFormChange} />
+                        <InputField id="bank_name" label="Bank Name" name="bank_name" placeholder="e.g. State Bank of India" icon={Landmark} value={formData.bank_name} onChange={handleFormChange} />
+                        <InputField id="ifsc_code" label="IFSC Code" name="ifsc_code" placeholder="SBIN0001234" icon={Hash} value={formData.ifsc_code} onChange={handleFormChange} />
+                        <InputField id="pincode" label="Pincode" name="pincode" placeholder="e.g. 110001" icon={MapPin} value={formData.pincode} onChange={handleFormChange} />
                         <div className="md:col-span-2">
-                          <InputField id="address" label="Address" name="address" value={formData.address} onChange={handleAddFormChange}>
+                          <InputField id="address" label="Address" name="address" value={formData.address} onChange={handleFormChange}>
                             <Textarea className="pl-10 pr-4 min-h-[80px]" placeholder="Enter full address" />
                           </InputField>
                         </div>
@@ -989,7 +853,7 @@ export default function StaffManagementPage() {
               </div>
               <DialogFooter className="p-6 pt-4 border-t bg-muted/50 flex justify-between w-full flex-shrink-0">
                 {activeTab === 'personal' ? (
-                  <div></div>
+                  <Button type="button" variant="outline" onClick={handleCloseForm}>Cancel</Button>
                 ) : (
                   <Button type="button" variant="outline" onClick={() => setActiveTab('personal')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -1002,18 +866,8 @@ export default function StaffManagementPage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button type="button" onClick={handleAddSubmit} disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Submitting...
-                      </>
-                    ) : (
-                      "Save Staff"
-                    )}
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : (formMode === 'add' ? "Save Staff" : "Save Changes")}
                   </Button>
                 )}
               </DialogFooter>
@@ -1021,58 +875,50 @@ export default function StaffManagementPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {editingUser && (
-        <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-          <DialogContent className="w-[95vw] sm:max-w-md max-h-[80vh] overflow-y-auto hide-scrollbar">
-            <DialogHeader>
-              <DialogTitle>Edit Staff</DialogTitle>
-              <DialogDescription>
-                Update the details for {editingUser.name}.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Name</Label>
-                <Input id="edit-name" name="name" value={editingUser.name} onChange={handleEditFormChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input id="edit-email" name="email" type="email" value={editingUser.email} onChange={handleEditFormChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-mobile">Mobile</Label>
-                <Input id="edit-mobile" name="mobile" value={editingUser.mobile} onChange={handleEditFormChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-teamLeader">Team Leader</Label>
-                <Select onValueChange={(value) => handleEditSelectChange("teamLeader", value)} name="teamLeader" defaultValue={editingUser.teamLeader}>
-                  <SelectTrigger id="edit-teamLeader">
-                    <SelectValue placeholder="Select Team Leader" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teamLeaders.map((leader) => (
-                      <SelectItem key={leader.id} value={String(leader.id)}>
-                        {leader.name || leader.user?.first_name || leader.user?.email || `Team Leader ${leader.id}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-password">New Password (optional)</Label>
-                <Input id="edit-password" name="password" type="password" placeholder="Leave blank to keep current password" onChange={handleEditFormChange} />
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditFormOpen(false)}>Cancel</Button>
-                <Button type="submit">Save Changes</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
-
-
     </div>
   );
 };
+
+
+
+
+// class StaffEditAPIView(APIView):
+//     """
+//     API ek Staff/Freelancer ki profile ko Get aur Update karne ke liye.
+//     """
+//     permission_classes = [ IsAuthenticated , CustomIsSuperuser] 
+//     parser_classes = (MultiPartParser, FormParser) 
+
+//     def get_object(self, id):
+//         """
+//         Helper method se Staff object get karo
+//         """
+//         try:
+//             return Staff.objects.get(id=id)
+//         except Staff.DoesNotExist:
+//             raise Http404
+
+//     def get(self, request, id, *args, **kwargs):
+//         """
+//         Ek Staff/Freelancer ki poori details fetch karo.
+//         """
+//         staff = self.get_object(id)
+        
+//         serializer = FullStaffSerializer(staff, context={'request': request})
+//         return Response(serializer.data, status=status.HTTP_200_OK)
+
+//     def patch(self, request, id, *args, **kwargs):
+//         """
+//         Ek Staff/Freelancer ki profile ko update karo (PATCH).
+//         """
+//         staff = self.get_object(id)
+        
+//         serializer = StaffUpdateSerializer(staff, data=request.data, partial=True)
+        
+//         if serializer.is_valid():
+//             updated_staff = serializer.save()
+           
+//             read_serializer = StaffProfileSerializer(updated_staff, context={'request': request})
+//             return Response(read_serializer.data, status=status.HTTP_200_OK)
+        
+//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

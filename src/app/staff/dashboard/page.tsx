@@ -147,6 +147,16 @@ export default function StaffDashboardPage() {
     not_picked: 2,
   });
 
+  const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [checkInTime, setCheckInTime] = useState<Date | null>(null);
+  const [checkOutTime, setCheckOutTime] = useState<Date | null>(null);
+  const [checkoutFormData, setCheckoutFormData] = useState({
+    projectName: "",
+    workDescription: "",
+    taskTime: "",
+    workProgress: "",
+  });
+
   const toggleRow = (rowId: number) => {
     setExpandedRowId(expandedRowId === rowId ? null : rowId);
   };
@@ -464,6 +474,130 @@ export default function StaffDashboardPage() {
   };
 
 
+
+  const handleCheckIn = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/checkin/`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}), // Assuming empty body for check-in
+      });
+
+      if (response.ok) {
+        const now = new Date();
+        setCheckInTime(now);
+        toast({
+          title: "Checked In",
+          description: `You checked in at ${now.toLocaleTimeString()}.`,
+          className: 'bg-green-500 text-white'
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Check In Failed",
+          description: errorData.detail || "Failed to check in.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error during check-in:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred during check-in. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCheckOut = () => {
+    if (!checkInTime) {
+      toast({
+        title: "Error",
+        description: "You must check in before you can check out.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // No premature setting of checkOutTime here
+    setCheckoutModalOpen(true);
+  };
+
+  const handleCheckoutFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setCheckoutFormData({ ...checkoutFormData, [name]: value });
+  };
+
+
+
+  const handleCheckoutSubmit = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast({ title: "Error", description: "Authentication token not found.", variant: "destructive" });
+      return;
+    }
+
+    const now = new Date();
+    const data = new FormData();
+    data.append('project_name', checkoutFormData.projectName);
+    data.append('work_description', checkoutFormData.workDescription);
+    data.append('task_time', checkoutFormData.taskTime);
+    data.append('work_progress', checkoutFormData.workProgress);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/checkout/`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Token ${token}`,
+        },
+        body: data,
+      });
+
+      if (response.ok) {
+        setCheckOutTime(now); // Set checkout time here to update UI
+        toast({
+          title: "Checked Out!",
+          description: "Your work has been logged successfully.",
+          className: 'bg-green-500 text-white'
+        });
+        
+        // Reset form data and close modal
+        setCheckoutModalOpen(false);
+        setCheckoutFormData({
+          projectName: "",
+          workDescription: "",
+          taskTime: "",
+          workProgress: "",
+        });
+
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Check Out Failed",
+          description: errorData.detail || "Failed to log your work.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error during check-out:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred during check-out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
+
   //console.log("Current leads state:", leads);
   //console.log("Current search query:", search);
   //console.log("Filtered leads for table:", filteredLeads);
@@ -484,26 +618,91 @@ export default function StaffDashboardPage() {
         ))}
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-wrap gap-4 justify-between items-end">
-            <div className="flex sm:flex-row gap-4 lg:flex-row lg:items-end">
-              <div className="space-y-2">
-                <Label htmlFor="start_date">Start Date</Label>
-                <DatePicker date={startDate} setDate={setStartDate} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_date">End Date</Label>
-                <DatePicker date={endDate} setDate={setEndDate} />
-              </div>
-            </div>
-            <Button onClick={handleFilterClick}>
-              <Filter className="h-4 w-4" />
-              <span>Filter</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+
+              <CardContent className="p-6">
+
+                <div className="flex flex-wrap gap-4 justify-between items-end">
+
+                  <div className="flex flex-col md:flex-row gap-4 md:items-end">
+
+                    <div className="space-y-2">
+
+                      <Label htmlFor="start_date">Start Date</Label>
+
+                      <DatePicker date={startDate} setDate={setStartDate} />
+
+                    </div>
+
+                    <div className="space-y-2">
+
+                      <Label htmlFor="end_date">End Date</Label>
+
+                      <DatePicker date={endDate} setDate={setEndDate} />
+
+                    </div>
+
+                  </div>
+
+                  <Button onClick={handleFilterClick}>
+
+                    <Filter className="h-4 w-4" />
+
+                    <span>Filter</span>
+
+                  </Button>
+
+                </div>
+
+              </CardContent>
+
+            </Card>
+
+      
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-wrap items-center justify-center gap-4 sm:justify-between">
+                  <h3 className="text-lg font-medium">Attendance</h3>
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={handleCheckIn}
+                      className="bg-green-500 text-white hover:bg-green-600"
+                      disabled={checkInTime !== null}
+                    >
+                      Check In
+                    </Button>
+                    <Button
+                      onClick={handleCheckOut}
+                      className="bg-red-500 text-white hover:bg-red-600"
+                      disabled={checkInTime === null || checkOutTime !== null}
+                    >
+                      Check Out
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex justify-center gap-4 mt-4">
+                  {/* Check-in Time Box */}
+                  <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 w-40 text-center">
+                      <div className="text-xs text-muted-foreground">CHECK-IN TIME</div>
+                      <div className="text-lg font-bold">
+                          {checkInTime ? checkInTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
+                      </div>
+                  </div>
+                  {/* Check-out Time Box */}
+                  <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 w-40 text-center">
+                      <div className="text-xs text-muted-foreground">CHECK-OUT TIME</div>
+                      <div className="text-lg font-bold">
+                          {checkOutTime ? checkOutTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
+                      </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+      </div>
+
+
 
       <Card>
         <CardContent className="p-6">
@@ -784,6 +983,77 @@ export default function StaffDashboardPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Checkout Modal */}
+      <Dialog open={isCheckoutModalOpen} onOpenChange={setCheckoutModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Log Your Work & Check Out</DialogTitle>
+            <DialogDescription>
+              Fill out the details of your work session before checking out.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="projectName" className="text-right">
+                Project
+              </Label>
+              <Input
+                id="projectName"
+                name="projectName"
+                value={checkoutFormData.projectName}
+                onChange={handleCheckoutFormChange}
+                className="col-span-3"
+                placeholder="Enter project name"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="workDescription" className="text-right">
+                Work
+              </Label>
+              <Textarea
+                id="workDescription"
+                name="workDescription"
+                value={checkoutFormData.workDescription}
+                onChange={handleCheckoutFormChange}
+                className="col-span-3"
+                placeholder="Describe what you did."
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="taskTime" className="text-right">
+                Time Taken
+              </Label>
+              <Input
+                id="taskTime"
+                name="taskTime"
+                value={checkoutFormData.taskTime}
+                onChange={handleCheckoutFormChange}
+                className="col-span-3"
+                placeholder="e.g., 2 hours"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="workProgress" className="text-right">
+                Progress
+              </Label>
+              <Textarea
+                id="workProgress"
+                name="workProgress"
+                value={checkoutFormData.workProgress}
+                onChange={handleCheckoutFormChange}
+                className="col-span-3"
+                placeholder="Describe the progress made."
+              />
+            </div>
+
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCheckoutModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleCheckoutSubmit} className="bg-red-500 text-white hover:bg-red-600">Check Out</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -794,58 +1064,216 @@ export default function StaffDashboardPage() {
 
 
 
-// class AutoAssignLeadsAPIView(APIView):
-//     permission_classes = [permissions.IsAuthenticated]
 
-//     def post(self, request):
-//         user_email = request.user.email
-//         request_user = Staff.objects.filter(email=user_email).last()
 
-//         if not request_user:
-//             return Response({"error": "Staff user not found"}, status=status.HTTP_404_NOT_FOUND)
 
-//         team_leader = request_user.team_leader
 
-//         # Count leads already assigned
-//         current_total_assign_leads = LeadUser.objects.filter(
-//             assigned_to=request_user, 
-//             status='Leads'
-//         ).count()
 
-//         if current_total_assign_leads != 0:
-//             return Response({"error": "You already have leads."}, status=status.HTTP_400_BAD_REQUEST)
 
-//         # Leads available for assignment
-//         team_leader_total_leads = Team_LeadData.objects.filter(
-//             assigned_to=None,
-//             status='Leads'
-//         )
 
-//         leads_count = 0
 
-//         for lead in team_leader_total_leads:
-//             if leads_count >= 100:
-//                 break
+// import { useState, useEffect } from "react";
+// import { Clock, LogIn, LogOut, MapPin, CheckCircle2, Timer } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+// import { cn } from "@/lib/utils";
 
-//             # Skip duplicates
-//             if LeadUser.objects.filter(call=lead.call).exists():
-//                 continue
+// interface AttendanceCardProps {
+//   onCheckIn: () => void;
+//   onCheckOut: () => void;
+//   isCheckedIn: boolean;
+//   checkInTime: string | null;
+//   checkOutTime: string | null;
+// }
 
-//             LeadUser.objects.create(
-//                 name=lead.name,
-//                 email=lead.email,
-//                 call=lead.call,
-//                 send=False,
-//                 status=lead.status,
-//                 assigned_to=request_user,
-//                 team_leader=team_leader,
-//                 user=lead.user,
-//             )
+// const AttendanceCard = ({
+//   onCheckIn,
+//   onCheckOut,
+//   isCheckedIn,
+//   checkInTime,
+//   checkOutTime,
+// }: AttendanceCardProps) => {
+//   const [currentTime, setCurrentTime] = useState(new Date());
+//   const [workDuration, setWorkDuration] = useState("00:00:00");
 
-//             lead.delete()
-//             leads_count += 1
+//   useEffect(() => {
+//     const timer = setInterval(() => {
+//       setCurrentTime(new Date());
+//     }, 1000);
+//     return () => clearInterval(timer);
+//   }, []);
 
-//         return Response(
-//             {"message": "Auto leads assigned successfully.", "assigned_leads": leads_count},
-//             status=status.HTTP_200_OK
-//         )
+//   useEffect(() => {
+//     if (isCheckedIn && checkInTime) {
+//       const interval = setInterval(() => {
+//         const checkIn = new Date();
+//         const [hours, minutes] = checkInTime.split(":");
+//         checkIn.setHours(parseInt(hours), parseInt(minutes), 0);
+//         const diff = new Date().getTime() - checkIn.getTime();
+//         const h = Math.floor(diff / 3600000);
+//         const m = Math.floor((diff % 3600000) / 60000);
+//         const s = Math.floor((diff % 60000) / 1000);
+//         setWorkDuration(
+//           `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
+//         );
+//       }, 1000);
+//       return () => clearInterval(interval);
+//     }
+//   }, [isCheckedIn, checkInTime]);
+
+//   const formatTime = (date: Date) => {
+//     return date.toLocaleTimeString("en-US", {
+//       hour: "2-digit",
+//       minute: "2-digit",
+//       second: "2-digit",
+//       hour12: true,
+//     });
+//   };
+
+//   const formatDate = (date: Date) => {
+//     return date.toLocaleDateString("en-US", {
+//       weekday: "long",
+//       year: "numeric",
+//       month: "long",
+//       day: "numeric",
+//     });
+//   };
+
+//   return (
+//     <div className="relative overflow-hidden rounded-2xl bg-card shadow-xl animate-fade-in">
+//       {/* Background Pattern */}
+//       <div className="absolute inset-0 opacity-5">
+//         <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-primary blur-3xl -translate-y-1/2 translate-x-1/2" />
+//         <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-accent blur-3xl translate-y-1/2 -translate-x-1/2" />
+//       </div>
+
+//       <div className="relative p-6 md:p-8">
+//         {/* Header */}
+//         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+//           <div>
+//             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+//               Attendance
+//             </h2>
+//             <p className="text-muted-foreground text-sm md:text-base flex items-center gap-2">
+//               <MapPin className="h-4 w-4" />
+//               Office Location
+//             </p>
+//           </div>
+//           <div className="text-right">
+//             <div className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+//               {formatTime(currentTime)}
+//             </div>
+//             <p className="text-muted-foreground text-sm">{formatDate(currentTime)}</p>
+//           </div>
+//         </div>
+
+//         {/* Status Card */}
+//         <div
+//           className={cn(
+//             "relative rounded-2xl p-6 mb-6 transition-all duration-500",
+//             isCheckedIn
+//               ? "gradient-success shadow-success-glow"
+//               : "gradient-primary shadow-glow"
+//           )}
+//         >
+//           {/* Shimmer Effect */}
+//           <div className="absolute inset-0 rounded-2xl overflow-hidden">
+//             <div className="absolute inset-0 animate-shimmer opacity-30" />
+//           </div>
+
+//           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+//             <div className="flex items-center gap-4">
+//               <div
+//                 className={cn(
+//                   "w-16 h-16 rounded-full flex items-center justify-center",
+//                   "bg-primary-foreground/20 backdrop-blur-sm"
+//                 )}
+//               >
+//                 {isCheckedIn ? (
+//                   <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
+//                 ) : (
+//                   <Clock className="h-8 w-8 text-primary-foreground" />
+//                 )}
+//               </div>
+//               <div>
+//                 <p className="text-primary-foreground/80 text-sm font-medium">
+//                   Current Status
+//                 </p>
+//                 <h3 className="text-2xl md:text-3xl font-bold text-primary-foreground">
+//                   {isCheckedIn ? "Checked In" : "Not Checked In"}
+//                 </h3>
+//               </div>
+//             </div>
+
+//             {isCheckedIn && (
+//               <div className="flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm rounded-xl px-5 py-3">
+//                 <Timer className="h-5 w-5 text-primary-foreground" />
+//                 <div>
+//                   <p className="text-primary-foreground/80 text-xs">Working Hours</p>
+//                   <p className="text-xl font-bold text-primary-foreground font-mono">
+//                     {workDuration}
+//                   </p>
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Action Buttons */}
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//           <Button
+//             onClick={onCheckIn}
+//             disabled={isCheckedIn}
+//             size="lg"
+//             className={cn(
+//               "h-16 text-lg font-semibold transition-all duration-300",
+//               "gradient-success hover:opacity-90 disabled:opacity-50",
+//               "shadow-lg hover:shadow-xl hover:scale-[1.02]",
+//               "disabled:hover:scale-100 disabled:cursor-not-allowed"
+//             )}
+//           >
+//             <LogIn className="mr-3 h-6 w-6" />
+//             Check In
+//           </Button>
+
+//           <Button
+//             onClick={onCheckOut}
+//             disabled={!isCheckedIn || !!checkOutTime}
+//             size="lg"
+//             className={cn(
+//               "h-16 text-lg font-semibold transition-all duration-300",
+//               "gradient-warning hover:opacity-90 disabled:opacity-50",
+//               "shadow-lg hover:shadow-xl hover:scale-[1.02]",
+//               "disabled:hover:scale-100 disabled:cursor-not-allowed"
+//             )}
+//           >
+//             <LogOut className="mr-3 h-6 w-6" />
+//             Check Out
+//           </Button>
+//         </div>
+
+//         {/* Time Display */}
+//         <div className="grid grid-cols-2 gap-4 mt-6">
+//           <div className="bg-secondary/50 rounded-xl p-4 text-center">
+//             <p className="text-muted-foreground text-sm mb-1">Check In Time</p>
+//             <p className="text-xl font-bold text-foreground">
+//               {checkInTime || "--:--"}
+//             </p>
+//           </div>
+//           <div className="bg-secondary/50 rounded-xl p-4 text-center">
+//             <p className="text-muted-foreground text-sm mb-1">Check Out Time</p>
+//             <p className="text-xl font-bold text-foreground">
+//               {checkOutTime || "--:--"}
+//             </p>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default AttendanceCard;
+
+
+
+
+
