@@ -13,7 +13,7 @@ const ReportPage = ({ params }: { params: { reportType: string } }) => {
   useEffect(() => {
     const loadComponent = async () => {
       try {
-        const component = await import(`../../../reports/${reportType}/page`);
+        const component = await import(`../${reportType}/page`);
         setDynamicReportComponent(() => component.default);
       } catch (error) {
         //console.error(`Failed to load report component for ${reportType}:`, error);
