@@ -878,46 +878,11 @@ export default function ProfilePage() {
 function changeTeamLeaderPassword(newPassword: string, confirmNewPassword: string) {
   throw new Error("Function not implemented.");
 }
-// class TeamLeaderProfileViewAPIView(APIView):
-//     """
-//     API endpoint for 'team_view_profile' (Team Leader Dashboard).
-//     GET: Fetches logged-in Team Leader's profile.
-//     PATCH: Updates logged-in Team Leader's profile.
-//     ONLY TEAM LEADER can access this.
-//     """
-//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
-//     parser_classes = [MultiPartParser, FormParser]
 
-//     def get_tl_object(self, request):
-//         try:
-//             return Team_Leader.objects.get(user=request.user)
-//         except Team_Leader.DoesNotExist:
-//             return None
 
-//     def get(self, request, format=None):
-//         tl_instance = self.get_tl_object(request)
-//         if not tl_instance:
-//             return Response({"error": "Team Leader profile not found."}, status=status.HTTP_404_NOT_FOUND)
         
-//         serializer = TeamLeaderProfileSerializer(tl_instance)
-//         return Response(serializer.data, status=status.HTTP_200_OK)
 
-//     def patch(self, request, format=None):
-//         tl_instance = self.get_tl_object(request)
-//         if not tl_instance:
-//             return Response({"error": "Team Leader profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
-//         # Use existing update serializer which handles User + TL model update
-//         serializer = TeamLeaderUpdateSerializer(instance=tl_instance, data=request.data, partial=True)
         
-//         if serializer.is_valid():
-//             updated_instance = serializer.save()
-//             return Response({
-//                 "message": "Profile updated successfully",
-//                 "data": TeamLeaderProfileSerializer(updated_instance).data
-//             }, status=status.HTTP_200_OK)
         
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-//     def post(self, request, format=None):
-//         return self.patch(request, format)

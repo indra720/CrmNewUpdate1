@@ -28,10 +28,6 @@ type Lead = {
 };
 
 // Mock data to replicate the functionality from the provided code.
-const mockLeads: Lead[] = [
-    { id: 4, name: 'Myra Reddy', call: '9876543213', status: 'Not Interested' },
-    { id: 8, name: 'Advika Joshi', call: '9876543217', status: 'Not Interested' },
-];
 
 export const columns: ColumnDef<Lead>[] = [
   {
@@ -91,7 +87,7 @@ export const columns: ColumnDef<Lead>[] = [
 
 
 const AssociateNotInterestedLeadsPage = () => {
-  const [data] = useState(mockLeads);
+  const [data] = useState([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 

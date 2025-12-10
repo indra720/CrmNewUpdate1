@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -25,7 +25,7 @@ import { fetchLeadsForSuperuser } from '@/lib/api';
 
 type Lead = any;
 
-function TotalEarningPage() {
+const TotalEarningContent = () => {
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -245,4 +245,11 @@ function TotalEarningPage() {
   );
 }
 
-export default TotalEarningPage;
+
+export default function TotalEarningPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TotalEarningContent />
+    </Suspense>
+  );
+}

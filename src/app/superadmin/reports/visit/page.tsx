@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -26,7 +26,7 @@ import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
 
-function VisitLeadsPage() {
+const VisitLeadsContent = () => {
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -305,4 +305,10 @@ function VisitLeadsPage() {
   );
 }
 
-export default VisitLeadsPage;
+export default function VisitLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VisitLeadsContent />
+    </Suspense>
+  );
+}

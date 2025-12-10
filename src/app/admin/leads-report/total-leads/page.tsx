@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -46,7 +46,7 @@ import { useRouter } from 'next/navigation';
 
 type Lead = any;
 
-function TotalLeadsPage() {
+const TotalLeadsContent = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -544,6 +544,13 @@ function TotalLeadsPage() {
   );
 }
 
-export default TotalLeadsPage;
 
 
+
+export default function TotalLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TotalLeadsContent />
+    </Suspense>
+  );
+}

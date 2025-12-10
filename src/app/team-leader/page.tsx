@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
@@ -202,7 +202,7 @@ const InputField = ({
   );
 };
 
-export default function TeamLeaderDashboardPage() {
+const TeamLeaderDashboardContent = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1334,87 +1334,10 @@ export default function TeamLeaderDashboardPage() {
   );
 }
 
-
-
-
-
-// class TeamLeaderExportDashboardLeadsAPIView(APIView):
-//     """
-//     API to export leads for 4 specific pages: Interested, Pending, Today, Tomorrow.
-//     POST: Generates Excel file based on 'tag' and optional date range.
-//     """
-//     permission_classes = [IsAuthenticated, IsCustomTeamLeaderUser]
-
-//     def post(self, request, format=None):
-//         # 1. Get Params
-//         tag = request.data.get('tag') # E.g., 'today_followups', 'Intrested'
-//         staff_id = request.data.get('staff_id')
-//         start_date_str = request.data.get('start_date')
-//         end_date_str = request.data.get('end_date')
-        
-//         # 2. Verify Team Leader
-//         try:
-//             tl_instance = Team_Leader.objects.get(user=request.user)
-//         except Team_Leader.DoesNotExist:
-//             return Response({"error": "Team Leader profile not found."}, status=status.HTTP_404_NOT_FOUND)
-
-//         # 3. Determine Base Queryset (All TL leads or Specific Staff)
-//         if staff_id:
-//             try:
-//                 staff = Staff.objects.get(id=staff_id)
-//                 if staff.team_leader != tl_instance:
-//                     return Response({"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-//                 # Staff Leads
-//                 base_qs = LeadUser.objects.filter(assigned_to=staff)
-//             except Staff.DoesNotExist:
-//                  return Response({"error": "Staff not found."}, status=status.HTTP_404_NOT_FOUND)
-//         else:
-//             # All Leads under TL (Assigned to any staff OR unassigned)
-//             staff_members = Staff.objects.filter(team_leader=tl_instance)
-//             base_qs = LeadUser.objects.filter(
-//                 Q(assigned_to__in=staff_members) | Q(team_leader=tl_instance, assigned_to=None)
-//             )
-
-//         # 4. Date Setup
-//         today = timezone.now().date()
-//         tomorrow = today + timedelta(days=1)
-
-//         # --- 5. FILTER LOGIC BASED ON TAG ---
-        
-//         if tag == 'today_followups':
-//             # Logic: Status Interested + FollowUp Date is TODAY
-//             leads = base_qs.filter(status='Intrested', follow_up_date=today)
-//             filename_tag = "Today_FollowUps"
-            
-//         elif tag == 'tomorrow_followups':
-//             # Logic: Status Interested + FollowUp Date is TOMORROW
-//             leads = base_qs.filter(status='Intrested', follow_up_date=tomorrow)
-//             filename_tag = "Tomorrow_FollowUps"
-
-//         elif tag == 'pending_followups':
-//             # Logic: Status Interested + FollowUp Date exists (Pending)
-//             leads = base_qs.filter(status='Intrested', follow_up_date__isnull=False)
-//             filename_tag = "Pending_FollowUps"
-
-//         elif tag == 'Intrested':
-//             # Logic: Status Interested + User selected Date Range (Created/Updated)
-//             try:
-//                 if start_date_str and end_date_str:
-//                     s_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-//                     e_date = datetime.strptime(end_date_str, '%Y-%m-%d')
-                    
-//                     start = timezone.make_aware(datetime.combine(s_date, datetime.min.time()))
-//                     end = timezone.make_aware(datetime.combine(e_date, datetime.max.time()))
-                    
-//                     # Filter by updated_date
-//                     leads = base_qs.filter(status='Intrested', updated_date__range=[start, end])
-//                 else:
-//                     # Default: All Interested
-//                     leads = base_qs.filter(status='Intrested')
-//             except ValueError:
-//                  return Response({"error": "Invalid date format."}, status=status.HTTP_400_BAD_REQUEST)
-            
-//             filename_tag = "Interested_Leads"
-
-//         else:
-//             return Response({"error": "Invalid tag provided."}, status=status.HTTP_400_BAD_REQUEST)
+export default function TeamLeaderDashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TeamLeaderDashboardContent />
+    </Suspense>
+  );
+}

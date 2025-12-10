@@ -76,7 +76,7 @@ const mockSingleLead = {
 };
 
 
-export default function TomorrowFollowupsPage() {
+export default function TodayFollowupsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [leads, setLeads] = useState<any[]>([]);
@@ -137,7 +137,7 @@ export default function TomorrowFollowupsPage() {
   return (
     <div className="space-y-6 flex flex-col h-full">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Tomorrow Followups</h1>
+        <h1 className="text-2xl font-bold">Today Followups</h1>
         <Link href="/dashboard/users/team-leader">
             <Button variant="outline">
                 <ArrowLeft className="mr-2 h-4 w-4" />

@@ -901,82 +901,6 @@ export default function TeamLeaderManagementPage() {
 
 
 
-// {
-//     "id": 11,
-//     "user_id": 19,
-//     "admin": {
-//         "id": 4,
-//         "admin_id": "475a1ff1-c935-4172-a0bd-317d87d93ff2",
-//         "name": "Abhishek Kumar",
-//         "email": "abhi720@gmail.com",
-//         "mobile": "7890098768",
-//         "address": "Jaipur,rajasthan",
-//         "city": "jaipur",
-//         "pincode": "234556",
-//         "state": "Rajasthan",
-//         "dob": "2004-06-27",
-//         "pancard": "ABCDE7978F",
-//         "aadharCard": "678909876547",
-//         "marksheet": null,
-//         "degree": "B.TECH",
-//         "account_number": "5678905432",
-//         "upi_id": "abhi@123",
-//         "bank_name": "hdfc",
-//         "ifsc_code": "HDFC68HGJL",
-//         "salary": "89060",
-//         "achived_slab": "0",
-//         "created_date": "2025-11-27T06:32:58.813773Z",
-//         "updated_date": "2025-12-08T07:28:24.599972Z",
-//         "user": 1,
-//         "self_user": 18
-//     },
-//     "user": {
-//         "id": 19,
-//         "password": "pbkdf2_sha256$720000$Y6PPHDEIUR2tpI0yHT06aK$pPU/AZWXDvg7vSM2GVhGV9BaS+e6RK4Zy4ZO4A+9HDE=",
-//         "last_login": null,
-//         "is_superuser": false,
-//         "username": "rohitS720@gmail.com",
-//         "first_name": "",
-//         "last_name": "",
-//         "is_staff": false,
-//         "date_joined": "2025-11-27T06:38:12Z",
-//         "name": "Rohit Panchvani",
-//         "mobile": "7890987654",
-//         "email": "rohitS720@gmail.com",
-//         "is_admin": false,
-//         "is_team_leader": true,
-//         "is_staff_new": false,
-//         "is_freelancer": false,
-//         "is_it_staff": false,
-//         "login_time": "2025-11-27T06:38:12Z",
-//         "logout_time": null,
-//         "profile_image": null,
-//         "created_date": "2025-11-27T06:38:12.927618Z",
-//         "updated_date": "2025-12-08T11:37:33.546475Z",
-//         "user_active": true,
-//         "is_user_login": true,
-//         "groups": [],
-//         "user_permissions": []
-//     },
-//     "admin_name": "Abhishek Kumar",
-//     "name": "Rohit Panchvani",
-//     "email": "rohitS720@gmail.com",
-//     "mobile": "7890987654",
-//     "address": "gokuldham society,mumbai,Mahrastara",
-//     "city": "Mumbai",
-//     "state": "Maharashtra",
-//     "pincode": "123456",
-//     "dob": "2002-03-27",
-//     "pancard": "ABCD78FG",
-//     "aadharCard": "789065431234",
-//     "account_number": "234567890987",
-//     "upi_id": "rohit@123",
-//     "bank_name": "SBI",
-//     "ifsc_code": "SBIN00889",
-//     "salary": "67890",
-//     "achived_slab": "0",
-//     "profile_image": null
-// }
 
 
 
@@ -987,56 +911,14 @@ export default function TeamLeaderManagementPage() {
 
 
 
-// class TeamLeaderEditAPIView(APIView):
-//     """
-//     API ek Team Leader ki profile ko Get aur Update karne ke liye (teamedit function).
-//     [FIX]: Ab yeh SIRF SUPERUSER ko allow karega.
-//     """
     
-//     # --- [YEH RAHA PERMISSION FIX] ---
-//     # IsCustomAdminUser ko CustomIsSuperuser se badal diya
-//     permission_classes = [IsAuthenticated, CustomIsSuperuser] 
     
-//     parser_classes = (MultiPartParser, FormParser) # profile_image upload ke liye
 
-//     def get_object(self, id):
-//         """
-//         Helper method se Team_Leader object get karo
-//         """
-//         try:
-//             return Team_Leader.objects.get(id=id)
-//         except Team_Leader.DoesNotExist:
-//             raise Http404
 
-//     def get(self, request, id, *args, **kwargs):
-//         """
-//         Ek Team Leader ki poori details fetch karo.
-//         """
-//         teamleader = self.get_object(id)
-//         # Data dikhane ke liye ProductivityTeamLeaderSerializer use karo
-//         serializer = ProductivityTeamLeaderSerializer(teamleader, context={'request': request})
-//         return Response(serializer.data, status=status.HTTP_200_OK)
 
-//     def patch(self, request, id, *args, **kwargs):
-//         """
-//         Ek Team Leader ki profile ko update karo (PATCH).
-//         """
-//         teamleader = self.get_object(id)
-//         # Data update karne ke liye TeamLeaderUpdateSerializer use karo
-//         serializer = TeamLeaderUpdateSerializer(teamleader, data=request.data, partial=True)
         
-//         if serializer.is_valid():
-//             updated_teamleader = serializer.save()
-//             # Updated data dikhane ke liye read serializer ka use karo
-//             read_serializer = ProductivityTeamLeaderSerializer(updated_teamleader, context={'request': request})
-//             return Response(read_serializer.data, status=status.HTTP_200_OK)
         
-//         # Agar error aaye
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-//     def post(self, request, id, *args, **kwargs):
-//         # POST ko bhi PATCH ki tarah handle karo
-//         return self.patch(request, id, format)
 
 
 
@@ -1063,55 +945,6 @@ export default function TeamLeaderManagementPage() {
 
 
 
-// {
-//     "counts": {
-//         "pending_followups": 6,
-//         "tomorrow_followups": 0,
-//         "today_followups": 0,
-//         "total_leads": 4,
-//         "total_visit": 6,
-//         "interested": 12,
-//         "not_interested": 5,
-//         "other_location": 2,
-//         "not_picked": 2,
-//         "total_staff": 16,
-//         "active_staff": 2,
-//         "total_lost": 3
-//     },
-//     "count": 18,
-//     "next": null,
-//     "previous": null,
-//     "results": [
-//         {
-//             "id": 12,
-//             "user_id": 33,
-//             "admin": {
-//                 "id": 1,
-//                 "admin_id": "c67f2e6c-dbc4-427a-85c5-132e2ecbff71",
-//                 "name": "abhi",
-//                 "email": "inder@gmail.com",
-//                 "mobile": "9521399707",
-//                 "address": "jaipur",
-//                 "city": "jaipur",
-//                 "pincode": "302012",
-//                 "state": "Rajasthan",
-//                 "dob": "2005-11-18",
-//                 "pancard": "HFHEH2121D",
-//                 "aadharCard": "789658748545",
-//                 "marksheet": "88",
-//                 "degree": "B.TECH",
-//                 "account_number": "25874569852",
-//                 "upi_id": "9521399708@upii",
-//                 "bank_name": "au bank",
-//                 "ifsc_code": "RMGB0000477",
-//                 "salary": "8000",
-//                 "achived_slab": "6081",
-//                 "created_date": "2025-10-29T09:53:31.770082Z",
-//                 "updated_date": "2025-11-21T10:46:39.766715Z",
-//                 "user": 1,
-//                 "self_user": 2
-//             },
-//           }
 
 
 
@@ -1128,52 +961,15 @@ export default function TeamLeaderManagementPage() {
 
 
 
-// class TeamLeaderEditAPIView(APIView):
-//     """
-//     this api is used for edit the team leader by superuser.
-//     """
     
-//     permission_classes = [IsAuthenticated, CustomIsSuperuser] 
     
-//     parser_classes = (MultiPartParser, FormParser) # profile_image upload ke liye
 
-//     def get_object(self, id):
-//         """
-//         Helper method se Team_Leader object get karo
-//         """
-//         try:
-//             return Team_Leader.objects.get(user__id=id)
-//         except Team_Leader.DoesNotExist:
-//             raise Http404
 
-//     def get(self, request, id, *args, **kwargs):
-//         """
-//         Ek Team Leader ki poori details fetch karo.
-//         """
-//         teamleader = self.get_object(id)
-//         # Data dikhane ke liye ProductivityTeamLeaderSerializer use karo
-//         serializer = ProductivityTeamLeaderSerializer(teamleader, context={'request': request})
-//         return Response(serializer.data, status=status.HTTP_200_OK)
 
-//     def patch(self, request, id, *args, **kwargs):
-//         """
-//         Ek Team Leader ki profile ko update karo (PATCH).
-//         """
-//         teamleader = self.get_object(id)
-//         # Data update karne ke liye TeamLeaderUpdateSerializer use karo
-//         serializer = TeamLeaderUpdateSerializer(teamleader, data=request.data, partial=True)
         
-//         if serializer.is_valid():
-//             updated_teamleader = serializer.save()
-//             # Updated data dikhane ke liye read serializer ka use karo
-//             read_serializer = ProductivityTeamLeaderSerializer(updated_teamleader, context={'request': request})
-//             return Response(read_serializer.data, status=status.HTTP_200_OK)
         
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-//     def post(self, request, id, *args, **kwargs):
         
-//         return self.patch(request, id, format)
 
 
 

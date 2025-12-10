@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -32,7 +32,7 @@ type Staff = {
 
 
 
-function ActiveStaffPage() {
+const ActiveStaffContent = () => {
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -298,4 +298,11 @@ function ActiveStaffPage() {
   );
 }
 
-export default ActiveStaffPage;
+
+export default function ActiveStaffPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ActiveStaffContent />
+    </Suspense>
+  );
+}

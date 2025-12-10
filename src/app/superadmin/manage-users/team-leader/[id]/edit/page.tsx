@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
-export default function EditTeamLeaderPage({ params }: { params: { id: string } }) {
+const EditTeamLeaderContent = ({ params }: { params: { id: string } }) => {
   const { id } = params;
   const [userData, setUserData] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(true);
@@ -123,5 +123,13 @@ export default function EditTeamLeaderPage({ params }: { params: { id: string } 
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function EditTeamLeaderPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditTeamLeaderContent />
+    </Suspense>
   );
 }

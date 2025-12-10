@@ -989,9 +989,7 @@ export async function fetchTeamLeaderStaffLeadsReportByTag(
 
 // New function for Admin to fetch staff leads by tag
 export async function fetchAdminStaffLeadsByTag(
-  staffId: number,
-  tag: string
-): Promise<any> {
+staffId: number, tag: string, formattedStartDate: string | undefined, formattedEndDate: string | undefined): Promise<any> {
   const token = localStorage.getItem("authToken");
 
   if (!token) {

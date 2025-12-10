@@ -1,7 +1,15 @@
-
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
+
+interface Lead {
+  id: number;
+  name: string;
+  staff: string;
+  status: string;
+  call: string;
+  updated_date: string;
+}
 import {
   Card,
   CardContent,
@@ -37,15 +45,10 @@ import { Search, Phone, MessageSquare, Calendar, FileDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 
-const mockLeads = [
-    { id: 1, name: 'Aarav Sharma', staff: 'Rohan', status: 'New', call: '9876543210', updated_date: 'Oct. 16, 2025, 7:07 a.m.'},
-    { id: 2, name: 'Saanvi Patel', staff: 'Anjali', status: 'Contacted', call: '9876543211', updated_date: 'Oct. 16, 2025, 7:03 a.m.' },
-    { id: 3, name: 'Vihaan Singh', staff: 'Rohan', status: 'Interested', call: '9876543212', updated_date: 'Oct. 11, 2025, 8:57 a.m.' },
-    { id: 4, name: 'Myra Reddy', staff: 'Anjali', status: 'Lost', call: '9876543213', updated_date: 'Oct. 11, 2025, 7:06 a.m.' },
-];
 
-export default function StaffLeadsPage() {
+const StaffLeadsContent = () => {
     const router = useRouter();
+    const [leads, setLeads] = useState<Lead[]>([]);
 
     const handleTypeNavChange = (value: string) => {
         if (!value) return;
@@ -139,29 +142,37 @@ export default function StaffLeadsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockLeads.map((lead, index) => (
-                  <TableRow key={lead.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell className="font-medium">{lead.name}</TableCell>
-                    <TableCell>{lead.staff}</TableCell>
-                    <TableCell>
-                      <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
+                {leads.length > 0 ? (
+                  leads.map((lead, index) => (
+                    <TableRow key={lead.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell className="font-medium">{lead.name}</TableCell>
+                      <TableCell>{lead.staff}</TableCell>
+                      <TableCell>
+                        <Badge variant={lead.status === 'Interested' ? 'default' : 'secondary'}>{lead.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                         <Button variant="ghost" size="icon" asChild>
+                           <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
+                         </Button>
+                      </TableCell>
+                      <TableCell className="text-center">
+                          <Button variant="ghost" size="icon" asChild>
+                              <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
+                                  <MessageSquare className="h-5 w-5 text-green-500" />
+                              </a>
+                          </Button>
+                      </TableCell>
+                      <TableCell>{lead.updated_date}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      No leads found
                     </TableCell>
-                    <TableCell className="text-center">
-                       <Button variant="ghost" size="icon" asChild>
-                         <a href={`tel:${lead.call}`}><Phone className="h-4 w-4 text-blue-500" /></a>
-                       </Button>
-                    </TableCell>
-                    <TableCell className="text-center">
-                        <Button variant="ghost" size="icon" asChild>
-                            <a href={`https://wa.me/91${lead.call}?text=Hello%20${lead.name}`} target="_blank" rel="noopener noreferrer">
-                                <MessageSquare className="h-5 w-5 text-green-500" />
-                            </a>
-                        </Button>
-                    </TableCell>
-                    <TableCell>{lead.updated_date}</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>
@@ -182,5 +193,13 @@ export default function StaffLeadsPage() {
         </PaginationContent>
         </Pagination>
     </div>
+  );
+}
+
+export default function StaffLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StaffLeadsContent />
+    </Suspense>
   );
 }

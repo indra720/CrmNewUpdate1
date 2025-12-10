@@ -36,7 +36,7 @@ const mockLeads: Lead[] = [
 export const columns: ColumnDef<Lead>[] = [
   {
     accessorKey: 'name',
-    header: ({ column }) => {
+    header: ({ column }: { column: any }) => {
       return (
         <Button
           variant="ghost"
@@ -47,12 +47,12 @@ export const columns: ColumnDef<Lead>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>,
+    cell: ({ row }: { row: any }) => <div className="font-medium">{row.getValue('name')}</div>,
   },
   {
     accessorKey: 'call',
     header: 'Call',
-    cell: ({ row }) => (
+    cell: ({ row }: { row: any }) => (
       <a href={`tel:${row.getValue('call')}`} className="inline-block hover:scale-110 transition-transform">
         <Phone className="h-5 w-5 text-blue-500" />
       </a>
@@ -61,7 +61,7 @@ export const columns: ColumnDef<Lead>[] = [
   {
     accessorKey: 'whatsapp',
     header: 'Whatsapp',
-    cell: ({ row }) => (
+    cell: ({ row }: { row: any }) => (
       <a
         href={`https://wa.me/${row.getValue('call')}?text=Hello%20${row.original.name}`}
         target="_blank"
@@ -74,7 +74,7 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => {
+    header: ({ column }: { column: any }) => {
       return (
         <Button
           variant="ghost"
@@ -85,7 +85,7 @@ export const columns: ColumnDef<Lead>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="capitalize">{row.getValue('status')}</div>,
+    cell: ({ row }: { row: any }) => <div className="capitalize">{row.getValue('status')}</div>,
   },
 ];
 
@@ -139,9 +139,9 @@ const AssociateInterestedLeadsPage = () => {
                 <div className="rounded-md border">
                     <Table>
                         <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
+                            {table.getHeaderGroups().map((headerGroup:any) => (
                                 <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
+                                    {headerGroup.headers.map((header:any) => {
                                         return (
                                             <TableHead key={header.id} className="text-center">
                                                 {header.isPlaceholder
@@ -158,12 +158,12 @@ const AssociateInterestedLeadsPage = () => {
                         </TableHeader>
                         <TableBody>
                             {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
+                                table.getRowModel().rows.map((row:any) => (
                                     <TableRow
                                         key={row.id}
                                         data-state={row.getIsSelected() && 'selected'}
                                     >
-                                        {row.getVisibleCells().map((cell) => (
+                                        {row.getVisibleCells().map((cell:any) => (
                                             <TableCell key={cell.id} className="text-center">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>

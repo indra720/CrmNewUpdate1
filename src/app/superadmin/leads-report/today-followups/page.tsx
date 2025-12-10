@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { format } from 'date-fns';
 // Force re-save for DialogClose error
 import {
@@ -57,7 +57,7 @@ import { getTeamCustomerLeads } from '@/lib/api'; // Corrected import
 import { DatePicker } from '@/components/ui/date-picker';
 import { Calendar } from '@/components/ui/calendar';
 
-export default function TodayFollowupsPage() {
+const TodayFollowupsContent = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [leads, setLeads] = useState<any[]>([]);
@@ -674,3 +674,10 @@ export default function TodayFollowupsPage() {
 //         # Paginator se poora response structure banwao (jisme next, previous, count, results honge)
 //         return self.paginator.get_paginated_response(serializer.data)
     
+export default function TodayFollowupsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TodayFollowupsContent />
+    </Suspense>
+  );
+}

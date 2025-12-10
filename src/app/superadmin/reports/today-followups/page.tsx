@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { format } from 'date-fns';
 // Force re-save for DialogClose error
 import {
@@ -46,7 +46,7 @@ import { useSearchParams } from 'next/navigation';
 import { fetchLeadsForSuperuser } from '@/lib/api';
 import { DatePicker } from '@/components/ui/date-picker';
 
-export default function TodayFollowupsPage() {
+const TodayFollowupsContent = () => {
   const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -358,5 +358,12 @@ export default function TodayFollowupsPage() {
       </Dialog>
     </div>
     </TooltipProvider>
+  );
+}
+export default function TodayFollowupsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TodayFollowupsContent />
+    </Suspense>
   );
 }

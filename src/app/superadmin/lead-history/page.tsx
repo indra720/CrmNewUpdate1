@@ -31,7 +31,7 @@ interface LeadHistory {
   created_date: string
 }
 
-export default function LeadHistoryPage() {
+const LeadHistoryContent = () => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFiltersState] = useState<ColumnFiltersState>([])
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
@@ -321,4 +321,11 @@ export default function LeadHistoryPage() {
       </div>
     </div>
   )
+}
+export default function LeadHistoryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LeadHistoryContent />
+    </Suspense>
+  );
 }

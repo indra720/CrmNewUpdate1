@@ -263,3 +263,109 @@ export default function SuperAdminDashboardPage() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// npm run build
+
+// > nextn@0.1.0 build
+// > cross-env NODE_ENV=production next build
+
+//    ▲ Next.js 15.5.6
+//    - Environments: .env
+
+//    Creating an optimized production build ...
+//  ✓ Compiled successfully in 23.2s
+//    Skipping validation of types
+//    Skipping linting
+//  ✓ Collecting page data    
+//  ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/superadmin/reports/other-location". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+//     at g (D:\newcrmcode\CrmNewUpdate1\.next\server\chunks\2390.js:1:98774)
+//     at m (D:\newcrmcode\CrmNewUpdate1\.next\server\chunks\2390.js:9:14815)
+//     at x (D:\newcrmcode\CrmNewUpdate1\.next\server\chunks\3651.js:1:715)
+//     at n3 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:82831)
+//     at n6 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:84601)
+//     at n5 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:104801)
+//     at n7 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:102219)
+//     at n8 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:83183)
+//     at n6 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:84647)
+//     at n6 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:101560)
+// Error occurred prerendering page "/superadmin/reports/other-location". Read more: https://nextjs.org/docs/messages/prerender-error
+// Export encountered an error on /superadmin/reports/other-location/page: /superadmin/reports/other-location, exiting the build.
+//  ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/team-leader/reports/interested". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+//     at g (D:\newcrmcode\CrmNewUpdate1\.next\server\chunks\2390.js:1:98774)
+//     at m (D:\newcrmcode\CrmNewUpdate1\.next\server\chunks\2390.js:9:14815)
+//     at l (D:\newcrmcode\CrmNewUpdate1\.next\server\app\team-leader\reports\visit\page.js:1:9100)
+//     at n3 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:82831)
+//     at n6 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:84601)
+//     at n5 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:104801)
+//     at n7 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:102219)
+//     at ia (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:108211)
+//     at ie (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:106833)
+//     at n5 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:105079)
+// Error occurred prerendering page "/team-leader/reports/interested". Read more: https://nextjs.org/docs/messages/prerender-error
+// Export encountered an error on /team-leader/reports/interested/page: /team-leader/reports/interested, exiting the build.
+//  ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/admin/leads-report/other-location". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+//     at g (D:\newcrmcode\CrmNewUpdate1\.next\server\chunks\2390.js:1:98774)
+//     at m (D:\newcrmcode\CrmNewUpdate1\.next\server\chunks\2390.js:9:14815)
+//     at l (D:\newcrmcode\CrmNewUpdate1\.next\server\app\admin\leads-report\total-earning\page.js:2:8124)
+//     at n3 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:82831)
+//     at n6 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:84601)
+//     at n5 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:104801)
+//     at n7 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:102219)
+//     at ia (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:108211)
+//     at ie (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:106833)
+//     at n5 (D:\newcrmcode\CrmNewUpdate1\node_modules\next\dist\compiled\next-server\app-page.runtime.prod.js:2:105079)
+// Error occurred prerendering page "/admin/leads-report/other-location". Read more: https://nextjs.org/docs/messages/prerender-error
+// Export encountered an error on /admin/leads-report/other-location/page: /admin/leads-report/other-location, exiting the build.
+//  ⨯ Next.js build worker exited with code: 1 and signal: null
+
+
+
+
+
+
+
+
+
+
+
+// Bhai good news + bad news:
+
+// ❌ Bad news:
+
+// Tumhare project me 20+ pages me useSearchParams() / useRouter() / usePathname() use ho raha hai —
+// and NEXT 15 build kabhi pass nahi hoga jab tak har page ko Suspense wrapper + split component structure follow nahi karta.
+
+// ✔ Good news:
+
+// Tum ek-ek page ko fix nahi karna padega.
+
+// ❤️ BEST FIX (SIRF 1 MINUTE)
+
+// Next.js 15 ka strict rule disable kar do
+
+// Next.js ne ye warning di thi:
+// "you MUST wrap useSearchParams with Suspense in app router"
+
+// BUT —
+// Ye rule ko next.config.js me disable kar sakte ho:
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {
+//   experimental: {
+//     missingSuspenseWithCSRBailout: false,
+//   },
+// };
+
+// module.exports = nextConfig;

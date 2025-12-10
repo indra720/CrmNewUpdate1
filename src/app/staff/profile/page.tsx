@@ -927,62 +927,16 @@ export default function ProfilePage() {
 
 
 
-// class StaffProfileViewAPIView(APIView):
-//     """
-//     API endpoint for 'staff_view_profile' function (Staff Dashboard).
-//     GET: Fetches the logged-in Staff's profile.
-//     PATCH: Updates the logged-in Staff's profile.
-//     ONLY STAFF (is_staff_new=True) can access this.
-//     """
     
-//     permission_classes = [IsAuthenticated, IsCustomStaffUser]
-//     parser_classes = [MultiPartParser, FormParser] # For profile_image
 
-//     def get_staff_object(self, request):
-//         # Helper to get staff from the logged-in user
-//         try:
-//             # The view function uses email, so we will too
-//             return Staff.objects.get(email=request.user.email)
-//         except Staff.DoesNotExist:
-//             raise Http404
     
-//     def get(self, request, format=None):
-//         """
-//         GET request: Fetches the staff's own profile.
-//         """
-//         try:
-//             staff = self.get_staff_object(request)
-//         except Http404:
-//             return Response({"error": "Staff profile not found."}, status=status.HTTP_404_NOT_FOUND)
         
-//         # Use 'FullStaffSerializer' to show all details, including nested User
-//         serializer = StaffOnlyProfileSerializer(staff)
-//         return Response(serializer.data, status=status.HTTP_200_OK)
 
-//     def patch(self, request, format=None):
-//         """
-//         PATCH request: Updates the staff's own profile.
-//         """
-//         try:
-//             staff = self.get_staff_object(request)
-//         except Http404:
-//             return Response({"error": "Staff profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
-//         # Use the 'StaffUpdateSerializer' which handles Staff + User update
-//         serializer = StaffUpdateSerializer(instance=staff, data=request.data, partial=True) 
         
-//         if serializer.is_valid():
-//             updated_instance = serializer.save()
             
-//             # Return the full, updated profile
-//             read_serializer = StaffOnlyProfileSerializer(updated_instance)
-//             return Response(read_serializer.data, status=status.HTTP_200_OK) 
         
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-//     def post(self, request, format=None):
-//         # Allow POST to work just like PATCH
-//         return self.patch(request, format)
     
 
 

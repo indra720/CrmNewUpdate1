@@ -882,43 +882,11 @@ export default function StaffManagementPage() {
 
 
 
-// class StaffEditAPIView(APIView):
-//     """
-//     API ek Staff/Freelancer ki profile ko Get aur Update karne ke liye.
-//     """
-//     permission_classes = [ IsAuthenticated , CustomIsSuperuser] 
-//     parser_classes = (MultiPartParser, FormParser) 
 
-//     def get_object(self, id):
-//         """
-//         Helper method se Staff object get karo
-//         """
-//         try:
-//             return Staff.objects.get(id=id)
-//         except Staff.DoesNotExist:
-//             raise Http404
 
-//     def get(self, request, id, *args, **kwargs):
-//         """
-//         Ek Staff/Freelancer ki poori details fetch karo.
-//         """
-//         staff = self.get_object(id)
         
-//         serializer = FullStaffSerializer(staff, context={'request': request})
-//         return Response(serializer.data, status=status.HTTP_200_OK)
 
-//     def patch(self, request, id, *args, **kwargs):
-//         """
-//         Ek Staff/Freelancer ki profile ko update karo (PATCH).
-//         """
-//         staff = self.get_object(id)
         
-//         serializer = StaffUpdateSerializer(staff, data=request.data, partial=True)
         
-//         if serializer.is_valid():
-//             updated_staff = serializer.save()
            
-//             read_serializer = StaffProfileSerializer(updated_staff, context={'request': request})
-//             return Response(read_serializer.data, status=status.HTTP_200_OK)
         
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -57,7 +57,7 @@ const LEAD_STATUS_OPTIONS = [
   'Lost',
 ];
 
-function LostLeadsPage() {
+const LostLeadsContent = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -579,5 +579,12 @@ function LostLeadsPage() {
   );
 }
 
-export default LostLeadsPage;
 
+
+export default function LostLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LostLeadsContent />
+    </Suspense>
+  );
+}

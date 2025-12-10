@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   Card,
   CardContent,
@@ -108,7 +108,7 @@ const ExpandedLeadDetails = ({ lead, index }: { lead: Lead; index: number }) => 
 );
 
 
-export default function LeadsPage() {
+const LeadsContent = () => {
     const router = useRouter();
     const [leads, setLeads] = useState<Lead[]>([]);
     const [staffList, setStaffList] = useState<{ id: number; name: string }[]>([]);
@@ -466,3 +466,11 @@ export default function LeadsPage() {
 
 
 
+
+export default function LeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LeadsContent />
+    </Suspense>
+  );
+}

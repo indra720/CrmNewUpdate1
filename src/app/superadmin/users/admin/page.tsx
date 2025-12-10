@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-// Force re-save
+import React, { useEffect, useState, Suspense } from "react";
 import {
   Card,
   CardContent,
@@ -1197,24 +1196,8 @@ export default function AdminManagementPage() {
 
 
 
-// class AdminAddAPIView(APIView):
-//     """
-//     API Superuser ke liye naya Admin user banane ke liye.
-//     """
-//     permission_classes = [IsAuthenticated, CustomIsSuperuser] # Sirf Superuser hi Admin add kar sakta hai
-//     parser_classes = (MultiPartParser, FormParser) # File upload (profile_image) ke liye
 
-//     def post(self, request, *args, **kwargs):
-//         # Serializer ko request context do taaki woh request.user le sake
-//         serializer = AdminCreateSerializer(data=request.data, context={'request': request})
         
-//         if serializer.is_valid():
-//             admin_instance = serializer.save()
             
-//             # Naye bane hue admin ka poora data dikhao
-//             read_serializer = DashboardAdminSerializer(admin_instance)
             
-//             return Response(read_serializer.data, status=status.HTTP_201_CREATED)
         
-//         # Agar validation fail ho
-//         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

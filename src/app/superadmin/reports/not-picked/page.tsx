@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -29,7 +29,7 @@ import { BackButton } from '@/components/ui/back-button';
 
 type Lead = any;
 
-function NotPickedLeadsPage() {
+const NotPickedLeadsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -312,4 +312,10 @@ function NotPickedLeadsPage() {
   );
 }
 
-export default NotPickedLeadsPage;
+export default function NotPickedLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotPickedLeadsContent />
+    </Suspense>
+  );
+}

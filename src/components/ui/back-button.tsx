@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Suspense } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -19,7 +20,7 @@ const sourceToPathMap: { [key: string]: string } = {
   'freelancer': '/admin/users/freelancer',
 };
 
-export function BackButton() {
+function BackButtonContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const source = searchParams.get('source');
@@ -57,5 +58,18 @@ export function BackButton() {
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  );
+}
+
+export function BackButton() {
+  return (
+    <Suspense fallback={
+      <Button variant="outline" size="icon">
+        <ArrowLeft className="h-4 w-4" />
+        <span className="sr-only">Back</span>
+      </Button>
+    }>
+      <BackButtonContent />
+    </Suspense>
   );
 }

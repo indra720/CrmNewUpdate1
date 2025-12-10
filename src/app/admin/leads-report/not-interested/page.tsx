@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -56,7 +56,7 @@ const LEAD_STATUS_OPTIONS = [
   'Lost',
 ];
 
-function NotInterestedLeadsPage() {
+const NotInterestedLeadsContent = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -563,37 +563,11 @@ function NotInterestedLeadsPage() {
   );
 }
 
-export default NotInterestedLeadsPage;
 
-
-
-
-
-
-
-// {
-//     "users_lead_lost": [
-//         {
-//             "id": 2,
-//             "name": "Abhi verma",
-//             "email": "abhi720@gmail.com",
-//             "call": "7865432134",
-//             "send": null,
-//             "status": "Not Interested",
-//             "message": null,
-//             "team_leader": "Indrajeet",
-//             "follow_up_date": null,
-//             "follow_up_time": null,
-//             "created_date": "2025-11-19T04:56:14.937447Z",
-//             "assigned_to": {
-//                 "id": 2,
-//                 "name": "Ayush Sharma",
-//                 "staff_id": "VRI315",
-//                 "email": "ayush720@gmail.com",
-//                 "mobile": "7865431249"
-//             },
-//             "project_id": null,
-//             "project": null
-//         }
-//     ]
-// }
+export default function NotInterestedLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotInterestedLeadsContent />
+    </Suspense>
+  );
+}

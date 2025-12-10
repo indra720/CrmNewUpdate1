@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -43,7 +43,6 @@ type Lead = {
   status: string;
 };
 
-// const mockLeads: Lead[] = [
 //   { id: 1, name: "Aarav Sharma", call: "9876543210", status: "New" },
 //   { id: 2, name: "Saanvi Patel", call: "9876543211", status: "Contacted" },
 //   { id: 3, name: "Vihaan Singh", call: "9876543212", status: "Interested" },
@@ -66,7 +65,7 @@ type Lead = {
 //   },
 // ];
 
-const LeadsPage = () => {
+const LeadsContent = () => {
   const router = useRouter();
  
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -651,4 +650,10 @@ useEffect(()=>{
   );
 };
 
-export default LeadsPage;
+export default function LeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LeadsContent />
+    </Suspense>
+  );
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -39,7 +39,7 @@ import { fetchLeadsForSuperuser } from '@/lib/api';
 
 type Lead = any;
 
-const TotalLeadsPage = () => {
+const TotalLeadsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -601,4 +601,10 @@ const TotalLeadsPage = () => {
   );
 };
 
-export default TotalLeadsPage;
+export default function TotalLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TotalLeadsContent />
+    </Suspense>
+  );
+}

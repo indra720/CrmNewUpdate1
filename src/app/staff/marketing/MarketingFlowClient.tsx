@@ -1,12 +1,12 @@
 'use client';
 
 import { MarketingDialog } from "@/components/marketing/dialog";
-import { MarketingProvider } from "@/components/marketing/provider";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useMarketingDialog } from "@/components/marketing/provider";
+import React from "react";
 
-function MarketingFlow() {
+const MarketingFlowContent = () => {
   const { openDialog } = useMarketingDialog();
   const pathname = usePathname();
 
@@ -16,22 +16,17 @@ function MarketingFlow() {
 
     if (platform) {
         const platformTitle = platform.charAt(0).toUpperCase() + platform.slice(1);
-        openDialog(platformTitle);
+        openDialog(platformTitle, platform);
     }
   }, [pathname, openDialog]);
 
   return <MarketingDialog />;
 }
 
-export default function MarketingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function MarketingFlowClient() {
   return (
-    <MarketingProvider>
-        {children}
-        <MarketingFlow />
-    </MarketingProvider>
+    <Suspense fallback={<div>Loading...</div>}>
+      <MarketingFlowContent />
+    </Suspense>
   );
 }

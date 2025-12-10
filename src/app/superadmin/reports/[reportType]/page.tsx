@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-const ReportPage = ({ params }: { params: { reportType: string } }) => {
+const ReportContent = ({ params }: { params: { reportType: string } }) => {
   const router = useRouter();
   const { reportType } = params;
   const [DynamicReportComponent, setDynamicReportComponent] = useState<React.ComponentType | null>(null);
@@ -38,4 +38,11 @@ const ReportPage = ({ params }: { params: { reportType: string } }) => {
   return <DynamicReportComponent />;
 };
 
-export default ReportPage;
+
+export default function ReportPage({ params }: { params: { reportType: string } }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReportContent params={params} />
+    </Suspense>
+  );
+}

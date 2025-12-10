@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   ColumnDef,
@@ -33,7 +33,7 @@ interface LeadHistory {
   created_date: string
 }
 
-export default function LeadHistoryPage() {
+const LeadHistoryContent = () => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFiltersState] = useState<ColumnFiltersState>([])
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
@@ -393,3 +393,11 @@ export default function LeadHistoryPage() {
 
 ﻿
 
+
+export default function LeadHistoryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LeadHistoryContent />
+    </Suspense>
+  );
+}

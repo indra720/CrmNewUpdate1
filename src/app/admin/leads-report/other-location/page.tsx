@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -50,7 +50,7 @@ const LEAD_STATUS_OPTIONS = [
   'Lost',
 ];
 
-function OtherLocationLeadsPage() {
+const OtherLocationLeadsContent = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -584,4 +584,10 @@ function OtherLocationLeadsPage() {
   );
 }
 
-export default OtherLocationLeadsPage;
+export default function OtherLocationLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OtherLocationLeadsContent />
+    </Suspense>
+  );
+}

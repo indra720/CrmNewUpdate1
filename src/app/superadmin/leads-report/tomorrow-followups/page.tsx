@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation'; // Import useSearchParams
 import { format } from 'date-fns';
 // Force re-save for DialogClose error
@@ -58,7 +58,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { getTeamCustomerLeads } from '@/lib/api';
 import { Calendar } from '@/components/ui/calendar';
 
-export default function TomorrowFollowupsPage() {
+const TomorrowFollowupsContent = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [leads, setLeads] = useState<any[]>([]);
@@ -526,5 +526,12 @@ export default function TomorrowFollowupsPage() {
       </Dialog>
     </div>
     </TooltipProvider>
+  );
+}
+export default function TomorrowFollowupsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TomorrowFollowupsContent />
+    </Suspense>
   );
 }

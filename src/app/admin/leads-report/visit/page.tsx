@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -15,7 +15,7 @@ import {
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Phone, MessageSquare, ArrowUpDown, Search, Plus, Minus, Tag, Calendar, Loader2 } from 'lucide-react';
+import { Phone, MessageSquare, ArrowUpDown, Search, Plus, Minus, Tag, Calendar, Loader2, History } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ import { updateAdminLeadStatus } from '@/lib/api';
 
 import { BackButton } from '@/components/ui/back-button';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 type Lead = any;
 
@@ -44,7 +45,7 @@ const LEAD_STATUS_OPTIONS = [
   'Lost',
 ];
 
-function VisitLeadsPage() {
+const VisitLeadsContent = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -375,4 +376,10 @@ function VisitLeadsPage() {
   );
 }
 
-export default VisitLeadsPage;
+export default function VisitLeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VisitLeadsContent />
+    </Suspense>
+  );
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -156,7 +156,7 @@ const InputField = ({
   );
 };
 
-const LoginPage = () => {
+const LoginContent = () => {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [showUnauthenticatedModal, setShowUnauthenticatedModal] = useState(false); // New state for modal
   const { toast } = useToast();
@@ -1064,4 +1064,11 @@ const LoginPage = () => {
     </>
   );
 };
-export default LoginPage;
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}

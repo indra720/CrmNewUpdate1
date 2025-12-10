@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 import { useSearchParams } from 'next/navigation';
 
-export default function AddSellForAssociatePage() {
+const AddSellForAssociateContent = () => {
   const searchParams = useSearchParams();
   const associateId = searchParams.get('associate_id');
 
@@ -132,5 +132,13 @@ export default function AddSellForAssociatePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AddSellForAssociatePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddSellForAssociateContent />
+    </Suspense>
   );
 }

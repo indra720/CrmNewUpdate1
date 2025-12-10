@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function SuperAdminReportsIndexPage() {
+const SuperAdminReportsIndexContent = () => {
   const router = useRouter();
 
   useEffect(() => {
@@ -11,4 +11,12 @@ export default function SuperAdminReportsIndexPage() {
   }, [router]);
 
   return null; // Or a loading spinner
+}
+
+export default function SuperAdminReportsIndexPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SuperAdminReportsIndexContent />
+    </Suspense>
+  );
 }

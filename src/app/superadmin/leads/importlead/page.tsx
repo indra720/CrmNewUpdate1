@@ -53,7 +53,7 @@ type Lead = {
   description?: string; // Added for form
 };
 
-const ImportLeadPage = () => {
+const ImportLeadContent = () => {
   const router = useRouter();
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
@@ -569,4 +569,11 @@ const ImportLeadPage = () => {
   );
 };
 
-export default ImportLeadPage;
+
+export default function ImportLeadPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ImportLeadContent />
+    </Suspense>
+  );
+}

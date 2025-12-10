@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1072,206 +1072,21 @@ export default function StaffDashboardPage() {
 
 
 
-// import { useState, useEffect } from "react";
-// import { Clock, LogIn, LogOut, MapPin, CheckCircle2, Timer } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// import { cn } from "@/lib/utils";
 
-// interface AttendanceCardProps {
-//   onCheckIn: () => void;
-//   onCheckOut: () => void;
-//   isCheckedIn: boolean;
-//   checkInTime: string | null;
-//   checkOutTime: string | null;
-// }
 
-// const AttendanceCard = ({
-//   onCheckIn,
-//   onCheckOut,
-//   isCheckedIn,
-//   checkInTime,
-//   checkOutTime,
-// }: AttendanceCardProps) => {
-//   const [currentTime, setCurrentTime] = useState(new Date());
-//   const [workDuration, setWorkDuration] = useState("00:00:00");
 
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setCurrentTime(new Date());
-//     }, 1000);
-//     return () => clearInterval(timer);
-//   }, []);
 
-//   useEffect(() => {
-//     if (isCheckedIn && checkInTime) {
-//       const interval = setInterval(() => {
-//         const checkIn = new Date();
-//         const [hours, minutes] = checkInTime.split(":");
-//         checkIn.setHours(parseInt(hours), parseInt(minutes), 0);
-//         const diff = new Date().getTime() - checkIn.getTime();
-//         const h = Math.floor(diff / 3600000);
-//         const m = Math.floor((diff % 3600000) / 60000);
-//         const s = Math.floor((diff % 60000) / 1000);
-//         setWorkDuration(
-//           `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
-//         );
-//       }, 1000);
-//       return () => clearInterval(interval);
-//     }
-//   }, [isCheckedIn, checkInTime]);
 
-//   const formatTime = (date: Date) => {
-//     return date.toLocaleTimeString("en-US", {
-//       hour: "2-digit",
-//       minute: "2-digit",
-//       second: "2-digit",
-//       hour12: true,
-//     });
-//   };
 
-//   const formatDate = (date: Date) => {
-//     return date.toLocaleDateString("en-US", {
-//       weekday: "long",
-//       year: "numeric",
-//       month: "long",
-//       day: "numeric",
-//     });
-//   };
 
-//   return (
-//     <div className="relative overflow-hidden rounded-2xl bg-card shadow-xl animate-fade-in">
-//       {/* Background Pattern */}
-//       <div className="absolute inset-0 opacity-5">
-//         <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-primary blur-3xl -translate-y-1/2 translate-x-1/2" />
-//         <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-accent blur-3xl translate-y-1/2 -translate-x-1/2" />
-//       </div>
 
-//       <div className="relative p-6 md:p-8">
-//         {/* Header */}
-//         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-//           <div>
-//             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-//               Attendance
-//             </h2>
-//             <p className="text-muted-foreground text-sm md:text-base flex items-center gap-2">
-//               <MapPin className="h-4 w-4" />
-//               Office Location
-//             </p>
-//           </div>
-//           <div className="text-right">
-//             <div className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-//               {formatTime(currentTime)}
-//             </div>
-//             <p className="text-muted-foreground text-sm">{formatDate(currentTime)}</p>
-//           </div>
-//         </div>
 
-//         {/* Status Card */}
-//         <div
-//           className={cn(
-//             "relative rounded-2xl p-6 mb-6 transition-all duration-500",
-//             isCheckedIn
-//               ? "gradient-success shadow-success-glow"
-//               : "gradient-primary shadow-glow"
-//           )}
-//         >
-//           {/* Shimmer Effect */}
-//           <div className="absolute inset-0 rounded-2xl overflow-hidden">
-//             <div className="absolute inset-0 animate-shimmer opacity-30" />
-//           </div>
 
-//           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
-//             <div className="flex items-center gap-4">
-//               <div
-//                 className={cn(
-//                   "w-16 h-16 rounded-full flex items-center justify-center",
-//                   "bg-primary-foreground/20 backdrop-blur-sm"
-//                 )}
-//               >
-//                 {isCheckedIn ? (
-//                   <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
-//                 ) : (
-//                   <Clock className="h-8 w-8 text-primary-foreground" />
-//                 )}
-//               </div>
-//               <div>
-//                 <p className="text-primary-foreground/80 text-sm font-medium">
-//                   Current Status
-//                 </p>
-//                 <h3 className="text-2xl md:text-3xl font-bold text-primary-foreground">
-//                   {isCheckedIn ? "Checked In" : "Not Checked In"}
-//                 </h3>
-//               </div>
-//             </div>
 
-//             {isCheckedIn && (
-//               <div className="flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm rounded-xl px-5 py-3">
-//                 <Timer className="h-5 w-5 text-primary-foreground" />
-//                 <div>
-//                   <p className="text-primary-foreground/80 text-xs">Working Hours</p>
-//                   <p className="text-xl font-bold text-primary-foreground font-mono">
-//                     {workDuration}
-//                   </p>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         </div>
 
-//         {/* Action Buttons */}
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//           <Button
-//             onClick={onCheckIn}
-//             disabled={isCheckedIn}
-//             size="lg"
-//             className={cn(
-//               "h-16 text-lg font-semibold transition-all duration-300",
-//               "gradient-success hover:opacity-90 disabled:opacity-50",
-//               "shadow-lg hover:shadow-xl hover:scale-[1.02]",
-//               "disabled:hover:scale-100 disabled:cursor-not-allowed"
-//             )}
-//           >
-//             <LogIn className="mr-3 h-6 w-6" />
-//             Check In
-//           </Button>
 
-//           <Button
-//             onClick={onCheckOut}
-//             disabled={!isCheckedIn || !!checkOutTime}
-//             size="lg"
-//             className={cn(
-//               "h-16 text-lg font-semibold transition-all duration-300",
-//               "gradient-warning hover:opacity-90 disabled:opacity-50",
-//               "shadow-lg hover:shadow-xl hover:scale-[1.02]",
-//               "disabled:hover:scale-100 disabled:cursor-not-allowed"
-//             )}
-//           >
-//             <LogOut className="mr-3 h-6 w-6" />
-//             Check Out
-//           </Button>
-//         </div>
 
-//         {/* Time Display */}
-//         <div className="grid grid-cols-2 gap-4 mt-6">
-//           <div className="bg-secondary/50 rounded-xl p-4 text-center">
-//             <p className="text-muted-foreground text-sm mb-1">Check In Time</p>
-//             <p className="text-xl font-bold text-foreground">
-//               {checkInTime || "--:--"}
-//             </p>
-//           </div>
-//           <div className="bg-secondary/50 rounded-xl p-4 text-center">
-//             <p className="text-muted-foreground text-sm mb-1">Check Out Time</p>
-//             <p className="text-xl font-bold text-foreground">
-//               {checkOutTime || "--:--"}
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
 
-// export default AttendanceCard;
 
 
 

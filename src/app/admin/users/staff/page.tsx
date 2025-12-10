@@ -974,101 +974,17 @@ export default function StaffManagementPage() {
 
 
 
-// {
-//     "counts": {
-//         "total_leads": 0,
-//         "total_visit": 0,
-//         "interested": 0,
-//         "not_interested": 1,
-//         "other_location": 0,
-//         "not_picked": 1,
-//         "total_earning": 0.0
-//     },
-//     "staff_list": [
-//         {
-//             "id": 5,
-//             "user_id": 18,
-//             "name": "Piyush Rathor",
-//             "team_leader_name": "Rohit Panchvani",
-//             "mobile": "6789009878",
-//             "created_date": "2025-11-27T08:50:24.945268Z",
-//             "is_active": true,
-//             "total_earned": 0.0,
-//             "leads_count": 0
-//         },
-//         {
-//             "id": 6,
-//             "user_id": 18,
-//             "name": "Manish Sidhh",
-//             "team_leader_name": "Rohit Panchvani",
-//             "mobile": "7865432235",
-//             "created_date": "2025-12-03T09:21:18.204476Z",
-//             "is_active": true,
-//             "total_earned": 0.0,
-//             "leads_count": 0
-//         }
-//     ],
-//     "setting": null
-// }
 
 
 
 
-// class AdminToggleStatusAPIView(APIView):
-//     """
-//     API for Admin to toggle Active/Inactive status of their Staff or Team Leaders.
-//     POST: Toggles the 'user_active' field.
-//     ONLY ADMIN can access this for their own team.
-//     """
-//     permission_classes = [IsAuthenticated, IsCustomAdminUser]
 
-//     def post(self, request, user_id, format=None):
-//         # 1. Get Target User
-//         try:
-//             target_user = User.objects.get(id=user_id)
-//         except User.DoesNotExist:
-//             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-//         # 2. Get Logged-in Admin Profile
-//         try:
-//             current_admin = Admin.objects.get(self_user=request.user)
-//         except Admin.DoesNotExist:
-//             return Response({"error": "Admin profile not found."}, status=status.HTTP_404_NOT_FOUND)
 
-//         # 3. Security Check: Is the user under this Admin?
-//         is_authorized = False
 
-//         # A. Team Leader check
-//         try:
-//             team_leader = Team_Leader.objects.get(user=target_user)
-//             if team_leader.admin == current_admin:
-//                 is_authorized = True
-//         except Team_Leader.DoesNotExist:
-//             pass
 
-//         # B. Staff check (agar TL nahi mila)
-//         if not is_authorized:
-//             try:
-//                 staff = Staff.objects.get(user=target_user)
-//                 if staff.team_leader and staff.team_leader.admin == current_admin:
-//                     is_authorized = True
-//             except Staff.DoesNotExist:
-//                 pass
 
-//         if not is_authorized:
-//             return Response({
-//                 "error": "Permission denied. This user is not under your administration."
-//             }, status=status.HTTP_403_FORBIDDEN)
 
-//         # 4. Perform Toggle
-//         target_user.user_active = not target_user.user_active
-//         target_user.save()
 
-//         status_msg = "Active" if target_user.user_active else "Inactive"
         
-//         return Response({
-//             "message": f"User is now {status_msg}",
-//             "user_id": target_user.id,
-//             "user_active": target_user.user_active
-//         }, status=status.HTTP_200_OK)
 
