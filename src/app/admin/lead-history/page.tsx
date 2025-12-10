@@ -339,6 +339,16 @@ const LeadHistoryContent = () => {
 
 
 
+export default function LeadHistoryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LeadHistoryContent />
+    </Suspense>
+  );
+}
+
+
+
 
 // class AdminLeadHistoryAPIView(APIView):
 //     """
@@ -394,10 +404,4 @@ const LeadHistoryContent = () => {
 ﻿
 
 
-export default function LeadHistoryPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LeadHistoryContent />
-    </Suspense>
-  );
-}
+
