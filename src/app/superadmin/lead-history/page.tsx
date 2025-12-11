@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect,Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   ColumnDef,

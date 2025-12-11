@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
-import type { Viewport } from "next";
+import type { Metadata } from "next";
 
-// Ye server-side viewport config hai
-export const viewport: Viewport = {
-  width: "device-width",
+export const metadata: Metadata = {
+  title: "Remaining Leads Reports",
+  description: "View remaining leads",
+};
+
+// ✅ Inline type definition (Next.js 13.x ke liye)
+export const viewport = {
+  width: 'device-width' as const,
   initialScale: 1,
 };
 
