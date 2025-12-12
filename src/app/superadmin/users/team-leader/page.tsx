@@ -107,16 +107,16 @@ const initialFormData = {
     state: "",
     pincode: "",
     degree: "",
-    pancard: "",
-    aadharCard: "",
+    pan_card: "",
+    aadhar_card: "",
     bank_name: "",
     account_number: "",
     ifsc_code: "",
     upi_id: "",
     salary: "",
-    referralCode: "",
-    marksheets: null,
-    admin: "",
+    referral_code: "",
+    marksheets: "",
+    admin_id: "",
 };
 
 const InputField = ({ id, label, name, type = 'text', placeholder, icon: Icon, value, onChange, required, children, disabled }: {
@@ -246,8 +246,10 @@ export default function TeamLeaderManagementPage() {
       }
 
       const data = await response.json();
-      // Assuming the admin list is under 'users' key in the super-admin dashboard response
-      const fetchedAdmins = data.users.map((admin: any) => ({ id: admin.id, name: admin.name }));
+      // Filter for users who are admins and then map to the required {id, name} structure.
+      const fetchedAdmins = data.users
+        .filter((user: any) => user.user && user.user.is_admin)
+        .map((admin: any) => ({ id: admin.id, name: admin.name }));
       setAdmins(fetchedAdmins);
     } catch (err: any) {
       //console.error("Failed to fetch admins:", err);
@@ -296,14 +298,14 @@ export default function TeamLeaderManagementPage() {
       state: user.state || '',
       pincode: user.pincode || '',
       degree: user.degree || '',
-      pancard: user.pancard || '',
-      aadharCard: user.aadharCard || '',
+      pan_card: user.pancard || '',
+      aadhar_card: user.aadharCard || '',
       bank_name: user.bank_name || '',
       account_number: user.account_number || '',
       ifsc_code: user.ifsc_code || '',
       upi_id: user.upi_id || '',
       salary: user.salary || '',
-      admin: user.admin?.id || '',
+      admin_id: user.admin?.id || '',
       password: '', // Always start with an empty password field
     });
     setActiveTab("personal");
@@ -355,6 +357,7 @@ export default function TeamLeaderManagementPage() {
         handleCloseForm();
         fetchPageData();
     } catch (error: any) {
+        console.error("Add Team Leader Error:", error);
         toast({
             title: "Error",
             description: error.message || "An unexpected error occurred.",
@@ -438,6 +441,7 @@ export default function TeamLeaderManagementPage() {
       handleCloseForm();
       fetchPageData(); 
     } catch (error: any) {
+      console.error("Edit Team Leader Error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update team leader.",
@@ -811,8 +815,8 @@ export default function TeamLeaderManagementPage() {
                       >
                         {activeTab === 'personal' && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                              <InputField id="admin" label="Admin" name="admin" value={formData.admin} onChange={(e) => handleAddFormSelectChange("admin", e.target.value)} required>
-                                <Select onValueChange={(value) => handleAddFormSelectChange("admin", value)} name="admin" value={formData.admin?.toString()} required>
+                              <InputField id="admin_id" label="Admin" name="admin_id" value={formData.admin_id} onChange={(e) => handleAddFormSelectChange("admin_id", e.target.value)} required>
+                                <Select onValueChange={(value) => handleAddFormSelectChange("admin_id", value)} name="admin_id" value={formData.admin_id?.toString()} required>
                                     <SelectTrigger className="pl-10 pr-4 h-11">
                                     <SelectValue placeholder="Select Admin" />
                                     </SelectTrigger>
@@ -825,11 +829,11 @@ export default function TeamLeaderManagementPage() {
                               </InputField>
                               <InputField id="name" label="Name" name="name" placeholder="John Doe" icon={User} value={formData.name} onChange={handleAddFormChange} required />
                               <InputField id="email" label="E-Mail Address" name="email" type="email" placeholder="you@example.com" icon={Mail} value={formData.email} onChange={handleAddFormChange} required />
-                              <InputField id="password" label="Password" name="password" type="password" placeholder={formMode === 'edit' ? 'Leave blank to keep current password' : '••••••••'} icon={Lock} value={formData.password} onChange={handleAddFormChange} required={formMode === 'add'} />
+                              <InputField id="password" label="Password" name="password" type="password" placeholder={formMode === 'edit' ? 'Leave blank to keep current password' : '••••••••'} icon={Lock} value={formData.password} onChange={handleAddFormChange} required />
                               <InputField id="dob" label="Date of Birth" name="dob" type="date" icon={Calendar} value={formData.dob} onChange={handleAddFormChange} required />
-                              <InputField id="pancard" label="Pan Card" name="pancard" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pancard} onChange={handleAddFormChange} required />
-                              <InputField id="aadharCard" label="Aadhar Card" name="aadharCard" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadharCard} onChange={handleAddFormChange} required />
-                              <InputField id="marksheets" label="MarkSheets" name="marksheets" type="file" icon={FileText} onChange={handleAddFormChange} value={''} required={formMode === 'add'} />
+                              <InputField id="pan_card" label="Pan Card" name="pan_card" placeholder="ABCDE1234F" icon={CreditCard} value={formData.pan_card} onChange={handleAddFormChange} required />
+                              <InputField id="aadhar_card" label="Aadhar Card" name="aadhar_card" placeholder="1234 5678 9012" icon={Fingerprint} value={formData.aadhar_card} onChange={handleAddFormChange} required />
+                              <InputField id="marksheets" label="MarkSheets" name="marksheets" type="text" icon={FileText} onChange={handleAddFormChange} value={formData.marksheets} required />
                               <InputField id="degree" label="Degree" name="degree" placeholder="B.Tech, M.Sc" icon={GraduationCap} value={formData.degree} onChange={handleAddFormChange} required />
                               <InputField id="city" label="City" name="city" placeholder="e.g. Mumbai" icon={Building2} value={formData.city} onChange={handleAddFormChange} required />
                               <InputField id="state" label="State" name="state" value={formData.state} onChange={handleAddFormChange} required>
@@ -851,7 +855,7 @@ export default function TeamLeaderManagementPage() {
                         {activeTab === 'account' && (
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                               <InputField id="account_number" label="Account Number" name="account_number" placeholder="Your account number" icon={Wallet} value={formData.account_number} onChange={handleAddFormChange} required />
-                              <InputField id="upi_id" label="Add UPI" name="upi_id" placeholder="yourname@upi" icon={Briefcase} value={formData.upi_id} onChange={handleAddFormChange} />
+                              <InputField id="upi_id" label="Add UPI" name="upi_id" placeholder="yourname@upi" icon={Briefcase} value={formData.upi_id} onChange={handleAddFormChange} required />
                               <InputField id="bank_name" label="Bank Name" name="bank_name" placeholder="e.g. State Bank of India" icon={Landmark} value={formData.bank_name} onChange={handleAddFormChange} required />
                               <InputField id="ifsc_code" label="IFSC Code" name="ifsc_code" placeholder="SBIN0001234" icon={Hash} value={formData.ifsc_code} onChange={handleAddFormChange} required />
                               <InputField id="pincode" label="Pincode" name="pincode" placeholder="e.g. 110001" icon={MapPin} value={formData.pincode} onChange={handleAddFormChange} required />
@@ -896,6 +900,61 @@ export default function TeamLeaderManagementPage() {
 
 
 
+
+
+
+
+
+
+// {
+//     "users": [
+//         {
+//             "id": 1,
+//             "user": {
+//                 "id": 2,
+//                 "email": "indra720@gmail.com",
+//                 "name": "Indrajeet",
+//                 "mobile": "7896758585",
+//                 "profile_image": null,
+//                 "is_admin": true,
+//                 "is_team_leader": false,
+//                 "is_staff_new": false,
+//                 "created_date": "2025-12-12T07:00:41.340327Z",
+//                 "user_active": false
+//             },
+//             "admin_id": "c7c4e760-9804-464e-84b9-449907728a27",
+//             "name": "Indrajeet",
+//             "email": "indra720@gmail.com",
+//             "mobile": "7896758585",
+//             "address": "123,purani chungi,sodala,jaipur",
+//             "city": "Jaipur",
+//             "pincode": "567890",
+//             "state": "Rajasthan",
+//             "dob": "2006-03-12",
+//             "pancard": null,
+//             "aadharCard": null,
+//             "account_number": "56789098765",
+//             "upi_id": "indra@123",
+//             "bank_name": "SBI",
+//             "ifsc_code": "SBIN0043",
+//             "salary": "78965",
+//             "achived_slab": "0",
+//             "created_date": "2025-12-12T07:00:42.580848Z"
+//         }
+//     ],
+//     "total_upload_leads": 0,
+//     "total_assign_leads": 0,
+//     "total_interested": 0,
+//     "total_not_interested": 0,
+//     "total_other_location": 0,
+//     "total_not_picked": 0,
+//     "total_lost": 0,
+//     "total_visits": 0,
+//     "total_left_leads": 0,
+//     "total_pending_followup": 0,
+//     "total_today_followup": 0,
+//     "total_tomorrow_followup": 0
+// }
 
 
 

@@ -547,10 +547,10 @@ export default function StaffDashboardPage() {
 
     const now = new Date();
     const data = new FormData();
-    data.append('project_name', checkoutFormData.projectName);
-    data.append('work_description', checkoutFormData.workDescription);
-    data.append('task_time', checkoutFormData.taskTime);
-    data.append('work_progress', checkoutFormData.workProgress);
+    data.append('project', checkoutFormData.projectName);
+    data.append('work', checkoutFormData.workDescription);
+    data.append('time_taken', checkoutFormData.taskTime);
+    data.append('progress', checkoutFormData.workProgress);
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/accounts/checkout/`, {

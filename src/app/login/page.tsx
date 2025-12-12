@@ -352,8 +352,8 @@ const LoginContent = () => {
             userRole = 'freelancer';
           }
 
-          //console.log('Login API response data:', data.data); // Added for debugging
-          //console.log('Determined userRole:', userRole); // Added for debugging
+          console.log('Login API response data:', data.data); // Added for debugging
+          console.log('Determined userRole:', userRole); // Added for debugging
 
           // Set localStorage for client-side usage
           localStorage.setItem('authToken', token);
@@ -383,7 +383,7 @@ const LoginContent = () => {
         });
       }
     } catch (error) {
-      //console.error("Login API error:", error);
+      console.error("Login API error:", error);
       toast({
         title: "Login Error",
         description: "Could not connect to the server. Please try again.",

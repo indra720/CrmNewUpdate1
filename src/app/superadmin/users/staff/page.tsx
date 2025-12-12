@@ -113,7 +113,7 @@ const initialFormData = {
   upi_id: "",
   salary: "",
   referralCode: "",
-  teamLeader: "",
+  team_leader: "",
   admin: "",
 };
 
@@ -311,7 +311,7 @@ export default function StaffManagementPage() {
         ifsc_code: staffData.ifsc_code || '',
         upi_id: staffData.upi_id || '',
         salary: staffData.salary || '',
-        teamLeader: staffData.team_leader || '',
+        team_leader: staffData.team_leader || '',
         admin: staffData.admin || '',
         password: '', // Keep password blank for edit
       });
@@ -348,8 +348,18 @@ export default function StaffManagementPage() {
     }
 
     const data = new FormData();
-    Object.keys(formData).forEach(key => {
-        if(formData[key]) data.append(key, formData[key]);
+    Object.keys(formData).forEach((key) => {
+      if (formData[key] !== null && formData[key] !== undefined && formData[key] !== "") {
+        if (key === "team_leader") {
+          data.append("team_leader", parseInt(formData.team_leader));
+        }
+        else if (key === "admin") {
+          data.append("admin", parseInt(formData.admin));
+        }
+        else {
+          data.append(key, formData[key]);
+        }
+      }
     });
 
     try {
@@ -407,10 +417,12 @@ export default function StaffManagementPage() {
     }
     
     Object.keys(submissionData).forEach(key => {
-        if (submissionData[key] !== null && submissionData[key] !== undefined) {
-             if (key === 'teamLeader' && submissionData[key]) {
-                data.append('team_leader', submissionData[key]);
-            } else if (submissionData[key]) {
+        if (submissionData[key] !== null && submissionData[key] !== undefined && submissionData[key] !== "") {
+             if (key === 'team_leader') {
+                data.append('team_leader', parseInt(submissionData[key]));
+            } else if (key === 'admin') {
+                data.append('admin', parseInt(submissionData[key]));
+            } else {
                  data.append(key, submissionData[key]);
             }
         }
@@ -777,7 +789,7 @@ export default function StaffManagementPage() {
               </div>
               <div className="w-full">
                 <Label className="text-sm font-medium text-muted-foreground">Team Leader *</Label>
-                <Select onValueChange={(value) => handleSelectChange("teamLeader", value)} name="teamLeader" value={formData.teamLeader?.toString()} required>
+                <Select onValueChange={(value) => handleSelectChange("team_leader", value)} name="team_leader" value={formData.team_leader?.toString()} required>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Team-Leader" />
                   </SelectTrigger>
@@ -890,3 +902,329 @@ export default function StaffManagementPage() {
         
            
         
+
+
+
+
+
+
+
+
+
+//{
+//     "counts": {
+//         "pending_followups": 0,
+//         "tomorrow_followups": 0,
+//         "today_followups": 0,
+//         "total_leads": 0,
+//         "total_visit": 0,
+//         "interested": 0,
+//         "not_interested": 0,
+//         "other_location": 0,
+//         "not_picked": 0,
+//         "total_staff": 0,
+//         "active_staff": 0,
+//         "total_lost": 0
+//     },
+//     "count": 1,
+//     "next": null,
+//     "previous": null,
+//     "results": [
+//         {
+//             "id": 1,
+//             "user_id": 3,
+//             "admin": {
+//                 "id": 1,
+//                 "admin_id": "c7c4e760-9804-464e-84b9-449907728a27",
+//                 "name": "Indrajeet",
+//                 "email": "indra720@gmail.com",
+//                 "mobile": "7896758585",
+//                 "address": "123,purani chungi,sodala,jaipur",
+//                 "city": "Jaipur",
+//                 "pincode": "567890",
+//                 "state": "Rajasthan",
+//                 "dob": "2006-03-12",
+//                 "pancard": null,
+//                 "aadharCard": null,
+//                 "marksheet": null,
+//                 "degree": "BCA",
+//                 "account_number": "56789098765",
+//                 "upi_id": "indra@123",
+//                 "bank_name": "SBI",
+//                 "ifsc_code": "SBIN0043",
+//                 "salary": "78965",
+//                 "achived_slab": "0",
+//                 "created_date": "2025-12-12T12:30:42.580848+05:30",
+//                 "updated_date": "2025-12-12T12:30:42.580895+05:30",
+//                 "user": 1,
+//                 "self_user": 2
+//             },
+//             "user": {
+//                 "id": 3,
+//                 "password": "pbkdf2_sha256$1000000$ZFPPSnmqkV6yRswkDTVxHZ$ejRzTgfqnyFP1s7eH9hR7aUaJr4MEOluM+IkKn1hFss=",
+//                 "last_login": null,
+//                 "is_superuser": false,
+//                 "username": "promod720@gmail.com",
+//                 "first_name": "",
+//                 "last_name": "",
+//                 "is_staff": false,
+//                 "date_joined": "2025-12-12T13:01:45+05:30",
+//                 "name": "Promod Saini",
+//                 "mobile": "9876543236",
+//                 "email": "promod720@gmail.com",
+//                 "is_admin": false,
+//                 "is_team_leader": true,
+//                 "is_staff_new": false,
+//                 "is_freelancer": false,
+//                 "is_it_staff": false,
+//                 "is_super_user": false,
+//                 "role": "team_leader",
+//                 "login_time": "2025-12-12T13:01:45+05:30",
+//                 "logout_time": null,
+//                 "profile_image": null,
+//                 "created_date": "2025-12-12T13:01:46.585309+05:30",
+//                 "updated_date": "2025-12-12T13:33:12.844932+05:30",
+//                 "user_active": true,
+//                 "is_user_login": true,
+//                 "groups": [],
+//                 "user_permissions": []
+//             },
+//             "admin_name": "Indrajeet",
+//             "name": "Promod Saini",
+//             "email": "promod720@gmail.com",
+//             "mobile": "9876543236",
+//             "address": "140,santosh nagar,jaipur",
+//             "city": "JAIPUR",
+//             "state": "Rajasthan",
+//             "pincode": "789650",
+//             "dob": "2003-03-12",
+//             "pancard": null,
+//             "aadharCard": null,
+//             "account_number": "7867564864",
+//             "upi_id": "pro@123",
+//             "bank_name": "SBI",
+//             "ifsc_code": "SBIN0043",
+//             "salary": "78906",
+//             "achived_slab": "0",
+//             "profile_image": null
+//         }
+//     ]
+// }
+
+
+
+
+
+
+
+
+
+// class SuperUserTeamLeaderDashboardAPIView(APIView):
+//     """
+//     API for Superuser's 'Team Leader List' dashboard (add_team_leader_admin_side).
+//     Provides all card counts (at the top) and the paginated list of Team Leaders.
+//     """
+//     permission_classes = [IsAuthenticated, CustomIsSuperuser]
+//     pagination_class = StandardResultsSetPagination
+
+//     def get(self, request, format=None):
+//         paginator = self.pagination_class()
+        
+//         # ---  Get Team Leader List (Paginated) ---
+//         team_leaders_qs = Team_Leader.objects.all().order_by('name')
+        
+//         page = paginator.paginate_queryset(team_leaders_qs, request, view=self)
+//         team_leaders_serializer = ProductivityTeamLeaderSerializer(page, many=True)
+
+//         # ---  Calculate All Card Counts ---
+//         active_staff_count = User.objects.filter(is_staff_new=True, is_user_login=True).count()
+//         total_staff_count = User.objects.filter(is_staff_new=True).count()
+//         total_leads = LeadUser.objects.filter(status="Leads").count()
+//         total_interested = LeadUser.objects.filter(status="Intrested").count()
+//         total_not_interested = LeadUser.objects.filter(status="Not Interested").count()
+//         total_other_location = LeadUser.objects.filter(status="Other Location").count()
+//         total_not_picked = LeadUser.objects.filter(status="Not Picked").count()
+//         total_lost = LeadUser.objects.filter(status="Lost").count()
+//         total_visits = LeadUser.objects.filter(status="Visit").count()
+
+//         # ---  Calculate Followup Counts ---
+//         today = timezone.now().date()
+//         tomorrow = today + timedelta(days=1)
+        
+//         pending_followups = LeadUser.objects.filter(
+//             Q(status='Intrested') & Q(follow_up_date__isnull=False)
+//         ).count()
+//         today_followups = LeadUser.objects.filter(
+//             Q(status='Intrested') & Q(follow_up_date=today)
+//         ).count()
+//         tomorrow_followups = LeadUser.objects.filter(
+//             Q(status='Intrested') & Q(follow_up_date=tomorrow)
+//         ).count()
+        
+//         counts_data = {
+//             'pending_followups': pending_followups,
+//             'tomorrow_followups': tomorrow_followups,
+//             'today_followups': today_followups,
+//             'total_leads': total_leads,
+//             'total_visit': total_visits,
+//             'interested': total_interested,
+//             'not_interested': total_not_interested,
+//             'other_location': total_other_location,
+//             'not_picked': total_not_picked,
+//             'total_staff': total_staff_count,
+//             'active_staff': active_staff_count,
+//             'total_lost': total_lost, 
+//         }
+
+//         paginated_response = paginator.get_paginated_response(team_leaders_serializer.data)
+        
+//         final_data = {
+//             "counts": counts_data,
+//             "count": paginated_response.data['count'],
+//             "next": paginated_response.data['next'],
+//             "previous": paginated_response.data['previous'],
+//             "results": paginated_response.data['results']
+//         }
+        
+//         return Response(final_data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+// class StaffAddAPIView(APIView):
+//     """
+//     API endpoint for creating a new Staff user and their associated profile.
+//     (Can be executed by Team Leader, Admin, or Superuser).
+//     [FIXED] UnboundLocalError has been resolved.
+//     """
+    
+//     permission_classes = [CustomIsSuperuser]
+//     parser_classes = (MultiPartParser, FormParser)
+//     def post(self, request, *args, **kwargs):
+//         serializer = StaffCreateSerializer(data=request.data, context={'request': request})
+        
+//         if not serializer.is_valid():
+//             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+//         try:
+//             staff_instance = serializer.save()
+//         except Exception as e:
+//             return Response({"error": f"Failed to save serializer: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+//         try:
+//             read_serializer = StaffProfileSerializer(staff_instance, context={'request': request})
+//             return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+//         except Exception as e:
+//             return Response(
+//                 {"message": f"Staff created (ID: {staff_instance.id}) but response serialization failed: {e}"}, 
+//                 status=status.HTTP_201_CREATED
+//             )
+
+        
+        
+           
+        
+
+
+
+
+// class StaffProfileSerializer(serializers.ModelSerializer):
+//     user_id = serializers.IntegerField(source='user.id', read_only=True)
+
+//     class Meta:
+//         model = Staff
+//         fields = [
+
+//             'id' ,'user_id', 'name', 'email', 'mobile', 'address', 'city', 'pincode', 'state',
+//             'dob', 'pancard', 'aadharCard', 'marksheet', 'degree', 'account_number',
+//             'upi_id', 'bank_name', 'ifsc_code', 'salary', 'achived_slab',
+//             'referral_code', 'join_referral', 'created_date', 'updated_date'
+//         ]
+//         read_only_fields = ['referral_code', 'created_date', 'updated_date']
+
+
+
+
+
+
+
+
+
+
+
+
+// Bhai team_leader missing error 100% confirm two jagah se aa sakti hai:
+
+// ✔ (1) Tum wrong field-name bhej rahe ho
+
+// Backend chahta hai:
+
+// ✅ team_leader
+
+// NOT
+
+// ❌ team_leader_id
+
+// Tum apne code me POST kar rahe ho:
+
+// data.append("team_leader_id", parseInt(formData.team_leader_id))
+
+
+// 🔥 Backend isko reject karega
+// Isliye error:
+// “team_leader field is required”
+
+// ✔ (2) Tum Select ke value ko wrong naam se store kar rahe ho
+
+// Tum select me likh rahe ho:
+
+// onValueChange={(value) => handleSelectChange("team_leader_id", value)}
+
+
+// But backend chahta hai:
+
+// team_leader
+
+// 📌 YEH DONO FIX KARNE HONGE
+// 🛠 FINAL CORRECT FIX
+// ⭐ Step 1 — Change Select field name
+// ❌ Wrong
+// <Select onValueChange={(value) => handleSelectChange("team_leader_id", value)} ... />
+
+// ✅ Correct
+// <Select onValueChange={(value) => handleSelectChange("team_leader", value)} ... />
+
+// ⭐ Step 2 — In FormData, send correct key
+// ❌ Wrong
+// data.append("team_leader_id", formData.team_leader_id);
+
+// ✅ Correct
+// data.append("team_leader", formData.team_leader);
+
+// ⭐ Step 3 — FormData Setup Fully Corrected
+
+// Replace your whole FormData code with this:
+
+// const data = new FormData();
+
+// Object.keys(formData).forEach((key) => {
+//   if (formData[key] !== null && formData[key] !== undefined && formData[key] !== "") {
+//     if (key === "team_leader") {
+//       data.append("team_leader", parseInt(formData.team_leader));
+//     } 
+//     else if (key === "admin") {
+//       data.append("admin", parseInt(formData.admin));
+//     } 
+//     else {
+//       data.append(key, formData[key]);
+//     }
+//   }
+// });
