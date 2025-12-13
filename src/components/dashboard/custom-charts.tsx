@@ -179,6 +179,16 @@ export const PieChart = ({ data = [] }: { data: any[] }) => {
     setActiveIndex(index);
   };
 
+  const isDataEmpty = !data || data.length === 0 || data.every(item => item.value === 0);
+
+  if (isDataEmpty) {
+    return (
+      <div style={{ width: '100%', height: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <p>No data to display</p>
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={400}>
       <RechartsPieChart>
